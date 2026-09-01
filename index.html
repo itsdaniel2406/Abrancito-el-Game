@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Abrahancito</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background-color: #1a1a1a;
             color: white;
@@ -14,24 +20,34 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            margin: 0;
+            padding: 10px;
         }
 
-        h1 { margin-bottom: 5px; color: #f1c40f; }
+        h1 { 
+            margin-bottom: 10px; 
+            color: #f1c40f; 
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+        }
 
         #game-container {
             position: relative;
             border: 4px solid #fff;
             border-radius: 8px;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 600 / 400;
         }
 
         canvas {
-            background-color: #27ae60; /* Pasto */
+            background-color: #27ae60;
             display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 4px;
+            touch-action: none;
         }
 
-        /* Cuadro de Diálogo estilo RPG */
         #dialog-box {
             position: absolute;
             bottom: 10px;
@@ -41,38 +57,124 @@
             border: 2px solid #fff;
             border-radius: 6px;
             padding: 12px;
-            font-size: 14px;
+            font-size: clamp(12px, 3vw, 14px);
             display: none;
             color: #fff;
+            z-index: 10;
         }
 
         .controls-info {
-            margin-top: 10px;
-            font-size: 0.9rem;
+            margin-top: 15px;
+            font-size: clamp(0.75rem, 2.5vw, 0.9rem);
             color: #ccc;
             text-align: center;
         }
 
-        .btn-panel {
-            margin-top: 10px;
-            display: flex;
+        .mobile-controls {
+            display: none;
             gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 600px;
+            flex-direction: column;
+            align-items: center;
         }
 
-        button {
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(3, 60px);
+            gap: 5px;
+            margin: 0 auto;
+        }
+
+        .dpad button {
+            background: #2980b9;
+            border: 2px solid #fff;
+            color: white;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.1s;
+            touch-action: manipulation;
+        }
+
+        .dpad button:active {
+            background: #3498db;
+            transform: scale(0.95);
+        }
+
+        .dpad button:nth-child(2) { grid-column: 2; grid-row: 1; }
+        .dpad button:nth-child(4) { grid-column: 1; grid-row: 2; }
+        .dpad button:nth-child(5) { grid-column: 2; grid-row: 2; visibility: hidden; }
+        .dpad button:nth-child(6) { grid-column: 3; grid-row: 2; }
+        .dpad button:nth-child(8) { grid-column: 2; grid-row: 3; }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons button {
+            background: #27ae60;
+            color: white;
+            border: 2px solid #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            transition: all 0.1s;
+            touch-action: manipulation;
+        }
+
+        .action-buttons button:active {
+            background: #2ecc71;
+            transform: scale(0.95);
+        }
+
+        .btn-panel {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .btn-panel button {
             background: #2980b9;
             color: white;
             border: none;
-            padding: 8px 15px;
+            padding: 10px 15px;
             border-radius: 4px;
             cursor: pointer;
             font-family: inherit;
             font-weight: bold;
+            font-size: clamp(0.8rem, 2vw, 1rem);
         }
 
-        button:hover { background: #3498db; }
-        button.reset { background: #c0392b; }
-        button.reset:hover { background: #e74c3c; }
+        .btn-panel button:active { transform: scale(0.95); }
+        .btn-panel button.reset { background: #c0392b; }
+        .btn-panel button.reset:active { background: #e74c3c; }
+
+        @media (max-width: 768px) {
+            .dpad {
+                grid-template-columns: repeat(3, 50px);
+                grid-template-rows: repeat(3, 50px);
+                gap: 3px;
+            }
+
+            .dpad button {
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -87,8 +189,20 @@
         </div>
     </div>
 
-    <div class="controls-info">
+    <div class="controls-info" id="desktop-info">
         Moverse: <b>Flechas / WASD</b> | Hablar: <b>E</b> (cerca de un NPC)
+    </div>
+
+    <div class="mobile-controls" id="mobileControls">
+        <div class="dpad">
+            <button id="btnUp">↑</button>
+            <button id="btnLeft">←</button>
+            <button id="btnRight">→</button>
+            <button id="btnDown">↓</button>
+        </div>
+        <div class="action-buttons">
+            <button id="btnTalk">💬 Hablar (E)</button>
+        </div>
     </div>
 
     <div class="btn-panel">
@@ -102,8 +216,16 @@
     const dialogBox = document.getElementById('dialog-box');
     const npcNameEl = document.getElementById('npc-name');
     const npcTextEl = document.getElementById('npc-text');
+    const mobileControls = document.getElementById('mobileControls');
+    const desktopInfo = document.getElementById('desktop-info');
 
-    // Estado del Jugador (Abrahancito)
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        mobileControls.style.display = 'flex';
+        desktopInfo.style.display = 'none';
+    }
+
     let player = {
         x: 100,
         y: 100,
@@ -112,10 +234,9 @@
         color: '#3498db'
     };
 
-    // Estado de las Teclas
     const keys = {};
+    const mobileKeys = {};
 
-    // Lista de NPCs en el mapa
     const npcs = [
         {
             name: "Anciano sabio",
@@ -137,7 +258,6 @@
 
     let currentNPC = null;
 
-    // Escuchar Teclado
     window.addEventListener('keydown', e => {
         keys[e.key.toLowerCase()] = true;
         if (e.key.toLowerCase() === 'e') {
@@ -149,27 +269,37 @@
         keys[e.key.toLowerCase()] = false;
     });
 
-    // Mover Jugador
-    function updatePlayer() {
-        let moving = false;
-        if (keys['arrowup'] || keys['w']) { player.y -= player.speed; moving = true; }
-        if (keys['arrowdown'] || keys['s']) { player.y += player.speed; moving = true; }
-        if (keys['arrowleft'] || keys['a']) { player.x -= player.speed; moving = true; }
-        if (keys['arrowright'] || keys['d']) { player.x += player.speed; moving = true; }
+    if (isMobile) {
+        document.getElementById('btnUp').addEventListener('touchstart', (e) => { e.preventDefault(); mobileKeys['up'] = true; });
+        document.getElementById('btnUp').addEventListener('touchend', (e) => { e.preventDefault(); mobileKeys['up'] = false; });
+        
+        document.getElementById('btnDown').addEventListener('touchstart', (e) => { e.preventDefault(); mobileKeys['down'] = true; });
+        document.getElementById('btnDown').addEventListener('touchend', (e) => { e.preventDefault(); mobileKeys['down'] = false; });
+        
+        document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); mobileKeys['left'] = true; });
+        document.getElementById('btnLeft').addEventListener('touchend', (e) => { e.preventDefault(); mobileKeys['left'] = false; });
+        
+        document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); mobileKeys['right'] = true; });
+        document.getElementById('btnRight').addEventListener('touchend', (e) => { e.preventDefault(); mobileKeys['right'] = false; });
 
-        // Colisiones con bordes del mapa
+        document.getElementById('btnTalk').addEventListener('touchstart', (e) => { e.preventDefault(); interactNPC(); });
+    }
+
+    function updatePlayer() {
+        if (keys['arrowup'] || keys['w'] || mobileKeys['up']) { player.y -= player.speed; }
+        if (keys['arrowdown'] || keys['s'] || mobileKeys['down']) { player.y += player.speed; }
+        if (keys['arrowleft'] || keys['a'] || mobileKeys['left']) { player.x -= player.speed; }
+        if (keys['arrowright'] || keys['d'] || mobileKeys['right']) { player.x += player.speed; }
+
         player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
         player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
 
-        // Comprobar cercanía a NPCs para mostrar indicador
         checkNPCDistance();
     }
 
-    // Comprobar distancia a NPCs
     function checkNPCDistance() {
         currentNPC = null;
         for (let npc of npcs) {
-            // Distancia Euclidiana simple
             let dx = (player.x + player.size/2) - (npc.x + npc.size/2);
             let dy = (player.y + player.size/2) - (npc.y + npc.size/2);
             let distance = Math.sqrt(dx * dx + dy * dy);
@@ -185,7 +315,6 @@
         }
     }
 
-    // Sistema de Diálogo
     function interactNPC() {
         if (currentNPC) {
             npcNameEl.textContent = currentNPC.name;
@@ -194,38 +323,31 @@
         }
     }
 
-    // Dibujar elementos en pantalla
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Dibujar NPCs
         npcs.forEach(npc => {
             ctx.fillStyle = npc.color;
             ctx.fillRect(npc.x, npc.y, npc.size, npc.size);
             
-            // Etiqueta indicadora
             ctx.fillStyle = '#fff';
             ctx.font = '10px Arial';
             ctx.fillText(npc.name, npc.x - 10, npc.y - 5);
         });
 
-        // Dibujar Jugador (Abrahancito)
         ctx.fillStyle = player.color;
         ctx.fillRect(player.x, player.y, player.size, player.size);
         
-        // Gorrito/Insignia para identificarlo
         ctx.fillStyle = '#f1c40f';
         ctx.fillRect(player.x + 6, player.y + 2, 12, 6);
     }
 
-    // Bucle Principal del Juego
     function gameLoop() {
         updatePlayer();
         draw();
         requestAnimationFrame(gameLoop);
     }
 
-    // --- SISTEMA DE GUARDADO ---
     function saveGame() {
         const saveData = {
             playerX: player.x,
@@ -252,7 +374,6 @@
         alert('Progreso reiniciado.');
     }
 
-    // Cargar partida e Iniciar
     loadGame();
     gameLoop();
 </script>
