@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dofus 2.5D Style - Motor Estable</title>
+    <title>Dofus RPG - Motor Isométrico HD</title>
     <style>
-        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; }
-        html, body { width: 100vw; height: 100vh; overflow: hidden; background-color: #0d1117; color: white; }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+        html, body { width: 100vw; height: 100vh; overflow: hidden; background-color: #0b0f19; color: white; }
 
-        #game-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
-        #canvas-container { width: 100%; height: 100%; position: absolute; }
+        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        canvas { background: #111827; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
 
         /* HUD - Chat & Misión */
         #dofus-chat {
-            position: absolute; top: 12px; left: 12px; width: 280px; max-height: 150px;
-            background: rgba(15, 23, 42, 0.85); border: 2px solid #3b82f6; border-radius: 8px;
+            position: absolute; top: 12px; left: 12px; width: 280px; height: 140px;
+            background: rgba(15, 23, 42, 0.9); border: 2px solid #3b82f6; border-radius: 8px;
             padding: 8px; font-size: 11px; overflow-y: auto; pointer-events: auto; z-index: 20;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
         }
         .chat-msg { margin-bottom: 4px; color: #e2e8f0; }
         .chat-speaker { color: #f59e0b; font-weight: bold; }
@@ -25,52 +24,44 @@
             position: absolute; top: 12px; right: 12px;
             background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%);
             border: 2px solid #60a5fa; border-radius: 8px; padding: 8px 16px;
-            font-size: 12px; font-weight: bold; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            font-size: 12px; font-weight: bold; z-index: 20;
         }
 
-        /* Panel de Equipamiento e Inventario */
+        /* Inventory & Equipment */
         #inventory-window {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 380px; background: #1e293b; border: 3px solid #3b82f6; border-radius: 12px;
-            padding: 12px; display: none; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            width: 360px; background: #1e293b; border: 3px solid #3b82f6; border-radius: 12px;
+            padding: 14px; display: none; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.9);
         }
         .inv-title { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #475569; padding-bottom: 8px; margin-bottom: 12px; }
         .equipment-slots { display: flex; justify-content: space-around; background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 12px; }
-        .eq-slot { width: 50px; height: 50px; background: #1e293b; border: 2px dashed #475569; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; position: relative; }
-        .eq-slot.equipped { border: 2px solid #22c55e; background: rgba(34, 197, 94, 0.1); }
-        .inv-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-height: 160px; overflow-y: auto; }
-        .inv-cell { width: 52px; height: 52px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; position: relative; }
+        .eq-slot { width: 54px; height: 54px; background: #1e293b; border: 2px dashed #475569; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
+        .eq-slot.equipped { border: 2px solid #22c55e; background: rgba(34, 197, 94, 0.15); }
+        .inv-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-height: 150px; overflow-y: auto; }
+        .inv-cell { width: 52px; height: 52px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
         .inv-cell:hover { border-color: #f59e0b; }
 
-        /* Barra Inferior de Control */
+        /* Action Bar */
         #action-bar {
-            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 8px; background: rgba(15, 23, 42, 0.9); border: 2px solid #3b82f6;
-            border-radius: 10px; padding: 8px 16px; z-index: 20; align-items: center;
+            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 10px; background: rgba(15, 23, 42, 0.95); border: 2px solid #3b82f6;
+            border-radius: 10px; padding: 8px 16px; z-index: 20;
         }
-        .act-btn { width: 44px; height: 44px; background: #1e293b; border: 1px solid #475569; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
+        .act-btn { width: 48px; height: 48px; background: #1e293b; border: 1px solid #475569; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; }
         .act-btn:active { transform: scale(0.92); }
 
-        /* D-PAD táctil */
+        /* D-Pad */
         #dpad { position: absolute; left: 15px; bottom: 15px; width: 110px; height: 110px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); z-index: 25; gap: 2px; }
         .dp-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-
-        /* Diálogo Flotante NPC */
-        #npc-dialog-box {
-            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
-            width: 320px; background: #0f172a; border: 2px solid #f59e0b; border-radius: 8px;
-            padding: 12px; display: none; z-index: 40; text-align: center; font-size: 13px;
-        }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
     <div id="game-container">
-        <div id="canvas-container"></div>
+        <canvas id="gameCanvas" width="960" height="640"></canvas>
 
         <div id="dofus-chat">
-            <div class="chat-msg"><span class="chat-speaker">Sistema:</span> Motor Dofus 2.5D Cargado.</div>
+            <div class="chat-msg"><span class="chat-speaker">Sistema:</span> Motor Isométrico HD Listo.</div>
             <div id="dynamic-chat"></div>
         </div>
 
@@ -78,39 +69,31 @@
             <span id="quest-text">Misión: Habla con el Sabio Orestes</span>
         </div>
 
-        <!-- Diálogo NPC -->
-        <div id="npc-dialog-box">
-            <div style="color:#f59e0b; font-weight:bold; margin-bottom:4px;" id="npc-name">Sabio Orestes</div>
-            <div id="npc-text" style="margin-bottom:8px;">¡Hola Aventurero!</div>
-            <button onclick="closeNpcDialog()" style="padding:4px 12px; background:#2563eb; color:white; border:none; border-radius:4px; cursor:pointer;">Continuar</button>
-        </div>
-
-        <!-- Panel de Inventario y Equipamiento -->
+        <!-- Inventario -->
         <div id="inventory-window">
             <div class="inv-title">
                 <span style="color:#f59e0b; font-weight:bold;">🎒 Equipo y Objetos</span>
                 <span style="cursor:pointer; color:#ef4444; font-weight:bold;" onclick="toggleInventory()">✖</span>
             </div>
-
-            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">EQUIPAMIENTO ACTUAL:</div>
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">EQUIPAMIENTO:</div>
             <div class="equipment-slots">
                 <div class="eq-slot" id="eq-weapon" onclick="unequipSlot('weapon')" title="Arma">🗡️</div>
                 <div class="eq-slot" id="eq-shield" onclick="unequipSlot('shield')" title="Escudo">🛡️</div>
                 <div class="eq-slot" id="eq-boots" onclick="unequipSlot('boots')" title="Zapatos">👢</div>
                 <div class="eq-slot" id="eq-ring" onclick="unequipSlot('ring')" title="Anillo">💍</div>
             </div>
-
             <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">INVENTARIO:</div>
             <div class="inv-grid" id="inv-grid"></div>
         </div>
 
-        <!-- Barra Inferior -->
+        <!-- Acciones -->
         <div id="action-bar">
             <div class="act-btn" onclick="executeAttack()" style="background:#dc2626; border-color:#ef4444;">⚔️</div>
             <div class="act-btn" onclick="interactNPC()" style="background:#0284c7; border-color:#38bdf8;">💬</div>
             <div class="act-btn" onclick="toggleInventory()" style="background:#7c3aed; border-color:#a78bfa;">🎒</div>
         </div>
 
+        <!-- D-PAD Mobile -->
         <div id="dpad">
             <div></div><div class="dp-btn" id="btn-up">▲</div><div></div>
             <div class="dp-btn" id="btn-left">◀</div><div></div><div class="dp-btn" id="btn-right">▶</div>
@@ -119,199 +102,238 @@
     </div>
 
 <script>
-    // ESTADO DEL JUGADOR (GUARDADO AUTOMÁTICO EN LOCALSTORAGE)
-    let p = JSON.parse(localStorage.getItem('dofus_save')) || {
-        lvl: 1, xp: 0, hp: 100, maxHp: 100, wood: 0, gold: 0,
+    // --- CANVAS Y MOTOR ISOMÉTRICO 2D ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const MAP_SIZE = 14; // Grilla Isométrica 14x14
+    const TILE_WIDTH = 64;
+    const TILE_HEIGHT = 32;
+    const ORIGIN_X = canvas.width / 2;
+    const ORIGIN_Y = 120;
+
+    // --- ESTADO DEL JUGADOR CON PERSISTENCIA ---
+    let p = JSON.parse(localStorage.getItem('dofus_hd_save')) || {
+        gridX: 6, gridY: 6,
+        lvl: 1, xp: 0, hp: 100, maxHp: 100, wood: 0,
         baseAtk: 15, questState: 0,
         equipment: { weapon: null, shield: null, boots: null, ring: null },
         inventory: [
-            { id: 1, name: 'Hacha de Tala', icon: '🪓', type: 'weapon', bonus: 5 },
-            { id: 2, name: 'Botas de Cuero', icon: '👢', type: 'boots', bonus: 10 }
+            { id: 1, name: 'Hacha de Madera', icon: '🪓', type: 'weapon', bonus: 5 },
+            { id: 2, name: 'Botas de Cuero', icon: '👢', type: 'boots', bonus: 8 }
         ]
     };
 
     function saveProgress() {
-        localStorage.setItem('dofus_save', JSON.stringify(p));
+        localStorage.setItem('dofus_hd_save', JSON.stringify(p));
     }
 
-    // MAPA Y CÁMARA
-    const MAP_LIMIT = 28; // LÍMITE DEL MAPA PARA EVITAR SALIRSE
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87cf3a);
-
-    const aspect = window.innerWidth / window.innerHeight;
-    const d = 16;
-    const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
-    camera.position.set(20, 20, 20);
-    camera.lookAt(0, 0, 0);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
-    scene.add(ambientLight);
-
-    const dirLight = new THREE.DirectionalLight(0xfffaed, 0.5);
-    dirLight.position.set(20, 40, 10);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
-
-    // TEXTURA DE SUELO ILUSTRADA
-    function createGroundTexture() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 512; canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#65a30d'; ctx.fillRect(0, 0, 512, 512);
-
-        // Caminos de piedra
-        ctx.fillStyle = '#d97706';
-        for(let i=0; i<120; i++) {
-            ctx.beginPath();
-            ctx.ellipse(256 + Math.sin(i)*100, i*4.2, 14, 8, 0, 0, Math.PI*2);
-            ctx.fill();
-        }
-        // Flores y detalles
-        ctx.fillStyle = '#ffffff';
-        for(let i=0; i<80; i++) {
-            ctx.beginPath(); ctx.arc(Math.random()*512, Math.random()*512, 3, 0, Math.PI*2); ctx.fill();
-        }
-        const tex = new THREE.CanvasTexture(canvas);
-        tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(3, 3);
-        return tex;
+    // Transformación Isométrica exacta
+    function toIso(x, y) {
+        return {
+            isoX: ORIGIN_X + (x - y) * (TILE_WIDTH / 2),
+            isoY: ORIGIN_Y + (x + y) * (TILE_HEIGHT / 2)
+        };
     }
 
-    const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(60, 60),
-        new THREE.MeshStandardMaterial({ map: createGroundTexture() })
-    );
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    scene.add(floor);
+    // --- OBJETOS DEL MUNDO ---
+    const npc = { gridX: 3, gridY: 3, name: "Sabio Orestes" };
 
-    // DIBUJAR SPRITES ILUSTRADOS 2.5D
-    function createIllustratedSprite(type) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 128; canvas.height = 128;
-        const ctx = canvas.getContext('2d');
-
-        if(type === 'tree') {
-            // Tronco
-            ctx.fillStyle = '#451a03'; ctx.fillRect(56, 75, 16, 45);
-            // Copa orgànica
-            ctx.fillStyle = '#15803d'; ctx.beginPath(); ctx.arc(64, 50, 40, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(52, 40, 25, 0, Math.PI*2); ctx.fill();
-        } else if(type === 'jalato') {
-            // Jalató Dofus
-            ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.arc(64, 68, 35, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(48, 58, 5, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(80, 58, 5, 0, Math.PI*2); ctx.fill();
-            // Cuernos
-            ctx.fillStyle = '#eab308'; ctx.fillRect(25, 45, 12, 18); ctx.fillRect(91, 45, 12, 18);
-        } else if(type === 'player') {
-            ctx.fillStyle = '#ea580c'; ctx.beginPath(); ctx.arc(64, 45, 22, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#1e293b'; ctx.fillRect(48, 67, 32, 45);
-        } else if(type === 'npc') {
-            ctx.fillStyle = '#0284c7'; ctx.fillRect(48, 60, 32, 50);
-            ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(64, 40, 22, 0, Math.PI*2); ctx.fill();
-        }
-
-        const tex = new THREE.CanvasTexture(canvas);
-        const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-        return new THREE.Sprite(mat);
-    }
-
-    // ENTIDADES
-    const playerMesh = createIllustratedSprite('player');
-    playerMesh.scale.set(3.2, 3.2, 1);
-    playerMesh.position.set(0, 1.6, 0);
-    scene.add(playerMesh);
-
-    const npcSprite = createIllustratedSprite('npc');
-    npcSprite.scale.set(3.2, 3.2, 1);
-    npcSprite.position.set(5, 1.6, 5);
-    scene.add(npcSprite);
-
-    // ENEMIGOS CON RESPAWN AUTOMÁTICO
-    const enemies = [];
-    function spawnEnemy(x, z) {
-        const sprite = createIllustratedSprite('jalato');
-        sprite.scale.set(3, 3, 1);
-        sprite.position.set(x, 1.5, z);
-        scene.add(sprite);
-        enemies.push({ mesh: sprite, hp: 40, maxHp: 40, spawnX: x, spawnZ: z, alive: true });
-    }
-
-    spawnEnemy(-8, 8);
-    spawnEnemy(10, -6);
-    spawnEnemy(-12, -10);
-
-    // ÁRBOLES
-    const trees = [];
-    for(let i=0; i<25; i++) {
-        let rx = (Math.random() - 0.5) * 45;
-        let rz = (Math.random() - 0.5) * 45;
-        if(Math.abs(rx) > 6 || Math.abs(rz) > 6) {
-            const tree = createIllustratedSprite('tree');
-            tree.scale.set(4.5, 4.5, 1);
-            tree.position.set(rx, 2.25, rz);
-            scene.add(tree);
-            trees.push({ mesh: tree, hp: 3, x: rx, z: rz });
-        }
-    }
-
-    // SISTEMA DE COMBATE Y DROPS MULTI-SLOT
-    const droppedLoot = [];
-    const possibleLoot = [
-        { name: 'Espada de Cristal', icon: '🗡️', type: 'weapon', bonus: 20 },
-        { name: 'Escudo Real', icon: '🛡️', type: 'shield', bonus: 15 },
-        { name: 'Botas de Combate', icon: '👢', type: 'boots', bonus: 12 },
-        { name: 'Anillo de Jalató', icon: '💍', type: 'ring', bonus: 8 }
+    const enemies = [
+        { id: 1, gridX: 9, gridY: 4, name: "Jalató Real", hp: 40, maxHp: 40, alive: true },
+        { id: 2, gridX: 4, gridY: 10, name: "Jalató Silvestre", hp: 40, maxHp: 40, alive: true },
+        { id: 3, gridX: 11, gridY: 11, name: "Jalató Negro", hp: 50, maxHp: 50, alive: true }
     ];
 
+    const trees = [
+        { gridX: 2, gridY: 8, hp: 3 },
+        { gridX: 8, gridY: 2, hp: 3 },
+        { gridX: 10, gridY: 7, hp: 3 }
+    ];
+
+    const possibleLoot = [
+        { name: 'Espada de Cristal', icon: '🗡️', type: 'weapon', bonus: 20 },
+        { name: 'Escudo de Roble', icon: '🛡️', type: 'shield', bonus: 15 },
+        { name: 'Botas Acorazadas', icon: '👢', type: 'boots', bonus: 12 },
+        { name: 'Anillo Magia', icon: '💍', type: 'ring', bonus: 10 }
+    ];
+
+    // --- DIBUJO DE GRÁFICOS ILUSTRADOS EN CANVAS ---
+    function drawTile(x, y, color, strokeColor) {
+        const pt = toIso(x, y);
+        ctx.beginPath();
+        ctx.moveTo(pt.isoX, pt.isoY);
+        ctx.lineTo(pt.isoX + TILE_WIDTH / 2, pt.isoY + TILE_HEIGHT / 2);
+        ctx.lineTo(pt.isoX, pt.isoY + TILE_HEIGHT);
+        ctx.lineTo(pt.isoX - TILE_WIDTH / 2, pt.isoY + TILE_HEIGHT / 2);
+        ctx.closePath();
+
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = strokeColor || '#334155';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+
+    function drawShadow(x, y, radius) {
+        const pt = toIso(x, y);
+        ctx.beginPath();
+        ctx.ellipse(pt.isoX, pt.isoY + TILE_HEIGHT / 2, radius, radius / 2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.fill();
+    }
+
+    function drawTree(x, y) {
+        drawShadow(x, y, 22);
+        const pt = toIso(x, y);
+
+        // Tronco con corteza detallada
+        ctx.fillStyle = '#5c3a21';
+        ctx.fillRect(pt.isoX - 6, pt.isoY - 30, 12, 35);
+
+        // Copa en gradiente orgánico
+        const grad = ctx.createRadialGradient(pt.isoX, pt.isoY - 50, 5, pt.isoX, pt.isoY - 50, 30);
+        grad.addColorStop(0, '#4ade80');
+        grad.addColorStop(1, '#15803d');
+
+        ctx.beginPath();
+        ctx.arc(pt.isoX, pt.isoY - 50, 26, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#166534';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    function drawCharacter(x, y, label, bodyColor, hatIcon) {
+        drawShadow(x, y, 16);
+        const pt = toIso(x, y);
+
+        // Cuerpo
+        ctx.beginPath();
+        ctx.arc(pt.isoX, pt.isoY - 18, 14, 0, Math.PI * 2);
+        ctx.fillStyle = bodyColor;
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Icono / Sombrero
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(hatIcon, pt.isoX, pt.isoY - 36);
+
+        // Etiqueta de Nombre
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillText(label, pt.isoX, pt.isoY - 50);
+    }
+
+    function drawJalato(enemy) {
+        if (!enemy.alive) return;
+        drawShadow(enemy.gridX, enemy.gridY, 18);
+        const pt = toIso(enemy.gridX, enemy.gridY);
+
+        // Cuerpo Peludo Jalató
+        ctx.beginPath();
+        ctx.arc(pt.isoX, pt.isoY - 12, 16, 0, Math.PI * 2);
+        ctx.fillStyle = '#f1f5f9';
+        ctx.fill();
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.stroke();
+
+        // Ojos y Cuernos
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(pt.isoX - 6, pt.isoY - 16, 3, 3);
+        ctx.fillRect(pt.isoX + 3, pt.isoY - 16, 3, 3);
+
+        ctx.font = '12px sans-serif';
+        ctx.fillText('🐏', pt.isoX - 8, pt.isoY - 22);
+
+        // Barra de Vida
+        const hpPercent = enemy.hp / enemy.maxHp;
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(pt.isoX - 16, pt.isoY - 36, 32, 4);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(pt.isoX - 16, pt.isoY - 36, 32 * hpPercent, 4);
+    }
+
+    // --- BUCLE PRINCIPAL DE RENDERIZADO ---
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 1. DIBUJAR TERRENO ISOMÉTRICO Y BORDES DEL MAPA
+        for (let x = 0; x < MAP_SIZE; x++) {
+            for (let y = 0; y < MAP_SIZE; y++) {
+                const isBorder = x === 0 || y === 0 || x === MAP_SIZE - 1 || y === MAP_SIZE - 1;
+                const tileColor = isBorder ? '#334155' : ((x + y) % 2 === 0 ? '#4fa32d' : '#459225');
+                drawTile(x, y, tileColor, isBorder ? '#1e293b' : '#3d8220');
+            }
+        }
+
+        // 2. DIBUJAR OBJETOS Y ELEMENTOS
+        trees.forEach(t => drawTree(t.gridX, t.gridY));
+        drawCharacter(npc.gridX, npc.gridY, npc.name, '#0284c7', '🧙‍♂️');
+        enemies.forEach(e => drawJalato(e));
+        drawCharacter(p.gridX, p.gridY, "Héroe", '#ea580c', '🥷');
+
+        requestAnimationFrame(render);
+    }
+
+    // --- MOVIMIENTO CON LÍMITES STRICTOS DE MAPA ---
+    function movePlayer(dx, dy) {
+        const nextX = p.gridX + dx;
+        const nextY = p.gridY + dy;
+
+        // Borde infranqueable (Pared Invisible)
+        if (nextX >= 1 && nextX < MAP_SIZE - 1 && nextY >= 1 && nextY < MAP_SIZE - 1) {
+            p.gridX = nextX;
+            p.gridY = nextY;
+            saveProgress();
+        } else {
+            addChatMsg("Sistema", "¡Alcanzaste el límite del mapa!");
+        }
+    }
+
+    // --- SISTEMA DE COMBATE Y DROPS ---
     function executeAttack() {
-        let totalDamage = p.baseAtk;
-        Object.values(p.equipment).forEach(item => { if(item) totalDamage += item.bonus; });
+        let totalAtk = p.baseAtk;
+        Object.values(p.equipment).forEach(item => { if(item) totalAtk += item.bonus; });
 
+        let attacked = false;
         enemies.forEach(e => {
-            if(e.alive && playerMesh.position.distanceTo(e.mesh.position) < 3.2) {
-                e.hp -= totalDamage;
-                addChatMsg("Combate", `Atacaste con ${totalDamage} de daño.`);
-                if(e.hp <= 0) {
+            if (e.alive && Math.abs(e.gridX - p.gridX) <= 1 && Math.abs(e.gridY - p.gridY) <= 1) {
+                e.hp -= totalAtk;
+                attacked = true;
+                addChatMsg("Combate", `Atacaste a ${e.name} por ${totalAtk} de daño.`);
+
+                if (e.hp <= 0) {
                     e.alive = false;
-                    scene.remove(e.mesh);
-                    addChatMsg("Victoria", "¡Eliminaste un Jalató! (+30 XP)");
-                    p.xp += 30;
+                    addChatMsg("Victoria", `¡Eliminaste a ${e.name}! (+35 XP)`);
+                    p.xp += 35;
 
-                    // Tirar Drop
-                    const randomItem = possibleLoot[Math.floor(Math.random() * possibleLoot.length)];
-                    p.inventory.push(randomItem);
-                    addChatMsg("Botín", `Conseguiste: ${randomItem.name}`);
-
+                    const drop = possibleLoot[Math.floor(Math.random() * possibleLoot.length)];
+                    p.inventory.push(drop);
+                    addChatMsg("Botín", `Conseguiste: ${drop.name}`);
                     saveProgress();
-                    updateHUD();
 
-                    // RESPAWN EN 4 SEGUNDOS
+                    // RESPAWN AUTOMÁTICO EN 4 SEGUNDOS
                     setTimeout(() => {
                         e.hp = e.maxHp;
                         e.alive = true;
-                        scene.add(e.mesh);
-                        addChatMsg("Sistema", "Un Jalató ha reaparecido en el mapa.");
+                        addChatMsg("Sistema", `${e.name} reapareció en el mapa.`);
                     }, 4000);
                 }
             }
         });
 
-        // Tala de madera con hacha
-        if(p.equipment.weapon && p.equipment.weapon.icon === '🪓') {
-            trees.forEach((t, i) => {
-                if(playerMesh.position.distanceTo(t.mesh.position) < 3.0) {
+        // Tala de madera
+        if (!attacked && p.equipment.weapon && p.equipment.weapon.icon === '🪓') {
+            trees.forEach((t, idx) => {
+                if (Math.abs(t.gridX - p.gridX) <= 1 && Math.abs(t.gridY - p.gridY) <= 1) {
                     t.hp--;
-                    if(t.hp <= 0) {
-                        scene.remove(t.mesh);
-                        trees.splice(i, 1);
+                    if (t.hp <= 0) {
+                        trees.splice(idx, 1);
                         p.wood += 3;
                         addChatMsg("Recolección", "¡+3 de Madera recolectada!");
                         saveProgress();
@@ -321,7 +343,21 @@
         }
     }
 
-    // INVENTARIO Y EQUIPAMIENTO
+    // --- NPC Y MISIÓN ---
+    function interactNPC() {
+        if (Math.abs(npc.gridX - p.gridX) <= 1 && Math.abs(npc.gridY - p.gridY) <= 1) {
+            if (p.questState === 0) {
+                addChatMsg("Orestes", "¡Hola aventurero! Derrota a un Jalató para iniciar tu entrenamiento.");
+                p.questState = 1;
+            } else {
+                addChatMsg("Orestes", "Sigue derrotando criaturas y equipando tus objetos mejores en el inventario.");
+            }
+            saveProgress();
+            document.getElementById('quest-text').textContent = "Misión: Elimina los Jalatós";
+        }
+    }
+
+    // --- GESTIÓN DE INVENTARIO Y EQUIPO ---
     function toggleInventory() {
         const inv = document.getElementById('inventory-window');
         inv.style.display = inv.style.display === 'block' ? 'none' : 'block';
@@ -335,70 +371,48 @@
         p.inventory.forEach((item, idx) => {
             const cell = document.createElement('div');
             cell.className = 'inv-cell';
-            cell.innerHTML = `<div>${item.icon}</div><div style="font-size:8px; color:#f59e0b;">+${item.bonus}</div>`;
+            cell.innerHTML = `<div>${item.icon}</div><div style="font-size:9px; color:#f59e0b;">+${item.bonus}</div>`;
             cell.onclick = () => equipItem(idx);
             grid.appendChild(cell);
         });
 
-        // Renderizar slots de equipamiento
         ['weapon', 'shield', 'boots', 'ring'].forEach(slot => {
-            const slotEl = document.getElementById(`eq-${slot}`);
+            const el = document.getElementById(`eq-${slot}`);
             const eqItem = p.equipment[slot];
-            if(eqItem) {
-                slotEl.innerHTML = eqItem.icon;
-                slotEl.classList.add('equipped');
+            if (eqItem) {
+                el.innerHTML = eqItem.icon;
+                el.classList.add('equipped');
             } else {
-                const defaultIcons = { weapon:'🗡️', shield:'🛡️', boots:'👢', ring:'💍' };
-                slotEl.innerHTML = defaultIcons[slot];
-                slotEl.classList.remove('equipped');
+                const icons = { weapon: '🗡️', shield: '🛡️', boots: '👢', ring: '💍' };
+                el.innerHTML = icons[slot];
+                el.classList.remove('equipped');
             }
         });
     }
 
     function equipItem(index) {
         const item = p.inventory[index];
-        if(!item) return;
+        if (!item) return;
 
-        // Si ya hay uno equipado en ese slot, devolverlo al inventario
-        if(p.equipment[item.type]) {
+        if (p.equipment[item.type]) {
             p.inventory.push(p.equipment[item.type]);
         }
 
         p.equipment[item.type] = item;
         p.inventory.splice(index, 1);
-        addChatMsg("Equipo", `Te has equipado: ${item.name}`);
+        addChatMsg("Equipo", `Te equipaste: ${item.name}`);
         saveProgress();
         renderInventoryUI();
     }
 
     function unequipSlot(type) {
-        if(p.equipment[type]) {
+        if (p.equipment[type]) {
             p.inventory.push(p.equipment[type]);
-            addChatMsg("Equipo", `Te has quitado: ${p.equipment[type].name}`);
+            addChatMsg("Equipo", `Te quitaste: ${p.equipment[type].name}`);
             p.equipment[type] = null;
             saveProgress();
             renderInventoryUI();
         }
-    }
-
-    // DIÁLOGO Y NPC
-    function interactNPC() {
-        if(playerMesh.position.distanceTo(npcSprite.position) < 3.8) {
-            const dlg = document.getElementById('npc-dialog-box');
-            dlg.style.display = 'block';
-            if(p.questState === 0) {
-                document.getElementById('npc-text').textContent = "¡Saludos! Derrota a un Jalató para demostrar tu fuerza.";
-                p.questState = 1;
-            } else {
-                document.getElementById('npc-text').textContent = "Sigue entrenando y equipando tus objetos mejores.";
-            }
-            saveProgress();
-            updateHUD();
-        }
-    }
-
-    function closeNpcDialog() {
-        document.getElementById('npc-dialog-box').style.display = 'none';
     }
 
     function addChatMsg(speaker, text) {
@@ -410,47 +424,21 @@
         chat.scrollTop = chat.scrollHeight;
     }
 
-    function updateHUD() {
-        const qText = document.getElementById('quest-text');
-        qText.textContent = p.questState === 0 ? "Misión: Habla con el Sabio Orestes" : "Misión: Elimina los Jalatós";
+    // --- CONTROLES ---
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
+        if (e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1);
+        if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
+        if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
+    });
+
+    function bindBtn(id, dx, dy) {
+        document.getElementById(id).addEventListener('click', () => movePlayer(dx, dy));
     }
+    bindBtn('btn-up', 0, -1); bindBtn('btn-down', 0, 1);
+    bindBtn('btn-left', -1, 0); bindBtn('btn-right', 1, 0);
 
-    // CONTROLES Y MOVIMIENTO CON PAREDES DE MAPA
-    const keys = { up: false, down: false, left: false, right: false };
-    function bindTouch(id, k) {
-        const el = document.getElementById(id);
-        el.addEventListener('touchstart', (e)=>{ e.preventDefault(); keys[k] = true; });
-        el.addEventListener('touchend', (e)=>{ e.preventDefault(); keys[k] = false; });
-    }
-    bindTouch('btn-up','up'); bindTouch('btn-down','down');
-    bindTouch('btn-left','left'); bindTouch('btn-right','right');
-
-    const speed = 0.20;
-    function animate() {
-        requestAnimationFrame(animate);
-
-        // MOVIMIENTO CON BORDES DE MAPA
-        let nextX = playerMesh.position.x;
-        let nextZ = playerMesh.position.z;
-
-        if (keys.up) { nextZ -= speed; nextX -= speed; }
-        if (keys.down) { nextZ += speed; nextX += speed; }
-        if (keys.left) { nextX -= speed; nextZ += speed; }
-        if (keys.right) { nextX += speed; nextZ -= speed; }
-
-        // MANTENER DENTRO DEL LÍMITE INFRANQUEABLE
-        if(Math.abs(nextX) < MAP_LIMIT) playerMesh.position.x = nextX;
-        if(Math.abs(nextZ) < MAP_LIMIT) playerMesh.position.z = nextZ;
-
-        // CÁMARA SEGUIMIENTO
-        camera.position.x = playerMesh.position.x + 20;
-        camera.position.z = playerMesh.position.z + 20;
-        camera.lookAt(playerMesh.position.x, playerMesh.position.y, playerMesh.position.z);
-
-        renderer.render(scene, camera);
-    }
-
-    animate();
+    render();
 </script>
 </body>
 </html>
