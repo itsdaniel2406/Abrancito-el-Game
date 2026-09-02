@@ -3,440 +3,481 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Abrancito - El Game</title>
+    <title>Abrancito - El Game en Dofus</title>
     <style>
-        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-        html, body { width: 100vw; height: 100vh; overflow: hidden; background-color: #0b0f19; color: white; }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Trebuchet MS', sans-serif; }
+        html, body { width: 100vw; height: 100vh; overflow: hidden; background: #070a12; color: white; }
 
-        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
-        canvas { background: #111827; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
-
-        /* HUD - Chat & Misión */
-        #dofus-chat {
-            position: absolute; top: 12px; left: 12px; width: 280px; height: 140px;
-            background: rgba(15, 23, 42, 0.9); border: 2px solid #3b82f6; border-radius: 8px;
-            padding: 8px; font-size: 11px; overflow-y: auto; pointer-events: auto; z-index: 20;
+        /* FORZAR PANTALLA HORIZONTAL MÓVIL */
+        #game-wrapper {
+            position: absolute; width: 100vw; height: 100vh; top: 0; left: 0;
+            display: flex; justify-content: center; align-items: center; background: #0b0f19;
         }
-        .chat-msg { margin-bottom: 4px; color: #e2e8f0; }
-        .chat-speaker { color: #f59e0b; font-weight: bold; }
 
-        #quest-banner {
-            position: absolute; top: 12px; right: 12px;
+        @media screen and (orientation: portrait) {
+            #game-wrapper {
+                width: 100vh; height: 100vw;
+                transform: rotate(90deg); transform-origin: top left;
+                top: 0; left: 100vw;
+            }
+        }
+
+        canvas { background: #111827; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+
+        /* INTERFAZ HUD */
+        #hud-top {
+            position: absolute; top: 10px; left: 10px; right: 10px;
+            display: flex; justify-content: space-between; pointer-events: none; z-index: 20;
+        }
+
+        #chat-box {
+            width: 280px; height: 120px; background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #3b82f6; border-radius: 8px; padding: 8px;
+            font-size: 11px; overflow-y: auto; pointer-events: auto;
+        }
+        .msg { margin-bottom: 4px; }
+        .speaker { color: #f59e0b; font-weight: bold; }
+
+        #quest-box {
             background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%);
             border: 2px solid #60a5fa; border-radius: 8px; padding: 8px 16px;
-            font-size: 12px; font-weight: bold; z-index: 20;
+            font-size: 13px; font-weight: bold; text-shadow: 1px 1px 2px #000;
         }
 
-        /* Inventory & Equipment */
-        #inventory-window {
+        /* INVENTARIO CON DROPS Y ARMAS */
+        #inventory-modal {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 360px; background: #1e293b; border: 3px solid #3b82f6; border-radius: 12px;
-            padding: 14px; display: none; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            width: 440px; background: #0f172a; border: 3px solid #f59e0b; border-radius: 12px;
+            padding: 16px; display: none; z-index: 50; box-shadow: 0 10px 40px rgba(0,0,0,0.95);
         }
-        .inv-title { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #475569; padding-bottom: 8px; margin-bottom: 12px; }
-        .equipment-slots { display: flex; justify-content: space-around; background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 12px; }
-        .eq-slot { width: 54px; height: 54px; background: #1e293b; border: 2px dashed #475569; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-        .eq-slot.equipped { border: 2px solid #22c55e; background: rgba(34, 197, 94, 0.15); }
-        .inv-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-height: 150px; overflow-y: auto; }
-        .inv-cell { width: 52px; height: 52px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
+        .inv-title { display: flex; justify-content: space-between; border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 12px; }
+        .eq-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: #1e293b; padding: 10px; border-radius: 8px; margin-bottom: 12px; }
+        .eq-slot { width: 60px; height: 60px; background: #0f172a; border: 2px dashed #475569; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; }
+        .eq-slot.active { border: 2px solid #22c55e; background: rgba(34, 197, 94, 0.2); }
+        .inv-items { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-height: 160px; overflow-y: auto; }
+        .inv-cell { width: 60px; height: 60px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; }
         .inv-cell:hover { border-color: #f59e0b; }
+        .item-stat { font-size: 10px; color: #22c55e; font-weight: bold; }
 
-        /* Action Bar */
+        /* BARRA DE ACCIÓN */
         #action-bar {
-            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 10px; background: rgba(15, 23, 42, 0.95); border: 2px solid #3b82f6;
             border-radius: 10px; padding: 8px 16px; z-index: 20;
         }
-        .act-btn { width: 48px; height: 48px; background: #1e293b; border: 1px solid #475569; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; }
-        .act-btn:active { transform: scale(0.92); }
+        .btn-act { width: 48px; height: 48px; background: #1e293b; border: 1px solid #475569; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; }
+        .btn-act:active { transform: scale(0.92); }
 
-        /* D-Pad */
-        #dpad { position: absolute; left: 15px; bottom: 15px; width: 110px; height: 110px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); z-index: 25; gap: 2px; }
-        .dp-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        /* CONTROLES MÓVILES D-PAD */
+        #dpad { position: absolute; left: 20px; bottom: 20px; width: 110px; height: 110px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); z-index: 25; gap: 2px; }
+        .dp-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: white; }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <canvas id="gameCanvas" width="960" height="640"></canvas>
+    <div id="game-wrapper">
+        <canvas id="canvas" width="960" height="540"></canvas>
 
-        <div id="dofus-chat">
-            <div class="chat-msg"><span class="chat-speaker">Sistema:</span> Motor Isométrico HD Listo.</div>
-            <div id="dynamic-chat"></div>
-        </div>
-
-        <div id="quest-banner">
-            <span id="quest-text">Misión: Habla con el Sabio Orestes</span>
+        <div id="hud-top">
+            <div id="chat-box">
+                <div class="msg"><span class="speaker">Sistema:</span> Cargado "Abrancito - El Game en Dofus".</div>
+                <div id="chat-content"></div>
+            </div>
+            <div id="quest-box">
+                <span id="quest-text">Misión: Habla con el Sabio Orestes</span>
+            </div>
         </div>
 
         <!-- Inventario -->
-        <div id="inventory-window">
+        <div id="inventory-modal">
             <div class="inv-title">
-                <span style="color:#f59e0b; font-weight:bold;">🎒 Equipo y Objetos</span>
+                <span style="color:#f59e0b; font-weight:bold;">🎒 Inventario de Abrancito</span>
                 <span style="cursor:pointer; color:#ef4444; font-weight:bold;" onclick="toggleInventory()">✖</span>
             </div>
-            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">EQUIPAMIENTO:</div>
-            <div class="equipment-slots">
-                <div class="eq-slot" id="eq-weapon" onclick="unequipSlot('weapon')" title="Arma">🗡️</div>
-                <div class="eq-slot" id="eq-shield" onclick="unequipSlot('shield')" title="Escudo">🛡️</div>
-                <div class="eq-slot" id="eq-boots" onclick="unequipSlot('boots')" title="Zapatos">👢</div>
-                <div class="eq-slot" id="eq-ring" onclick="unequipSlot('ring')" title="Anillo">💍</div>
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">EQUIPAMIENTO ACTIVO:</div>
+            <div class="eq-grid">
+                <div class="eq-slot" id="eq-weapon" onclick="unequip('weapon')">🗡️<span style="font-size:9px; color:#aaa;">Arma</span></div>
+                <div class="eq-slot" id="eq-shield" onclick="unequip('shield')">🛡️<span style="font-size:9px; color:#aaa;">Escudo</span></div>
+                <div class="eq-slot" id="eq-armor" onclick="unequip('armor')">🛡️<span style="font-size:9px; color:#aaa;">Armadura</span></div>
+                <div class="eq-slot" id="eq-ring" onclick="unequip('ring')">💍<span style="font-size:9px; color:#aaa;">Anillo</span></div>
             </div>
-            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">INVENTARIO:</div>
-            <div class="inv-grid" id="inv-grid"></div>
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">DROPS Y OBJETOS OBTENIDOS:</div>
+            <div class="inv-items" id="inv-grid"></div>
         </div>
 
-        <!-- Acciones -->
+        <!-- Barra de Acciones -->
         <div id="action-bar">
-            <div class="act-btn" onclick="executeAttack()" style="background:#dc2626; border-color:#ef4444;">⚔️</div>
-            <div class="act-btn" onclick="interactNPC()" style="background:#0284c7; border-color:#38bdf8;">💬</div>
-            <div class="act-btn" onclick="toggleInventory()" style="background:#7c3aed; border-color:#a78bfa;">🎒</div>
+            <div class="btn-act" onclick="attack()" style="background:#dc2626;" title="Atacar">⚔️</div>
+            <div class="btn-act" onclick="talkNPC()" style="background:#0284c7;" title="Hablar">💬</div>
+            <div class="btn-act" onclick="toggleInventory()" style="background:#7c3aed;" title="Inventario">🎒</div>
         </div>
 
-        <!-- D-PAD Mobile -->
+        <!-- D-Pad -->
         <div id="dpad">
-            <div></div><div class="dp-btn" id="btn-up">▲</div><div></div>
-            <div class="dp-btn" id="btn-left">◀</div><div></div><div class="dp-btn" id="btn-right">▶</div>
-            <div></div><div class="dp-btn" id="btn-down">▼</div><div></div>
+            <div></div><div class="dp-btn" id="btn-u">▲</div><div></div>
+            <div class="dp-btn" id="btn-l">◀</div><div></div><div class="dp-btn" id="btn-r">▶</div>
+            <div></div><div class="dp-btn" id="btn-d">▼</div><div></div>
         </div>
     </div>
 
 <script>
-    // --- CANVAS Y MOTOR ISOMÉTRICO 2D ---
-    const canvas = document.getElementById('gameCanvas');
+    const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    const MAP_SIZE = 14; // Grilla Isométrica 14x14
-    const TILE_WIDTH = 64;
-    const TILE_HEIGHT = 32;
+    const MAP_SIZE = 12;
+    const TILE_W = 72;
+    const TILE_H = 36;
     const ORIGIN_X = canvas.width / 2;
-    const ORIGIN_Y = 120;
+    const ORIGIN_Y = 90;
 
-    // --- ESTADO DEL JUGADOR CON PERSISTENCIA ---
-    let p = JSON.parse(localStorage.getItem('dofus_hd_save')) || {
-        gridX: 6, gridY: 6,
-        lvl: 1, xp: 0, hp: 100, maxHp: 100, wood: 0,
+    // --- ESTADO DEL JUGADOR (PRESERVANDO MECÁNICAS) ---
+    let p = JSON.parse(localStorage.getItem('abrancito_save')) || {
+        x: 5, y: 5,
+        lvl: 1, xp: 0, hp: 100, maxHp: 100,
         baseAtk: 15, questState: 0,
-        equipment: { weapon: null, shield: null, boots: null, ring: null },
+        equipment: { weapon: null, shield: null, armor: null, ring: null },
         inventory: [
-            { id: 1, name: 'Hacha de Madera', icon: '🪓', type: 'weapon', bonus: 5 },
-            { id: 2, name: 'Botas de Cuero', icon: '👢', type: 'boots', bonus: 8 }
+            { id: 1, name: 'Magical Sword', icon: '🗡️', type: 'weapon', atk: 25, imgType: 'magical_sword' },
+            { id: 2, name: 'Glow Axe', icon: '🪓', type: 'weapon', atk: 18, imgType: 'glow_axe' }
         ]
     };
 
-    function saveProgress() {
-        localStorage.setItem('dofus_hd_save', JSON.stringify(p));
+    function save() {
+        localStorage.setItem('abrancito_save', JSON.stringify(p));
     }
 
-    // Transformación Isométrica exacta
     function toIso(x, y) {
         return {
-            isoX: ORIGIN_X + (x - y) * (TILE_WIDTH / 2),
-            isoY: ORIGIN_Y + (x + y) * (TILE_HEIGHT / 2)
+            isoX: ORIGIN_X + (x - y) * (TILE_W / 2),
+            isoY: ORIGIN_Y + (x + y) * (TILE_H / 2)
         };
     }
 
-    // --- OBJETOS DEL MUNDO ---
-    const npc = { gridX: 3, gridY: 3, name: "Sabio Orestes" };
+    // ENTIDADES
+    const npc = { x: 2, y: 2, name: "Sabio Orestes" };
 
     const enemies = [
-        { id: 1, gridX: 9, gridY: 4, name: "Jalató Real", hp: 40, maxHp: 40, alive: true },
-        { id: 2, gridX: 4, gridY: 10, name: "Jalató Silvestre", hp: 40, maxHp: 40, alive: true },
-        { id: 3, gridX: 11, gridY: 11, name: "Jalató Negro", hp: 50, maxHp: 50, alive: true }
+        { id: 1, x: 8, y: 3, name: "Orco con Maza", hp: 60, maxHp: 60, type: 'orc', alive: true, atk: 10 },
+        { id: 2, x: 4, y: 8, name: "Caballero Negro", hp: 90, maxHp: 90, type: 'knight', alive: true, atk: 15 },
+        { id: 3, x: 9, y: 9, name: "Demonio Cornudo", hp: 120, maxHp: 120, type: 'demon', alive: true, atk: 20 }
     ];
 
     const trees = [
-        { gridX: 2, gridY: 8, hp: 3 },
-        { gridX: 8, gridY: 2, hp: 3 },
-        { gridX: 10, gridY: 7, hp: 3 }
+        { x: 1, y: 5, type: 'oak' }, { x: 6, y: 1, type: 'pine' },
+        { x: 8, y: 4, type: 'autumn_pine' }, { x: 10, y: 7, type: 'birch' }
     ];
 
-    const possibleLoot = [
-        { name: 'Espada de Cristal', icon: '🗡️', type: 'weapon', bonus: 20 },
-        { name: 'Escudo de Roble', icon: '🛡️', type: 'shield', bonus: 15 },
-        { name: 'Botas Acorazadas', icon: '👢', type: 'boots', bonus: 12 },
-        { name: 'Anillo Magia', icon: '💍', type: 'ring', bonus: 10 }
+    // DROPS EXACTOS DE TU FOTO DE ARMAS
+    const weaponDrops = [
+        { name: 'Magical Sword', icon: '🗡️', type: 'weapon', atk: 30, imgType: 'magical_sword' },
+        { name: 'Aura Staff', icon: '🪄', type: 'weapon', atk: 28, imgType: 'aura_staff' },
+        { name: 'Glow Axe', icon: '🪓', type: 'weapon', atk: 22, imgType: 'glow_axe' },
+        { name: 'Chainblade', icon: '⚔️', type: 'weapon', atk: 35, imgType: 'chainblade' },
+        { name: 'Clockwork Pistol', icon: '🔫', type: 'weapon', atk: 20, imgType: 'pistol' }
     ];
 
-    // --- DIBUJO DE GRÁFICOS ILUSTRADOS EN CANVAS ---
-    function drawTile(x, y, color, strokeColor) {
+    // --- DIBUJO DE SPRITES DETALLADOS BASADOS EN TUS FOTOS ---
+
+    // DIBUJAR PISO ISOMÉTRICO
+    function drawTile(x, y, color, stroke) {
         const pt = toIso(x, y);
         ctx.beginPath();
         ctx.moveTo(pt.isoX, pt.isoY);
-        ctx.lineTo(pt.isoX + TILE_WIDTH / 2, pt.isoY + TILE_HEIGHT / 2);
-        ctx.lineTo(pt.isoX, pt.isoY + TILE_HEIGHT);
-        ctx.lineTo(pt.isoX - TILE_WIDTH / 2, pt.isoY + TILE_HEIGHT / 2);
+        ctx.lineTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2);
+        ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
+        ctx.lineTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2);
         ctx.closePath();
-
         ctx.fillStyle = color;
         ctx.fill();
-        ctx.strokeStyle = strokeColor || '#334155';
+        ctx.strokeStyle = stroke || '#2d5a1e';
         ctx.lineWidth = 1;
         ctx.stroke();
     }
 
-    function drawShadow(x, y, radius) {
+    function drawShadow(x, y, rx, ry) {
         const pt = toIso(x, y);
         ctx.beginPath();
-        ctx.ellipse(pt.isoX, pt.isoY + TILE_HEIGHT / 2, radius, radius / 2, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.ellipse(pt.isoX, pt.isoY + TILE_H / 2, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.fill();
     }
 
-    function drawTree(x, y) {
-        drawShadow(x, y, 22);
-        const pt = toIso(x, y);
+    // DIBUJAR ÁRBOLES EXACTOS (OAK, PINE, AUTUMN PINE, BIRCH) DE TU FOTO 3
+    function drawTree(tree) {
+        drawShadow(tree.x, tree.y, 20, 10);
+        const pt = toIso(tree.x, tree.y);
+        const px = pt.isoX;
+        const py = pt.isoY + 10;
 
-        // Tronco con corteza detallada
-        ctx.fillStyle = '#5c3a21';
-        ctx.fillRect(pt.isoX - 6, pt.isoY - 30, 12, 35);
-
-        // Copa en gradiente orgánico
-        const grad = ctx.createRadialGradient(pt.isoX, pt.isoY - 50, 5, pt.isoX, pt.isoY - 50, 30);
-        grad.addColorStop(0, '#4ade80');
-        grad.addColorStop(1, '#15803d');
-
-        ctx.beginPath();
-        ctx.arc(pt.isoX, pt.isoY - 50, 26, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-        ctx.strokeStyle = '#166534';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        if (tree.type === 'oak') { // Roble de copa verde curva
+            ctx.fillStyle = '#5c3a21';
+            ctx.fillRect(px - 5, py - 35, 10, 35);
+            ctx.fillStyle = '#22c55e';
+            ctx.beginPath(); ctx.arc(px, py - 50, 24, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#15803d';
+            ctx.beginPath(); ctx.arc(px - 8, py - 45, 16, 0, Math.PI * 2); ctx.fill();
+        } else if (tree.type === 'pine') { // Pino verde en punta
+            ctx.fillStyle = '#4a2c11';
+            ctx.fillRect(px - 4, py - 25, 8, 25);
+            ctx.fillStyle = '#166534';
+            ctx.beginPath();
+            ctx.moveTo(px, py - 70); ctx.lineTo(px + 22, py - 25); ctx.lineTo(px - 22, py - 25);
+            ctx.closePath(); ctx.fill();
+        } else if (tree.type === 'autumn_pine') { // Pino de Otoño Naranja/Amarillo
+            ctx.fillStyle = '#4a2c11';
+            ctx.fillRect(px - 4, py - 25, 8, 25);
+            ctx.fillStyle = '#f97316';
+            ctx.beginPath();
+            ctx.moveTo(px, py - 75); ctx.lineTo(px + 24, py - 25); ctx.lineTo(px - 24, py - 25);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#eab308';
+            ctx.beginPath();
+            ctx.moveTo(px, py - 75); ctx.lineTo(px + 14, py - 45); ctx.lineTo(px - 14, py - 45);
+            ctx.closePath(); ctx.fill();
+        } else if (tree.type === 'birch') { // Abedul de tronco blanco
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(px - 3, py - 35, 6, 35);
+            ctx.fillStyle = '#a3e635';
+            ctx.beginPath(); ctx.arc(px, py - 48, 18, 0, Math.PI * 2); ctx.fill();
+        }
     }
 
-    function drawCharacter(x, y, label, bodyColor, hatIcon) {
-        drawShadow(x, y, 16);
+    // DIBUJAR HÉROE DE TU FOTO 1 (GUERRERO CON ARMADURA VERDE Y ESPADA RUNICA EN ESPALDA)
+    function drawHero(x, y) {
+        drawShadow(x, y, 16, 8);
         const pt = toIso(x, y);
+        const px = pt.isoX;
+        const py = pt.isoY;
 
-        // Cuerpo
-        ctx.beginPath();
-        ctx.arc(pt.isoX, pt.isoY - 18, 14, 0, Math.PI * 2);
-        ctx.fillStyle = bodyColor;
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
+        // Espada Gigante en Espalda con Runas Azules
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(px - 12, py - 45); ctx.lineTo(px + 10, py - 10); ctx.stroke();
+        ctx.strokeStyle = '#38bdf8'; // Glow Runas
         ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(px - 8, py - 38); ctx.lineTo(px + 4, py - 16); ctx.stroke();
 
-        // Icono / Sombrero
-        ctx.font = '16px sans-serif';
+        // Cuerpo / Armadura Verde y Marrón
+        ctx.fillStyle = '#15803d'; // Verde
+        ctx.fillRect(px - 8, py - 24, 16, 16);
+        ctx.fillStyle = '#78350f'; // Cinturón Marrón
+        ctx.fillRect(px - 9, py - 14, 18, 4);
+
+        // Hombreras de Metal
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(px - 12, py - 25, 5, 6);
+        ctx.fillRect(px + 7, py - 25, 5, 6);
+
+        // Cabeza y Pelo Marrón
+        ctx.fillStyle = '#ffdbac';
+        ctx.beginPath(); ctx.arc(px, py - 30, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#78350f'; // Pelo pico
+        ctx.beginPath(); ctx.arc(px, py - 34, 7, Math.PI, Math.PI * 2); ctx.fill();
+
+        // Etiqueta
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillStyle = '#38bdf8';
         ctx.textAlign = 'center';
-        ctx.fillText(hatIcon, pt.isoX, pt.isoY - 36);
-
-        // Etiqueta de Nombre
-        ctx.font = 'bold 11px sans-serif';
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillText(label, pt.isoX, pt.isoY - 50);
+        ctx.fillText('Abrancito (Héroe)', px, py - 48);
     }
 
-    function drawJalato(enemy) {
-        if (!enemy.alive) return;
-        drawShadow(enemy.gridX, enemy.gridY, 18);
-        const pt = toIso(enemy.gridX, enemy.gridY);
+    // DIBUJAR VILLANOS DE TU FOTO 2 (ORCO CON MAZA, CABALLERO NEGRO Y DEMONIO CORNUDO)
+    function drawEnemy(e) {
+        if (!e.alive) return;
+        drawShadow(e.x, e.y, 18, 9);
+        const pt = toIso(e.x, e.y);
+        const px = pt.isoX;
+        const py = pt.isoY;
 
-        // Cuerpo Peludo Jalató
-        ctx.beginPath();
-        ctx.arc(pt.isoX, pt.isoY - 12, 16, 0, Math.PI * 2);
-        ctx.fillStyle = '#f1f5f9';
-        ctx.fill();
-        ctx.strokeStyle = '#cbd5e1';
-        ctx.stroke();
-
-        // Ojos y Cuernos
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(pt.isoX - 6, pt.isoY - 16, 3, 3);
-        ctx.fillRect(pt.isoX + 3, pt.isoY - 16, 3, 3);
-
-        ctx.font = '12px sans-serif';
-        ctx.fillText('🐏', pt.isoX - 8, pt.isoY - 22);
+        if (e.type === 'orc') { // Orco Verde con Maza de Picos
+            ctx.fillStyle = '#166534'; // Piel Verde Oscura
+            ctx.fillRect(px - 10, py - 26, 20, 18);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(px - 8, py - 34, 16, 10); // Cabeza
+            // Maza
+            ctx.fillStyle = '#334155';
+            ctx.beginPath(); ctx.arc(px - 14, py - 15, 8, 0, Math.PI * 2); ctx.fill();
+        } else if (e.type === 'knight') { // Caballero Oscuro Rojo/Negro con Escudo Calavera
+            ctx.fillStyle = '#0f172a'; // Armadura Negra
+            ctx.fillRect(px - 9, py - 28, 18, 20);
+            ctx.fillStyle = '#dc2626'; // Detalle Rojo
+            ctx.fillRect(px - 3, py - 28, 6, 20);
+            // Casco con Cuernos
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(px - 7, py - 38, 14, 10);
+            ctx.fillStyle = '#ef4444'; // Ojos Rojos Brillantes
+            ctx.fillRect(px - 4, py - 34, 3, 2); ctx.fillRect(px + 1, py - 34, 3, 2);
+        } else if (e.type === 'demon') { // Demonio Azul Cornudo con Báculo
+            ctx.fillStyle = '#1e1b4b'; // Azul Oscuro
+            ctx.fillRect(px - 9, py - 28, 18, 20);
+            // Cuernos Grandes
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(px - 6, py - 36); ctx.lineTo(px - 14, py - 46); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(px + 6, py - 36); ctx.lineTo(px + 14, py - 46); ctx.stroke();
+            // Báculo Morado
+            ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(px + 12, py - 42); ctx.lineTo(px + 12, py); ctx.stroke();
+        }
 
         // Barra de Vida
-        const hpPercent = enemy.hp / enemy.maxHp;
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(pt.isoX - 16, pt.isoY - 36, 32, 4);
-        ctx.fillStyle = '#22c55e';
-        ctx.fillRect(pt.isoX - 16, pt.isoY - 36, 32 * hpPercent, 4);
+        const hpPct = e.hp / e.maxHp;
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(px - 16, px - 16, py - 48, 32, 4);
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(px - 16, py - 44, 32, 4);
+        ctx.fillStyle = '#22c55e'; ctx.fillRect(px - 16, py - 44, 32 * hpPct, 4);
+
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.fillText(e.name, px, py - 50);
     }
 
-    // --- BUCLE PRINCIPAL DE RENDERIZADO ---
+    function drawNPC() {
+        drawShadow(npc.x, npc.y, 14, 7);
+        const pt = toIso(npc.x, npc.y);
+        ctx.fillStyle = '#0284c7'; ctx.fillRect(pt.isoX - 7, pt.isoY - 22, 14, 16);
+        ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(pt.isoX, pt.isoY - 26, 6, 0, Math.PI*2); ctx.fill();
+        ctx.font = '14px sans-serif'; ctx.fillText('🧙‍♂️', pt.isoX - 7, pt.isoY - 30);
+        ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = '#f59e0b'; ctx.textAlign = 'center';
+        ctx.fillText(npc.name, pt.isoX, pt.isoY - 42);
+    }
+
+    // --- RENDER LOOP ---
     function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. DIBUJAR TERRENO ISOMÉTRICO Y BORDES DEL MAPA
+        // Terreno Isométrico Dofus
         for (let x = 0; x < MAP_SIZE; x++) {
             for (let y = 0; y < MAP_SIZE; y++) {
                 const isBorder = x === 0 || y === 0 || x === MAP_SIZE - 1 || y === MAP_SIZE - 1;
-                const tileColor = isBorder ? '#334155' : ((x + y) % 2 === 0 ? '#4fa32d' : '#459225');
-                drawTile(x, y, tileColor, isBorder ? '#1e293b' : '#3d8220');
+                const tileColor = isBorder ? '#1e293b' : ((x + y) % 2 === 0 ? '#38761d' : '#2e6318');
+                drawTile(x, y, tileColor, isBorder ? '#0f172a' : '#234e12');
             }
         }
 
-        // 2. DIBUJAR OBJETOS Y ELEMENTOS
-        trees.forEach(t => drawTree(t.gridX, t.gridY));
-        drawCharacter(npc.gridX, npc.gridY, npc.name, '#0284c7', '🧙‍♂️');
-        enemies.forEach(e => drawJalato(e));
-        drawCharacter(p.gridX, p.gridY, "Héroe", '#ea580c', '🥷');
+        trees.forEach(t => drawTree(t));
+        drawNPC();
+        enemies.forEach(e => drawEnemy(e));
+        drawHero(p.x, p.y);
 
         requestAnimationFrame(render);
     }
 
-    // --- MOVIMIENTO CON LÍMITES STRICTOS DE MAPA ---
-    function movePlayer(dx, dy) {
-        const nextX = p.gridX + dx;
-        const nextY = p.gridY + dy;
-
-        // Borde infranqueable (Pared Invisible)
-        if (nextX >= 1 && nextX < MAP_SIZE - 1 && nextY >= 1 && nextY < MAP_SIZE - 1) {
-            p.gridX = nextX;
-            p.gridY = nextY;
-            saveProgress();
+    // --- CONTROLES Y MECÁNICAS DE JUEGO ---
+    function move(dx, dy) {
+        const nx = p.x + dx;
+        const ny = p.y + dy;
+        if (nx >= 1 && nx < MAP_SIZE - 1 && ny >= 1 && ny < MAP_SIZE - 1) {
+            p.x = nx; p.y = ny;
+            save();
         } else {
-            addChatMsg("Sistema", "¡Alcanzaste el límite del mapa!");
+            addMsg("Sistema", "Límite del mapa alcanzado.");
         }
     }
 
-    // --- SISTEMA DE COMBATE Y DROPS ---
-    function executeAttack() {
+    function attack() {
         let totalAtk = p.baseAtk;
-        Object.values(p.equipment).forEach(item => { if(item) totalAtk += item.bonus; });
+        if (p.equipment.weapon) totalAtk += p.equipment.weapon.atk;
 
-        let attacked = false;
         enemies.forEach(e => {
-            if (e.alive && Math.abs(e.gridX - p.gridX) <= 1 && Math.abs(e.gridY - p.gridY) <= 1) {
+            if (e.alive && Math.abs(e.x - p.x) <= 1 && Math.abs(e.y - p.y) <= 1) {
                 e.hp -= totalAtk;
-                attacked = true;
-                addChatMsg("Combate", `Atacaste a ${e.name} por ${totalAtk} de daño.`);
+                addMsg("Combate", `Atacaste a ${e.name} por ${totalAtk} de daño.`);
 
                 if (e.hp <= 0) {
                     e.alive = false;
-                    addChatMsg("Victoria", `¡Eliminaste a ${e.name}! (+35 XP)`);
-                    p.xp += 35;
+                    addMsg("Victoria", `¡Eliminaste a ${e.name}!`);
 
-                    const drop = possibleLoot[Math.floor(Math.random() * possibleLoot.length)];
+                    // Dropear armas reales de tu foto
+                    const drop = weaponDrops[Math.floor(Math.random() * weaponDrops.length)];
                     p.inventory.push(drop);
-                    addChatMsg("Botín", `Conseguiste: ${drop.name}`);
-                    saveProgress();
+                    addMsg("Drop", `¡Obtuviste arma: ${drop.name} (+${drop.atk} Atk)!`);
+                    save();
 
-                    // RESPAWN AUTOMÁTICO EN 4 SEGUNDOS
+                    // Respawn
                     setTimeout(() => {
-                        e.hp = e.maxHp;
-                        e.alive = true;
-                        addChatMsg("Sistema", `${e.name} reapareció en el mapa.`);
-                    }, 4000);
+                        e.hp = e.maxHp; e.alive = true;
+                        addMsg("Sistema", `${e.name} reapareció.`);
+                    }, 5000);
                 }
             }
         });
+    }
 
-        // Tala de madera
-        if (!attacked && p.equipment.weapon && p.equipment.weapon.icon === '🪓') {
-            trees.forEach((t, idx) => {
-                if (Math.abs(t.gridX - p.gridX) <= 1 && Math.abs(t.gridY - p.gridY) <= 1) {
-                    t.hp--;
-                    if (t.hp <= 0) {
-                        trees.splice(idx, 1);
-                        p.wood += 3;
-                        addChatMsg("Recolección", "¡+3 de Madera recolectada!");
-                        saveProgress();
-                    }
-                }
-            });
+    function talkNPC() {
+        if (Math.abs(npc.x - p.x) <= 1 && Math.abs(npc.y - p.y) <= 1) {
+            addMsg("Sabio Orestes", "¡Hola Abrancito! Derrota al Caballero Negro y al Demonio para liberar la zona.");
+            document.getElementById('quest-text').textContent = "Misión: Derrota a los Villanos";
         }
     }
 
-    // --- NPC Y MISIÓN ---
-    function interactNPC() {
-        if (Math.abs(npc.gridX - p.gridX) <= 1 && Math.abs(npc.gridY - p.gridY) <= 1) {
-            if (p.questState === 0) {
-                addChatMsg("Orestes", "¡Hola aventurero! Derrota a un Jalató para iniciar tu entrenamiento.");
-                p.questState = 1;
-            } else {
-                addChatMsg("Orestes", "Sigue derrotando criaturas y equipando tus objetos mejores en el inventario.");
-            }
-            saveProgress();
-            document.getElementById('quest-text').textContent = "Misión: Elimina los Jalatós";
-        }
-    }
-
-    // --- GESTIÓN DE INVENTARIO Y EQUIPO ---
     function toggleInventory() {
-        const inv = document.getElementById('inventory-window');
+        const inv = document.getElementById('inventory-modal');
         inv.style.display = inv.style.display === 'block' ? 'none' : 'block';
-        renderInventoryUI();
+        renderInvUI();
     }
 
-    function renderInventoryUI() {
+    function renderInvUI() {
         const grid = document.getElementById('inv-grid');
         grid.innerHTML = '';
 
         p.inventory.forEach((item, idx) => {
             const cell = document.createElement('div');
             cell.className = 'inv-cell';
-            cell.innerHTML = `<div>${item.icon}</div><div style="font-size:9px; color:#f59e0b;">+${item.bonus}</div>`;
-            cell.onclick = () => equipItem(idx);
+            cell.innerHTML = `<div>${item.icon}</div><div class="item-stat">+${item.atk}</div>`;
+            cell.onclick = () => equip(idx);
             grid.appendChild(cell);
         });
 
-        ['weapon', 'shield', 'boots', 'ring'].forEach(slot => {
-            const el = document.getElementById(`eq-${slot}`);
-            const eqItem = p.equipment[slot];
-            if (eqItem) {
-                el.innerHTML = eqItem.icon;
-                el.classList.add('equipped');
-            } else {
-                const icons = { weapon: '🗡️', shield: '🛡️', boots: '👢', ring: '💍' };
-                el.innerHTML = icons[slot];
-                el.classList.remove('equipped');
-            }
-        });
-    }
-
-    function equipItem(index) {
-        const item = p.inventory[index];
-        if (!item) return;
-
-        if (p.equipment[item.type]) {
-            p.inventory.push(p.equipment[item.type]);
+        const eqW = document.getElementById('eq-weapon');
+        if (p.equipment.weapon) {
+            eqW.innerHTML = `${p.equipment.weapon.icon}<span style="font-size:9px; color:#22c55e;">+${p.equipment.weapon.atk}</span>`;
+            eqW.classList.add('active');
+        } else {
+            eqW.innerHTML = `🗡️<span style="font-size:9px; color:#aaa;">Arma</span>`;
+            eqW.classList.remove('active');
         }
-
-        p.equipment[item.type] = item;
-        p.inventory.splice(index, 1);
-        addChatMsg("Equipo", `Te equipaste: ${item.name}`);
-        saveProgress();
-        renderInventoryUI();
     }
 
-    function unequipSlot(type) {
+    function equip(idx) {
+        const item = p.inventory[idx];
+        if (p.equipment[item.type]) p.inventory.push(p.equipment[item.type]);
+        p.equipment[item.type] = item;
+        p.inventory.splice(idx, 1);
+        addMsg("Inventario", `Equipado: ${item.name}`);
+        save();
+        renderInvUI();
+    }
+
+    function unequip(type) {
         if (p.equipment[type]) {
             p.inventory.push(p.equipment[type]);
-            addChatMsg("Equipo", `Te quitaste: ${p.equipment[type].name}`);
             p.equipment[type] = null;
-            saveProgress();
-            renderInventoryUI();
+            save();
+            renderInvUI();
         }
     }
 
-    function addChatMsg(speaker, text) {
-        const chat = document.getElementById('dynamic-chat');
-        const msg = document.createElement('div');
-        msg.className = 'chat-msg';
-        msg.innerHTML = `<span class="chat-speaker">${speaker}:</span> ${text}`;
-        chat.appendChild(msg);
-        chat.scrollTop = chat.scrollHeight;
+    function addMsg(speaker, text) {
+        const c = document.getElementById('chat-content');
+        const m = document.createElement('div');
+        m.className = 'msg';
+        m.innerHTML = `<span class="speaker">${speaker}:</span> ${text}`;
+        c.appendChild(m);
+        document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
     }
 
-    // --- CONTROLES ---
+    // Teclado y D-Pad
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
-        if (e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1);
-        if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
-        if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
+        if (e.key === 'ArrowUp' || e.key === 'w') move(0, -1);
+        if (e.key === 'ArrowDown' || e.key === 's') move(0, 1);
+        if (e.key === 'ArrowLeft' || e.key === 'a') move(-1, 0);
+        if (e.key === 'ArrowRight' || e.key === 'd') move(1, 0);
     });
 
-    function bindBtn(id, dx, dy) {
-        document.getElementById(id).addEventListener('click', () => movePlayer(dx, dy));
-    }
-    bindBtn('btn-up', 0, -1); bindBtn('btn-down', 0, 1);
-    bindBtn('btn-left', -1, 0); bindBtn('btn-right', 1, 0);
+    document.getElementById('btn-u').onclick = () => move(0, -1);
+    document.getElementById('btn-d').onclick = () => move(0, 1);
+    document.getElementById('btn-l').onclick = () => move(-1, 0);
+    document.getElementById('btn-r').onclick = () => move(1, 0);
 
     render();
 </script>
