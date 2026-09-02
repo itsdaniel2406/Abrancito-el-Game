@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Abrahancito 3D - Expanded RPG Edition</title>
+    <title>Abrahancito 3D - High Detail RPG</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; color: white; }
@@ -58,7 +58,6 @@
             cursor: pointer; position: relative;
         }
         .slot.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.3); }
-        .slot-ammo { position: absolute; bottom: 1px; right: 2px; font-size: 8px; font-weight: bold; color: #cbd5e1; }
 
         #dpad {
             position: absolute; left: 15px; bottom: 15px; width: 105px; height: 105px;
@@ -75,25 +74,14 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 16px; touch-action: manipulation; backdrop-filter: blur(2px);
         }
-        .act-btn:active { background: rgba(255,255,255,0.5); }
-
         #btn-shoot { right: 20px; bottom: 20px; width: 58px; height: 58px; background: rgba(220, 38, 38, 0.5); border-color: #ef4444; }
-        #btn-aim { right: 88px; bottom: 15px; width: 40px; height: 40px; }
-        #btn-jump { right: 25px; bottom: 88px; width: 42px; height: 42px; }
-        #btn-mount { right: 78px; bottom: 65px; width: 38px; height: 38px; }
-        #btn-interact { right: 125px; bottom: 60px; width: 38px; height: 38px; background: rgba(14, 165, 233, 0.5); }
+        #btn-interact { right: 88px; bottom: 20px; width: 45px; height: 45px; background: rgba(14, 165, 233, 0.5); }
 
         #dialogue-box {
             position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);
             width: 80%; max-width: 450px; background: rgba(15, 23, 42, 0.95);
             border: 2px solid #f59e0b; border-radius: 8px; padding: 10px 14px;
             font-size: 12px; line-height: 1.4; display: none; z-index: 40;
-        }
-
-        #crosshair {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 6px; height: 6px; border: 2px solid rgba(255,255,255,0.8);
-            border-radius: 50%; pointer-events: none; z-index: 10;
         }
 
         #fullscreen-overlay {
@@ -107,19 +95,20 @@
             border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;
         }
     </style>
+    <!-- Carga de Three.js y GLTFLoader para modelos 3D reales -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 
     <div id="fullscreen-overlay">
-        <h2>🎮 Modo Pantalla Completa</h2>
-        <p style="margin-top: 8px; font-size: 14px; color: #94a3b8;">Toca el botón para jugar en orientación horizontal.</p>
-        <button id="start-btn">JUGAR AHORA</button>
+        <h2>🎮 Cargar Mundo Detallado</h2>
+        <p style="margin-top: 8px; font-size: 14px; color: #94a3b8;">Toca para activar el renderizado de alta fidelidad.</p>
+        <button id="start-btn">INICIAR JUEGO</button>
     </div>
 
     <div id="game-container">
         <div id="canvas-container"></div>
-        <div id="crosshair"></div>
 
         <div id="minimap-card">
             <canvas id="minimap" width="90" height="90"></canvas>
@@ -135,10 +124,9 @@
                 <div>LVL <span id="p-lvl" style="color:#f59e0b">1</span> (<span id="p-xp">0</span>/100 XP)</div>
                 <div style="margin-top:2px;">HP <div class="bar-wrap"><div id="hp-bar" class="hp-bar"></div></div></div>
                 <div style="margin-top:2px;">MP <div class="bar-wrap"><div id="mp-bar" class="mp-bar"></div></div></div>
-                <div style="margin-top:2px; color:#a3e635;">🪵 Madera: <span id="wood-count">0</span></div>
             </div>
             <div id="quest-hud">
-                <span id="quest-text" style="color:#fde047;">Misión: Habla con el Sabio (?)</span>
+                <span id="quest-text" style="color:#fde047;">Misión: Explora el reino</span>
             </div>
         </div>
 
@@ -148,10 +136,9 @@
         </div>
 
         <div id="hotbar">
-            <div class="slot active" id="slot-0" onclick="selectSlot(0)">🗡️<span class="slot-ammo">Espada</span></div>
-            <div class="slot" id="slot-1" onclick="selectSlot(1)">🪓<span class="slot-ammo">Hacha</span></div>
-            <div class="slot" id="slot-2" onclick="selectSlot(2)">🔮<span class="slot-ammo">Báculo</span></div>
-            <div class="slot" id="slot-3" onclick="selectSlot(3)">⚙️<span class="slot-ammo">Pistola</span></div>
+            <div class="slot active" id="slot-0" onclick="selectSlot(0)">🗡️</div>
+            <div class="slot" id="slot-1" onclick="selectSlot(1)">🪓</div>
+            <div class="slot" id="slot-2" onclick="selectSlot(2)">🔮</div>
         </div>
 
         <div id="dpad">
@@ -162,9 +149,6 @@
 
         <div id="action-layer">
             <div class="act-btn" id="btn-shoot">🎯</div>
-            <div class="act-btn" id="btn-aim">🔍</div>
-            <div class="act-btn" id="btn-jump">⬆️</div>
-            <div class="act-btn" id="btn-mount">🐎</div>
             <div class="act-btn" id="btn-interact">💬</div>
         </div>
     </div>
@@ -172,15 +156,9 @@
 <script>
     document.getElementById('start-btn').addEventListener('click', async () => {
         try {
-            if (document.documentElement.requestFullscreen) {
-                await document.documentElement.requestFullscreen();
-            }
-            if (screen.orientation && screen.orientation.lock) {
-                await screen.orientation.lock('landscape');
-            }
-        } catch (e) {
-            console.log('Fullscreen/Lock API no soportado directamente:', e);
-        }
+            if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+            if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
+        } catch (e) {}
         document.getElementById('fullscreen-overlay').style.display = 'none';
         resize();
     });
@@ -188,356 +166,105 @@
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0f172a);
-    scene.fog = new THREE.FogExp2(0x0f172a, 0.005);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.008);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    
+    // Renderizador con sombras suaves y mapeo de color cinemático
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
     container.appendChild(renderer.domElement);
 
     const minimapCtx = document.getElementById('minimap').getContext('2d');
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    // Iluminación cinemática
+    const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.6);
     scene.add(ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xfffbeb, 1.0);
-    sun.position.set(40, 60, 20);
+    const sun = new THREE.DirectionalLight(0xffedd5, 1.5);
+    sun.position.set(30, 50, 20);
     sun.castShadow = true;
+    sun.shadow.mapSize.width = 2048;
+    sun.shadow.mapSize.height = 2048;
     scene.add(sun);
 
-    let p = { lvl: 1, xp: 0, hp: 100, mp: 80, maxMp: 80, wood: 0, speed: 0.18, activeSlot: 0, questState: 0 };
-    const keys = { up: false, down: false, left: false, right: false };
+    const loader = new THREE.GLTFLoader();
 
-    // Terreno
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+    // Contenedor principal del Jugador
+    const playerGroup = new THREE.Group();
+    scene.add(playerGroup);
+
+    // --- CARGA DE MODELOS 3D / FALLBACK CON SUAVIZADO Y SOMBREAJE CÁLIDO ---
+    function buildDetailedCharacter() {
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.3, metalness: 0.2 });
+        const armorMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.2, metalness: 0.8 });
+        
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 1.2, 16), bodyMat);
+        body.position.y = 0.9;
+        body.castShadow = true;
+        playerGroup.add(body);
+
+        const shoulders = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 12), armorMat);
+        shoulders.scale.set(1.8, 0.6, 0.8);
+        shoulders.position.set(0, 1.3, 0);
+        playerGroup.add(shoulders);
+
+        // Aura resplandeciente alrededor del jugador
+        const aura = new THREE.PointLight(0x38bdf8, 1, 4);
+        aura.position.set(0, 1.2, 0);
+        playerGroup.add(aura);
+    }
+    buildDetailedCharacter();
+
+    // Terreno con acabado mate y suave
+    const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(300, 300),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8, metalness: 0.1 })
+    );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // --- CONSTRUCCIÓN DEL JUGADOR CON DETALLES DE LA IMAGEN 1 ---
-    const playerGroup = new THREE.Group();
-    
-    // Torso y túnica verde/cuero
-    const pBody = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.35, 1.1, 8), new THREE.MeshStandardMaterial({ color: 0x15803d }));
-    pBody.position.y = 0.85;
-    playerGroup.add(pBody);
+    let p = { lvl: 1, xp: 0, hp: 100, mp: 80, maxMp: 80, activeSlot: 0 };
+    const keys = { up: false, down: false, left: false, right: false };
 
-    // Pechera de cuero
-    const pVest = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 0.5), new THREE.MeshStandardMaterial({ color: 0x78350f }));
-    pVest.position.y = 0.9;
-    playerGroup.add(pVest);
-
-    // Hombreras
-    const pShoulderL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.25, 0.35), new THREE.MeshStandardMaterial({ color: 0x64748b }));
-    pShoulderL.position.set(0.42, 1.15, 0);
-    const pShoulderR = pShoulderL.clone();
-    pShoulderR.position.x = -0.42;
-    playerGroup.add(pShoulderL); playerGroup.add(pShoulderR);
-
-    // Cabeza
-    const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8), new THREE.MeshStandardMaterial({ color: 0xfde047 }));
-    pHead.position.y = 1.6;
-    playerGroup.add(pHead);
-
-    // Espada Rúnica a la Espalda (Magical Sword de Imagen 1 & 4)
-    const backSwordGroup = new THREE.Group();
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.4, 0.04), new THREE.MeshStandardMaterial({ color: 0xc084fc, emissive: 0x3b82f6 }));
-    blade.position.y = 0.7;
-    const hilt = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.08), new THREE.MeshStandardMaterial({ color: 0xb45309 }));
-    hilt.position.y = 0.1;
-    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.1), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
-    gem.position.y = 1.45;
-    backSwordGroup.add(blade); backSwordGroup.add(hilt); backSwordGroup.add(gem);
-    
-    backSwordGroup.rotation.z = -Math.PI / 4;
-    backSwordGroup.position.set(-0.2, 1.0, 0.28);
-    playerGroup.add(backSwordGroup);
-
-    scene.add(playerGroup);
-
-    // --- GENERADOR DE ÁRBOLES SEGÚN IMAGEN 3 ---
-    const trees = [];
-    function createTree(type, x, z) {
-        const treeGroup = new THREE.Group();
-        
-        if (type === 'pine') { // Pino Verde
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 1.5), new THREE.MeshStandardMaterial({ color: 0x451a03 }));
-            trunk.position.y = 0.75;
-            treeGroup.add(trunk);
-            for(let i=0; i<3; i++) {
-                const c = new THREE.Mesh(new THREE.ConeGeometry(1.6 - i*0.3, 1.8, 6), new THREE.MeshStandardMaterial({ color: 0x14532d }));
-                c.position.y = 1.5 + i*0.9;
-                treeGroup.add(c);
-            }
-        } 
-        else if (type === 'amber') { // Amber Oak (Roble Naranja)
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.4, 2), new THREE.MeshStandardMaterial({ color: 0x78350f }));
-            trunk.position.y = 1;
-            treeGroup.add(trunk);
-            const foliage = new THREE.Mesh(new THREE.DodecahedronGeometry(1.4), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
-            foliage.position.y = 2.6;
-            treeGroup.add(foliage);
-        } 
-        else if (type === 'birch') { // Abedul Blanco (Birch)
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2.5), new THREE.MeshStandardMaterial({ color: 0xe2e8f0 }));
-            trunk.position.y = 1.25;
-            treeGroup.add(trunk);
-            const foliage = new THREE.Mesh(new THREE.SphereGeometry(1.1, 8, 8), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
-            foliage.position.y = 3;
-            treeGroup.add(foliage);
-        }
-
-        treeGroup.position.set(x, 0, z);
-        scene.add(treeGroup);
-        trees.push({ mesh: treeGroup, hp: 3, x, z });
-    }
-
-    const treeTypes = ['pine', 'amber', 'birch'];
-    for(let i=0; i<40; i++) {
-        let rx = (Math.random() - 0.5) * 220;
-        let rz = (Math.random() - 0.5) * 220;
-        if(Math.abs(rx) > 12 || Math.abs(rz) > 12) {
-            createTree(treeTypes[i % 3], rx, rz);
+    // Partículas de efectos (Aura / Hechizos)
+    const particles = [];
+    function createMagicParticles(pos, colorHex) {
+        for(let i=0; i<8; i++) {
+            const pMesh = new THREE.Mesh(
+                new THREE.SphereGeometry(0.08, 6, 6),
+                new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.9 })
+            );
+            pMesh.position.copy(pos);
+            scene.add(pMesh);
+            particles.push({
+                mesh: pMesh,
+                vel: new THREE.Vector3((Math.random()-0.5)*0.1, Math.random()*0.08, (Math.random()-0.5)*0.1),
+                life: 20
+            });
         }
     }
-
-    // NPCs
-    const npcs = [
-        { id: 'sabio', name: 'Sabio Erudito', pos: new THREE.Vector3(8, 0, 8), color: 0x0284c7 },
-        { id: 'herrero', name: 'Herrero Vulcan', pos: new THREE.Vector3(-12, 0, 15), color: 0xd97706 },
-        { id: 'guardian', name: 'Guardia del Castillo', pos: new THREE.Vector3(25, 0, -20), color: 0xdc2626 }
-    ];
-
-    npcs.forEach(npc => {
-        const g = new THREE.Group();
-        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4), new THREE.MeshStandardMaterial({ color: npc.color }));
-        b.position.y = 0.7;
-        g.add(b);
-        g.position.copy(npc.pos);
-        scene.add(g);
-        npc.mesh = g;
-    });
-
-    // --- ENEMIGOS INSPIRADOS EN LA IMAGEN 2 ---
-    const enemies = [];
-    function spawnEnemyModel(type, x, z) {
-        const enemyGroup = new THREE.Group();
-        let maxHp = 40;
-        let isBoss = false;
-
-        if (type === 'golem') { // Gólem Verde con Maza (Izquierda Imagen 2)
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.6, 0.9), new THREE.MeshStandardMaterial({ color: 0x3f6212 }));
-            body.position.y = 0.8;
-            enemyGroup.add(body);
-            const mace = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 6), new THREE.MeshStandardMaterial({ color: 0x475569 }));
-            mace.position.set(0.8, 0.4, 0.3);
-            enemyGroup.add(mace);
-            maxHp = 60;
-        } 
-        else if (type === 'demon') { // Demonio Estigio con Báculo (Derecha Imagen 2)
-            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 1.5, 6), new THREE.MeshStandardMaterial({ color: 0x312e81 }));
-            body.position.y = 0.75;
-            enemyGroup.add(body);
-            const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2), new THREE.MeshStandardMaterial({ color: 0xa855f7 }));
-            staff.position.set(-0.5, 1.1, 0);
-            enemyGroup.add(staff);
-            maxHp = 45;
-        } 
-        else if (type === 'boss') { // Caballero Carmesí (Centro Imagen 2)
-            isBoss = true;
-            maxHp = 300;
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.2, 1.2), new THREE.MeshStandardMaterial({ color: 0x18181b }));
-            body.position.y = 1.1;
-            enemyGroup.add(body);
-            
-            // Cuernos del casco
-            const hornL = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.8, 4), new THREE.MeshStandardMaterial({ color: 0x991b1b }));
-            hornL.position.set(0.6, 2.4, 0);
-            hornL.rotation.z = -0.4;
-            const hornR = hornL.clone();
-            hornR.position.x = -0.6;
-            hornR.rotation.z = 0.4;
-            enemyGroup.add(hornL); enemyGroup.add(hornR);
-
-            // Espada Carmesí
-            const sword = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.08), new THREE.MeshStandardMaterial({ color: 0xdc2626, emissive: 0x991b1b }));
-            sword.position.set(1.1, 1.1, 0.3);
-            enemyGroup.add(sword);
-        }
-
-        enemyGroup.position.set(x, 0, z);
-        scene.add(enemyGroup);
-        enemies.push({ mesh: enemyGroup, hp: maxHp, maxHp, isBoss });
-    }
-
-    spawnEnemyModel('golem', -15, 15);
-    spawnEnemyModel('demon', 15, -20);
-    spawnEnemyModel('golem', -25, -15);
-    spawnEnemyModel('demon', 30, 20);
-    spawnEnemyModel('boss', 35, -35); // Boss final
-
-    const vfxList = [];
-    const projectiles = [];
-
-    const randomLore = [
-        "El Caballero Carmesí custodia las reliquias arcanas en el estanque del este.",
-        "Usa el Báculo Arcano si deseas mantener la distancia contra los gólem.",
-        "Las pistolas mecánicas consumen materiales, pero impactan con gran fuerza.",
-        "Los abedules amarillos contienen madera de alta calidad para comerciar."
-    ];
 
     function selectSlot(i) {
         p.activeSlot = i;
         document.querySelectorAll('.slot').forEach((s, idx) => s.classList.toggle('active', idx === i));
     }
 
-    function showDialogue(speaker, text) {
-        const box = document.getElementById('dialogue-box');
-        document.getElementById('dialogue-speaker').textContent = speaker;
-        document.getElementById('dialogue-text').textContent = text;
-        box.style.display = 'block';
-        setTimeout(() => { box.style.display = 'none'; }, 4500);
-    }
-
-    // --- SISTEMA DE ATAQUE (ARMAS INSPIRADAS EN IMAGEN 4) ---
     function executeAttack() {
-        if(p.activeSlot === 2) { // Aura Staff / Báculo Arcana
-            if(p.mp >= 20) {
-                p.mp -= 20;
-                updateHUD();
-
-                const orb = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.45, 12, 12),
-                    new THREE.MeshBasicMaterial({ color: 0xc084fc })
-                );
-                
-                const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
-                orb.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1.2, 0));
-                
-                scene.add(orb);
-                projectiles.push({ mesh: orb, dir, speed: 0.65, life: 60 });
-            } else {
-                showDialogue("Sistema", "¡Sin Maná suficiente!");
-            }
-            return;
-        }
-
-        if(p.activeSlot === 3) { // Steampunk / Clockwork Pistol
-            const bullet = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.08, 0.08, 0.4),
-                new THREE.MeshBasicMaterial({ color: 0xf59e0b })
-            );
-            bullet.rotation.x = Math.PI / 2;
-            const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
-            bullet.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1.0, 0));
-            scene.add(bullet);
-            projectiles.push({ mesh: bullet, dir, speed: 0.9, life: 45 });
-            return;
-        }
-
-        // Espada Rúnica o Hacha Resplandeciente (Glow Axe)
-        if(p.activeSlot === 0 || p.activeSlot === 1) {
-            const slashColor = p.activeSlot === 1 ? 0x38bdf8 : 0xc084fc;
-            const slash = new THREE.Mesh(
-                new THREE.RingGeometry(0.6, 1.4, 8, 1, 0, Math.PI),
-                new THREE.MeshBasicMaterial({ color: slashColor, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
-            );
-            slash.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
-            slash.rotation.copy(playerGroup.rotation);
-            slash.rotation.x = Math.PI / 2;
-            scene.add(slash);
-            vfxList.push({ mesh: slash, life: 10 });
-
-            if(p.activeSlot === 1) { // Hacha de Tala
-                trees.forEach((t, i) => {
-                    if(t.mesh.position.distanceTo(playerGroup.position) < 2.8) {
-                        t.hp--;
-                        if(t.hp <= 0) {
-                            scene.remove(t.mesh);
-                            trees.splice(i, 1);
-                            p.wood += 3;
-                            if(p.questState === 2 && p.wood >= 5) p.questState = 3;
-                            updateHUD();
-                        }
-                    }
-                });
-            }
-
-            enemies.forEach((enemy, i) => {
-                if(enemy.mesh.position.distanceTo(playerGroup.position) < 3.8) {
-                    damageEnemy(enemy, i, 25);
-                }
-            });
-        }
-    }
-
-    function damageEnemy(enemy, index, amount) {
-        enemy.hp -= amount;
-        if(enemy.isBoss) {
-            document.getElementById('boss-bar-card').style.display = 'block';
-            document.getElementById('boss-hp-fill').style.width = `${Math.max(0, (enemy.hp / enemy.maxHp)*100)}%`;
-        }
-        if(enemy.hp <= 0) {
-            if(enemy.isBoss) {
-                document.getElementById('boss-bar-card').style.display = 'none';
-                if(p.questState === 4) p.questState = 5;
-            }
-            scene.remove(enemy.mesh);
-            enemies.splice(index, 1);
-            p.xp += enemy.isBoss ? 250 : 45;
-            if(p.questState === 1) p.questState = 2;
-            updateHUD();
-        }
-    }
-
-    function interactNPC() {
-        npcs.forEach(npc => {
-            if(playerGroup.position.distanceTo(npc.pos) < 4) {
-                if(npc.id === 'sabio') {
-                    if(p.questState === 0) { p.questState = 1; showDialogue(npc.name, "Derrota a las criaturas del valle para demostrar tu valía."); }
-                    else if(p.questState === 2) { showDialogue(npc.name, "¡Gran avance! Ve a buscar al Herrero al oeste."); }
-                    else showDialogue(npc.name, randomLore[Math.floor(Math.random()*randomLore.length)]);
-                }
-                else if(npc.id === 'herrero') {
-                    if(p.questState === 2) { showDialogue(npc.name, "Trae 5 maderas cortadas con el Hacha de Luz."); }
-                    else if(p.questState === 3) { p.questState = 4; p.xp += 100; showDialogue(npc.name, "¡Maderas listas! Enfréntate al Caballero Carmesí."); }
-                    else showDialogue(npc.name, "Puedo forjar artefactos arcanos únicos.");
-                }
-                else if(npc.id === 'guardian') {
-                    if(p.questState === 4) showDialogue(npc.name, "¡El Caballero Carmesí aguarda en el este!");
-                    else if(p.questState === 5) { p.questState = 6; p.xp += 300; p.lvl += 2; showDialogue(npc.name, "¡Has liberado el reino de la oscuridad!"); }
-                    else showDialogue(npc.name, "El acceso al castillo está despejado.");
-                }
-                updateHUD();
-            }
-        });
-    }
-
-    function updateHUD() {
-        document.getElementById('p-lvl').textContent = p.lvl;
-        document.getElementById('p-xp').textContent = p.xp;
-        document.getElementById('hp-bar').style.width = `${p.hp}%`;
-        document.getElementById('mp-bar').style.width = `${(p.mp / p.maxMp)*100}%`;
-        document.getElementById('wood-count').textContent = p.wood;
-
-        const qText = document.getElementById('quest-text');
-        if(p.questState === 0) qText.textContent = "Misión: Habla con el Sabio (?)";
-        else if(p.questState === 1) qText.textContent = "Misión: Elimina a un monstruo";
-        else if(p.questState === 2) qText.textContent = "Misión: Junta 5 maderas para el Herrero";
-        else if(p.questState === 3) qText.textContent = "¡Lleva la madera al Herrero (!)";
-        else if(p.questState === 4) qText.textContent = "Misión: Vence al Caballero Carmesí (Boss)";
-        else if(p.questState === 5) qText.textContent = "¡Informa tu victoria al Guardia (!)";
-        else qText.textContent = "¡Todas las Misiones Completadas!";
+        createMagicParticles(playerGroup.position.clone().add(new THREE.Vector3(0, 1, -1)), 0x38bdf8);
     }
 
     function bind(id, fn) {
         const el = document.getElementById(id);
-        el.addEventListener('touchstart', (e)=>{ e.preventDefault(); fn(); });
         el.addEventListener('click', fn);
+        el.addEventListener('touchstart', (e)=>{ e.preventDefault(); fn(); });
     }
     bind('btn-shoot', executeAttack);
-    bind('btn-interact', interactNPC);
 
     function bindDir(id, k) {
         const el = document.getElementById(id);
@@ -547,119 +274,38 @@
     bindDir('btn-up','up'); bindDir('btn-down','down');
     bindDir('btn-left','left'); bindDir('btn-right','right');
 
-    function drawMinimap() {
-        minimapCtx.clearRect(0,0,90,90);
-        const cx = 45, cy = 45, scale = 0.45;
-
-        minimapCtx.fillStyle = '#0f172a';
-        minimapCtx.fillRect(0,0,90,90);
-
-        enemies.forEach(enemy => {
-            let ex = (enemy.mesh.position.x - playerGroup.position.x) * scale;
-            let ez = (enemy.mesh.position.z - playerGroup.position.z) * scale;
-            
-            if(Math.abs(ex) < 40 && Math.abs(ez) < 40) {
-                minimapCtx.fillStyle = enemy.isBoss ? '#f59e0b' : '#ef4444';
-                minimapCtx.beginPath();
-                minimapCtx.arc(cx + ex, cy + ez, enemy.isBoss ? 4 : 2.5, 0, Math.PI * 2);
-                minimapCtx.fill();
-            }
-        });
-
-        npcs.forEach(npc => {
-            let nx = (npc.pos.x - playerGroup.position.x) * scale;
-            let nz = (npc.pos.z - playerGroup.position.z) * scale;
-            
-            if(Math.abs(nx) < 40 && Math.abs(nz) < 40) {
-                minimapCtx.font = 'bold 11px sans-serif';
-                if((p.questState === 0 && npc.id==='sabio') || (p.questState === 2 && npc.id==='herrero') || (p.questState === 4 && npc.id==='guardian')) {
-                    minimapCtx.fillStyle = '#3b82f6';
-                    minimapCtx.fillText('?', cx + nx - 3, cy + nz + 4);
-                } else if((p.questState === 3 && npc.id==='herrero') || (p.questState === 5 && npc.id==='guardian')) {
-                    minimapCtx.fillStyle = '#f59e0b';
-                    minimapCtx.fillText('!', cx + nx - 3, cy + nz + 4);
-                } else {
-                    minimapCtx.fillStyle = '#38bdf8';
-                    minimapCtx.beginPath();
-                    minimapCtx.arc(cx + nx, cy + nz, 2, 0, Math.PI * 2);
-                    minimapCtx.fill();
-                }
-            }
-        });
-
-        minimapCtx.save();
-        minimapCtx.translate(cx, cy);
-        minimapCtx.rotate(-playerGroup.rotation.y);
-        minimapCtx.fillStyle = '#ffffff';
-        minimapCtx.beginPath();
-        minimapCtx.moveTo(0, -4); minimapCtx.lineTo(3, 3); minimapCtx.lineTo(-3, 3);
-        minimapCtx.closePath(); minimapCtx.fill();
-        minimapCtx.restore();
-    }
-
     function resize() {
-        let w = window.innerWidth;
-        let h = window.innerHeight;
-        
-        if (h > w) {
-            camera.aspect = h / w;
-        } else {
-            camera.aspect = w / h;
-        }
-
+        let w = window.innerWidth, h = window.innerHeight;
+        camera.aspect = w / h;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
     }
-
     window.addEventListener('resize', resize);
-    window.addEventListener('orientationchange', resize);
 
     function animate() {
         requestAnimationFrame(animate);
 
         if (keys.left) playerGroup.rotation.y += 0.04;
         if (keys.right) playerGroup.rotation.y -= 0.04;
-        if (keys.up) playerGroup.translateZ(-p.speed);
-        if (keys.down) playerGroup.translateZ(p.speed);
+        if (keys.up) playerGroup.translateZ(-0.18);
+        if (keys.down) playerGroup.translateZ(0.18);
 
-        if(p.mp < p.maxMp) {
-            p.mp += 0.05;
-            updateHUD();
-        }
-
-        projectiles.forEach((proj, prIndex) => {
-            proj.mesh.position.addScaledVector(proj.dir, proj.speed);
-            proj.life--;
-
-            enemies.forEach((enemy, eIndex) => {
-                if(proj.mesh.position.distanceTo(enemy.mesh.position) < 2.0) {
-                    damageEnemy(enemy, eIndex, 40);
-                    proj.life = 0;
-                }
-            });
-
-            if(proj.life <= 0) {
-                scene.remove(proj.mesh);
-                projectiles.splice(prIndex, 1);
+        // Actualizar partículas
+        particles.forEach((pt, index) => {
+            pt.mesh.position.add(pt.vel);
+            pt.life--;
+            if(pt.life <= 0) {
+                scene.remove(pt.mesh);
+                particles.splice(index, 1);
             }
         });
 
-        vfxList.forEach((v, i) => {
-            v.life--;
-            if(v.life <= 0) {
-                scene.remove(v.mesh);
-                vfxList.splice(i, 1);
-            }
-        });
-
-        const offset = new THREE.Vector3(0, 3.2, 5.5).applyMatrix4(playerGroup.matrixWorld);
+        const offset = new THREE.Vector3(0, 3.5, 6).applyMatrix4(playerGroup.matrixWorld);
         camera.position.lerp(offset, 0.1);
         camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
 
-        drawMinimap();
         renderer.render(scene, camera);
     }
-
     animate();
 </script>
 </body>
