@@ -2,86 +2,106 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Abrahancito: Realm of Legends 3D - v3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Abrahancito: Realm of Legends 3D - Landscape</title>
     <style>
-        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-        body { margin: 0; padding: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; color: white; }
-        #canvas-container { width: 100vw; height: 100vh; display: block; }
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Roboto, sans-serif; color: white; }
 
-        /* Minimapa Superior Izquierdo Estilo Fortnite */
+        /* FORZAR ORIENTACIÓN HORIZONTAL SI EL MÓVIL ESTÁ EN VERTICAL */
+        @media screen and (orientation: portrait) {
+            #game-wrapper {
+                width: 100vh !important;
+                height: 100vw !important;
+                transform: rotate(90deg);
+                transform-origin: bottom left;
+                position: absolute;
+                top: -100vw;
+                left: 0;
+            }
+        }
+
+        #game-wrapper {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #canvas-container { width: 100%; height: 100%; display: block; }
+
+        /* Minimapa Superior Izquierdo */
         #minimap-card {
             position: absolute; top: 10px; left: 10px;
-            width: 110px; height: 110px; border-radius: 8px;
+            width: 100px; height: 100px; border-radius: 8px;
             border: 2px solid rgba(255,255,255,0.6); background: rgba(0,0,0,0.6);
             overflow: hidden; z-index: 20; box-shadow: 0 4px 10px rgba(0,0,0,0.8);
         }
         #minimap { width: 100%; height: 100%; }
 
-        /* Barras de Estado (HP / MP / XP) Arriba */
-        #status-bar {
-            position: absolute; top: 10px; left: 130px;
-            background: rgba(15, 23, 42, 0.75); padding: 6px 12px; border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.2); font-size: 10px; font-weight: bold; z-index: 10;
+        /* Tracker de Misión y Estado Superior Derecho */
+        #top-right-hud {
+            position: absolute; top: 10px; right: 10px;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 6px; z-index: 20;
         }
-        .bar-wrap { width: 90px; height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; display: inline-block; vertical-align: middle; }
+
+        #quest-hud {
+            background: rgba(0,0,0,0.75); padding: 6px 12px; border-radius: 16px;
+            border: 1px solid #f59e0b; font-size: 11px; text-align: right;
+        }
+
+        #status-bar {
+            background: rgba(15, 23, 42, 0.8); padding: 6px 10px; border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2); font-size: 10px; font-weight: bold;
+        }
+        .bar-wrap { width: 80px; height: 7px; background: #1e293b; border-radius: 4px; overflow: hidden; display: inline-block; vertical-align: middle; }
         .hp-bar { width: 100%; height: 100%; background: #22c55e; transition: width 0.2s; }
         .mp-bar { width: 100%; height: 100%; background: #3b82f6; transition: width 0.2s; }
 
-        /* Tracker de Misión Superior Central */
-        #quest-hud {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.65); padding: 6px 14px; border-radius: 20px;
-            border: 1px solid #f59e0b; font-size: 11px; text-align: center; z-index: 10;
-        }
-
-        /* Hotbar de Armas Inferior (Estilo Fortnite) */
+        /* Hotbar de Armas Inferior Central */
         #hotbar {
-            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 6px; background: rgba(15, 23, 42, 0.85);
-            padding: 5px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); z-index: 20;
+            padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); z-index: 20;
         }
         .slot {
-            width: 44px; height: 44px; background: rgba(255,255,255,0.1);
+            width: 46px; height: 46px; background: rgba(255,255,255,0.1);
             border: 2px solid #475569; border-radius: 6px; display: flex;
-            align-items: center; justify-content: center; font-size: 18px;
+            align-items: center; justify-content: center; font-size: 20px;
             cursor: pointer; position: relative;
         }
-        .slot.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.25); }
+        .slot.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.3); }
         .slot-ammo { position: absolute; bottom: 1px; right: 3px; font-size: 8px; font-weight: bold; color: #cbd5e1; }
 
-        /* Controles Táctiles estilo shooter movil */
-        #touch-layer {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none; z-index: 15;
+        /* Joystick Izquierdo (D-Pad) */
+        #dpad {
+            position: absolute; left: 15px; bottom: 15px; width: 110px; height: 110px;
+            display: grid; grid-template-columns: repeat(3, 36px); grid-template-rows: repeat(3, 36px);
+            z-index: 20; gap: 2px;
         }
-        .touch-btn {
+        .dp-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .dp-btn:active { background: rgba(255,255,255,0.4); }
+
+        /* Botones de Acción Derechos Distribuidos */
+        #action-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+        .act-btn {
             position: absolute; pointer-events: auto; border-radius: 50%;
             background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.5);
             display: flex; align-items: center; justify-content: center;
             font-size: 18px; touch-action: manipulation; backdrop-filter: blur(2px);
         }
-        .touch-btn:active { background: rgba(255,255,255,0.4); }
+        .act-btn:active { background: rgba(255,255,255,0.4); }
 
-        /* Posiciones exactas controles móviles */
-        #btn-shoot { right: 25px; bottom: 80px; width: 68px; height: 68px; background: rgba(220, 38, 38, 0.4); border-color: #ef4444; }
-        #btn-aim { right: 105px; bottom: 95px; width: 48px; height: 48px; }
-        #btn-jump { right: 35px; bottom: 160px; width: 48px; height: 48px; }
-        #btn-mount { right: 95px; bottom: 155px; width: 44px; height: 44px; }
-        #btn-interact { right: 150px; bottom: 155px; width: 44px; height: 44px; background: rgba(14, 165, 233, 0.4); }
+        #btn-shoot { right: 20px; bottom: 20px; width: 62px; height: 62px; background: rgba(220, 38, 38, 0.4); border-color: #ef4444; }
+        #btn-aim { right: 90px; bottom: 15px; width: 44px; height: 44px; }
+        #btn-jump { right: 25px; bottom: 90px; width: 44px; height: 44px; }
+        #btn-mount { right: 80px; bottom: 70px; width: 40px; height: 40px; }
+        #btn-interact { right: 130px; bottom: 65px; width: 40px; height: 40px; background: rgba(14, 165, 233, 0.4); }
 
-        /* D-Pad Joystick Izquierdo */
-        #dpad {
-            position: absolute; left: 20px; bottom: 20px; width: 120px; height: 120px;
-            display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px);
-            pointer-events: auto;
-        }
-        .dp-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
-
-        /* Mira Crosshair Central */
+        /* Crosshair */
         #crosshair {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 10px; height: 10px; border: 2px solid rgba(255,255,255,0.7);
+            width: 8px; height: 8px; border: 2px solid rgba(255,255,255,0.7);
             border-radius: 50%; pointer-events: none; z-index: 10;
         }
     </style>
@@ -89,60 +109,64 @@
 </head>
 <body>
 
-    <div id="canvas-container"></div>
-    <div id="crosshair"></div>
+    <div id="game-wrapper">
+        <div id="canvas-container"></div>
+        <div id="crosshair"></div>
 
-    <!-- Minimapa -->
-    <div id="minimap-card">
-        <canvas id="minimap" width="110" height="110"></canvas>
-    </div>
+        <!-- Minimapa Izquierda Superior -->
+        <div id="minimap-card">
+            <canvas id="minimap" width="100" height="100"></canvas>
+        </div>
 
-    <!-- Estados del Jugador -->
-    <div id="status-bar">
-        <div>LVL <span id="p-lvl" style="color:#f59e0b">1</span> (<span id="p-xp">0</span>/100 XP)</div>
-        <div style="margin-top:2px;">HP <div class="bar-wrap"><div id="hp-bar" class="hp-bar"></div></div></div>
-        <div style="margin-top:2px;">MP <div class="bar-wrap"><div id="mp-bar" class="mp-bar"></div></div></div>
-    </div>
+        <!-- Panel Superior Derecho -->
+        <div id="top-right-hud">
+            <div id="quest-hud">
+                <span id="quest-text" style="color:#fde047;">Misión: Habla con el Sabio (?)</span>
+            </div>
+            <div id="status-bar">
+                <div>LVL <span id="p-lvl" style="color:#f59e0b">1</span> (<span id="p-xp">0</span>/100 XP)</div>
+                <div style="margin-top:2px;">HP <div class="bar-wrap"><div id="hp-bar" class="hp-bar"></div></div></div>
+                <div style="margin-top:2px;">MP <div class="bar-wrap"><div id="mp-bar" class="mp-bar"></div></div></div>
+            </div>
+        </div>
 
-    <!-- Banner de Misión Activa -->
-    <div id="quest-hud">
-        <span id="quest-text" style="color:#fde047;">Misión: Habla con el Sabio (?)</span>
-    </div>
+        <!-- Selector de Armas Centrado Inferior -->
+        <div id="hotbar">
+            <div class="slot active" id="slot-0" onclick="selectSlot(0)">⚔️<span class="slot-ammo">∞</span></div>
+            <div class="slot" id="slot-1" onclick="selectSlot(1)">🏹<span class="slot-ammo" id="ammo-bow">15</span></div>
+            <div class="slot" id="slot-2" onclick="selectSlot(2)">🔥<span class="slot-ammo">MP</span></div>
+            <div class="slot" id="slot-3" onclick="selectSlot(3)">🪓<span class="slot-ammo">Tala</span></div>
+        </div>
 
-    <!-- Selector de Armas (Hotbar Fortnite) -->
-    <div id="hotbar">
-        <div class="slot active" id="slot-0" onclick="selectSlot(0)">⚔️<span class="slot-ammo">∞</span></div>
-        <div class="slot" id="slot-1" onclick="selectSlot(1)">🏹<span class="slot-ammo" id="ammo-bow">15</span></div>
-        <div class="slot" id="slot-2" onclick="selectSlot(2)">🔥<span class="slot-ammo">MP</span></div>
-        <div class="slot" id="slot-3" onclick="selectSlot(3)">🪓<span class="slot-ammo">Tala</span></div>
-    </div>
-
-    <!-- Capa de Controles Táctiles -->
-    <div id="touch-layer">
-        <div class="touch-btn" id="btn-shoot">🎯</div>
-        <div class="touch-btn" id="btn-aim">🔍</div>
-        <div class="touch-btn" id="btn-jump">⬆️</div>
-        <div class="touch-btn" id="btn-mount">🐎</div>
-        <div class="touch-btn" id="btn-interact">💬</div>
-
+        <!-- D-Pad Movimiento Izquierda -->
         <div id="dpad">
             <div></div><div class="dp-btn" id="btn-up">▲</div><div></div>
             <div class="dp-btn" id="btn-left">◀</div><div></div><div class="dp-btn" id="btn-right">▶</div>
             <div></div><div class="dp-btn" id="btn-down">▼</div><div></div>
         </div>
+
+        <!-- Botones de Acción Derecha -->
+        <div id="action-layer">
+            <div class="act-btn" id="btn-shoot">🎯</div>
+            <div class="act-btn" id="btn-aim">🔍</div>
+            <div class="act-btn" id="btn-jump">⬆️</div>
+            <div class="act-btn" id="btn-mount">🐎</div>
+            <div class="act-btn" id="btn-interact">💬</div>
+        </div>
     </div>
 
 <script>
-    // --- ESCENA Y CONFIGURACIÓN ---
+    const wrapper = document.getElementById('game-wrapper');
+    const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0284c7);
     scene.fog = new THREE.FogExp2(0x0284c7, 0.008);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(wrapper.clientWidth, wrapper.clientHeight);
     renderer.shadowMap.enabled = true;
-    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
     const minimapCtx = document.getElementById('minimap').getContext('2d');
 
@@ -154,11 +178,9 @@
     sun.castShadow = true;
     scene.add(sun);
 
-    // --- ESTADO Y RECURSOS ---
     let p = {
         lvl: 1, xp: 0, hp: 100, maxHp: 100, mp: 80, maxMp: 80,
-        speed: 0.18, activeSlot: 0, arrows: 15, isMounted: false,
-        questState: 0, // 0: Hablar NPC, 1: Derrotar 2 Sombras, 2: Listo para entregar
+        speed: 0.18, activeSlot: 0, questState: 0
     };
 
     const keys = { up: false, down: false, left: false, right: false };
@@ -184,7 +206,7 @@
 
     scene.add(playerGroup);
 
-    // NPC Sabio (Para Entregar Misiones)
+    // NPC
     const npcGroup = new THREE.Group();
     const npcBody = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4), new THREE.MeshStandardMaterial({ color: 0x0284c7 }));
     npcBody.position.y = 0.7;
@@ -203,34 +225,8 @@
     }
     spawnEnemy(-15, 15); spawnEnemy(15, -20);
 
-    // --- EFECTOS VISUALES (VFX) ---
     const vfxList = [];
 
-    function triggerSlashVFX() {
-        const slashGeo = new THREE.RingGeometry(0.5, 1.2, 8, 1, 0, Math.PI);
-        const slashMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
-        const slash = new THREE.Mesh(slashGeo, slashMat);
-        
-        slash.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
-        slash.rotation.copy(playerGroup.rotation);
-        slash.rotation.x = Math.PI / 2;
-        scene.add(slash);
-        vfxList.push({ mesh: slash, life: 10 });
-    }
-
-    function triggerFireballVFX() {
-        if(p.mp < 20) return;
-        p.mp -= 20;
-        updateHUD();
-
-        const ball = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
-        ball.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, -0.5));
-        const dir = new THREE.Vector3(0,0,-1).applyQuaternion(playerGroup.quaternion);
-        scene.add(ball);
-        vfxList.push({ mesh: ball, dir, life: 40, isProj: true });
-    }
-
-    // --- ACCIONES Y CONTROLES ---
     function selectSlot(index) {
         p.activeSlot = index;
         document.querySelectorAll('.slot').forEach((s, i) => {
@@ -239,55 +235,44 @@
     }
 
     function executeAttack() {
-        if(p.activeSlot === 0) { // Espada
-            triggerSlashVFX();
-            checkMeleeHit();
-        } else if(p.activeSlot === 2) { // Magia
-            triggerFireballVFX();
-        }
-    }
+        if(p.activeSlot === 0) {
+            const slash = new THREE.Mesh(
+                new THREE.RingGeometry(0.5, 1.2, 8, 1, 0, Math.PI),
+                new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+            );
+            slash.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
+            slash.rotation.copy(playerGroup.rotation);
+            slash.rotation.x = Math.PI / 2;
+            scene.add(slash);
+            vfxList.push({ mesh: slash, life: 10 });
 
-    function checkMeleeHit() {
-        enemies.forEach((enemy, i) => {
-            if(enemy.mesh.position.distanceTo(playerGroup.position) < 3) {
-                enemy.hp -= 25;
-                if(enemy.hp <= 0) {
-                    scene.remove(enemy.mesh);
-                    enemies.splice(i, 1);
-                    p.xp += 40;
-                    if(p.questState === 1) {
-                        p.questState = 2; // Listo para entregar
-                        updateQuestHUD();
+            enemies.forEach((enemy, i) => {
+                if(enemy.mesh.position.distanceTo(playerGroup.position) < 3) {
+                    enemy.hp -= 25;
+                    if(enemy.hp <= 0) {
+                        scene.remove(enemy.mesh);
+                        enemies.splice(i, 1);
+                        p.xp += 40;
+                        if(p.questState === 1) p.questState = 2;
+                        updateHUD();
                     }
-                    updateHUD();
                 }
-            }
-        });
+            });
+        }
     }
 
     function interactNPC() {
-        const dist = playerGroup.position.distanceTo(npcGroup.position);
-        if(dist < 4) {
+        if(playerGroup.position.distanceTo(npcGroup.position) < 4) {
             if(p.questState === 0) {
                 p.questState = 1;
-                alert("Sabio: 'Derrota a las Sombras del Valle y regresa por tu recompensa.'");
+                alert("Sabio: 'Derrota a las Sombras del Valle.'");
             } else if(p.questState === 2) {
                 p.questState = 3;
-                p.xp += 100;
-                p.lvl++;
+                p.xp += 100; p.lvl++;
                 alert("Sabio: '¡Excelente trabajo! Has subido de nivel.'");
             }
-            updateQuestHUD();
             updateHUD();
         }
-    }
-
-    function updateQuestHUD() {
-        const qText = document.getElementById('quest-text');
-        if(p.questState === 0) qText.textContent = "Misión: Habla con el Sabio (?)";
-        else if(p.questState === 1) qText.textContent = "Misión: Elimina a las Sombras";
-        else if(p.questState === 2) qText.textContent = "¡Misión Cumplida! Entrega al Sabio (!)";
-        else qText.textContent = "Misiones Completadas";
     }
 
     function updateHUD() {
@@ -295,9 +280,14 @@
         document.getElementById('p-xp').textContent = p.xp;
         document.getElementById('hp-bar').style.width = `${p.hp}%`;
         document.getElementById('mp-bar').style.width = `${p.mp}%`;
+
+        const qText = document.getElementById('quest-text');
+        if(p.questState === 0) qText.textContent = "Misión: Habla con el Sabio (?)";
+        else if(p.questState === 1) qText.textContent = "Misión: Elimina a las Sombras";
+        else if(p.questState === 2) qText.textContent = "¡Misión Cumplida! Entrega al Sabio (!)";
+        else qText.textContent = "Misiones Completadas";
     }
 
-    // --- EVENTOS BINDING ---
     function bind(id, fn) {
         const el = document.getElementById(id);
         el.addEventListener('touchstart', (e)=>{ e.preventDefault(); fn(); });
@@ -315,15 +305,13 @@
     bindDir('btn-up','up'); bindDir('btn-down','down');
     bindDir('btn-left','left'); bindDir('btn-right','right');
 
-    // --- MINIMAPA CON ICONOS DE NPC DINÁMICOS ---
     function drawMinimap() {
-        minimapCtx.clearRect(0,0,110,110);
-        const cx = 55, cy = 55, scale = 0.6;
+        minimapCtx.clearRect(0,0,100,100);
+        const cx = 50, cy = 50, scale = 0.6;
 
         minimapCtx.fillStyle = '#064e3b';
-        minimapCtx.fillRect(0,0,110,110);
+        minimapCtx.fillRect(0,0,100,100);
 
-        // Render NPC Icon en Minimapa
         let nx = (npcGroup.position.x - playerGroup.position.x) * scale;
         let nz = (npcGroup.position.z - playerGroup.position.z) * scale;
         
@@ -336,7 +324,6 @@
             minimapCtx.fillText('!', cx + nx - 3, cy + nz + 4);
         }
 
-        // Flecha Jugador
         minimapCtx.save();
         minimapCtx.translate(cx, cy);
         minimapCtx.rotate(-playerGroup.rotation.y);
@@ -347,7 +334,6 @@
         minimapCtx.restore();
     }
 
-    // --- LOOP PRINCIPAL ---
     function animate() {
         requestAnimationFrame(animate);
 
@@ -356,9 +342,7 @@
         if (keys.up) playerGroup.translateZ(-p.speed);
         if (keys.down) playerGroup.translateZ(p.speed);
 
-        // Render VFX
         vfxList.forEach((v, i) => {
-            if(v.isProj) v.mesh.position.addScaledVector(v.dir, 0.4);
             v.life--;
             if(v.life <= 0) {
                 scene.remove(v.mesh);
@@ -366,14 +350,19 @@
             }
         });
 
-        // Camara Third Person
-        const offset = new THREE.Vector3(0, 3.5, 6).applyMatrix4(playerGroup.matrixWorld);
+        const offset = new THREE.Vector3(0, 3.2, 5.5).applyMatrix4(playerGroup.matrixWorld);
         camera.position.lerp(offset, 0.1);
         camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
 
         drawMinimap();
         renderer.render(scene, camera);
     }
+
+    window.addEventListener('resize', () => {
+        renderer.setSize(wrapper.clientWidth, wrapper.clientHeight);
+        camera.aspect = wrapper.clientWidth / wrapper.clientHeight;
+        camera.updateProjectionMatrix();
+    });
 
     animate();
 </script>
