@@ -3,344 +3,309 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Abrahancito: Realm of Legends 3D - v2</title>
+    <title>Abrahancito: Realm of Legends 3D - v3</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-        body { margin: 0; padding: 0; overflow: hidden; background-color: #050811; font-family: 'Segoe UI', Roboto, sans-serif; color: white; }
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; color: white; }
         #canvas-container { width: 100vw; height: 100vh; display: block; }
 
-        /* HUD Principal Superior */
-        .hud {
+        /* Minimapa Superior Izquierdo Estilo Fortnite */
+        #minimap-card {
             position: absolute; top: 10px; left: 10px;
-            background: rgba(15, 23, 42, 0.9); padding: 8px 12px; border-radius: 8px;
-            border: 2px solid #b45309; box-shadow: 0 4px 15px rgba(0,0,0,0.8);
-            font-size: 11px; font-weight: bold; pointer-events: none; z-index: 10;
-        }
-
-        .bar-wrap { width: 110px; height: 10px; background: #1e293b; border-radius: 5px; overflow: hidden; display: inline-block; vertical-align: middle; border: 1px solid #475569; }
-        .hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #dc2626, #ef4444); transition: width 0.2s; }
-        .mp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); transition: width 0.2s; }
-
-        /* Barra de Menú Toggle UI */
-        #menu-bar {
-            position: absolute; top: 10px; right: 10px;
-            display: flex; gap: 8px; z-index: 20;
-        }
-        .toggle-btn {
-            background: rgba(15, 23, 42, 0.9); border: 2px solid #f59e0b;
-            border-radius: 8px; padding: 8px; cursor: pointer; color: white;
-            display: flex; align-items: center; justify-content: center;
-            width: 38px; height: 38px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        .toggle-btn:active { transform: scale(0.95); background: #334155; }
-
-        /* Ventana Minimapa Flotante */
-        #minimap-wrapper {
-            position: absolute; top: 55px; right: 10px;
-            width: 120px; height: 120px; border-radius: 50%;
-            border: 3px solid #f59e0b; background: rgba(15, 23, 42, 0.95);
-            overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.8); z-index: 15;
-            display: none;
+            width: 110px; height: 110px; border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.6); background: rgba(0,0,0,0.6);
+            overflow: hidden; z-index: 20; box-shadow: 0 4px 10px rgba(0,0,0,0.8);
         }
         #minimap { width: 100%; height: 100%; }
 
-        /* Ventanas Modales UI (Crafteo y Misiones) */
-        .ui-window {
-            position: absolute; top: 55px; left: 10px;
-            background: rgba(15, 23, 42, 0.95); border: 2px solid #3b82f6;
-            border-radius: 8px; padding: 10px; font-size: 11px; z-index: 15;
-            width: 180px; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        /* Barras de Estado (HP / MP / XP) Arriba */
+        #status-bar {
+            position: absolute; top: 10px; left: 130px;
+            background: rgba(15, 23, 42, 0.75); padding: 6px 12px; border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2); font-size: 10px; font-weight: bold; z-index: 10;
         }
-        .craft-btn {
-            background: #1e3a8a; border: 1px solid #3b82f6; color: white;
-            padding: 5px; margin-top: 5px; width: 100%; border-radius: 4px;
-            cursor: pointer; font-size: 10px; font-weight: bold; text-align: left;
-        }
-        .craft-btn:active { background: #2563eb; }
+        .bar-wrap { width: 90px; height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; display: inline-block; vertical-align: middle; }
+        .hp-bar { width: 100%; height: 100%; background: #22c55e; transition: width 0.2s; }
+        .mp-bar { width: 100%; height: 100%; background: #3b82f6; transition: width 0.2s; }
 
-        /* Controles Táctiles con Íconos */
-        #touch-controls {
-            position: absolute; bottom: 15px; width: 100%;
-            display: flex; justify-content: space-between; padding: 0 15px;
-            z-index: 10; pointer-events: none;
+        /* Tracker de Misión Superior Central */
+        #quest-hud {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.65); padding: 6px 14px; border-radius: 20px;
+            border: 1px solid #f59e0b; font-size: 11px; text-align: center; z-index: 10;
         }
-        .dpad, .action-btns { pointer-events: auto; }
-        .dpad { display: grid; grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px); gap: 2px; }
-        .dbtn { background: rgba(30, 41, 59, 0.85); border: 2px solid #475569; border-radius: 8px; color: white; font-size: 14px; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
-        
-        .action-btns { display: grid; grid-template-columns: repeat(3, 52px); gap: 8px; align-items: center; }
-        .abtn {
-            width: 52px; height: 52px; border-radius: 50%; border: 2px solid #fff;
-            color: white; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            touch-action: manipulation; box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+
+        /* Hotbar de Armas Inferior (Estilo Fortnite) */
+        #hotbar {
+            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 6px; background: rgba(15, 23, 42, 0.85);
+            padding: 5px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); z-index: 20;
         }
-        .abtn svg { width: 22px; height: 22px; fill: white; }
+        .slot {
+            width: 44px; height: 44px; background: rgba(255,255,255,0.1);
+            border: 2px solid #475569; border-radius: 6px; display: flex;
+            align-items: center; justify-content: center; font-size: 18px;
+            cursor: pointer; position: relative;
+        }
+        .slot.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.25); }
+        .slot-ammo { position: absolute; bottom: 1px; right: 3px; font-size: 8px; font-weight: bold; color: #cbd5e1; }
 
-        .btn-sword { background: #dc2626; }
-        .btn-magic { background: #2563eb; }
-        .btn-bow { background: #16a34a; }
-        .btn-chop { background: #d97706; }
-        .btn-mount { background: #9333ea; }
-        .btn-interact { background: #0891b2; }
+        /* Controles Táctiles estilo shooter movil */
+        #touch-layer {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 15;
+        }
+        .touch-btn {
+            position: absolute; pointer-events: auto; border-radius: 50%;
+            background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.5);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; touch-action: manipulation; backdrop-filter: blur(2px);
+        }
+        .touch-btn:active { background: rgba(255,255,255,0.4); }
 
-        .credits { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #64748b; font-weight: bold; z-index: 10; pointer-events: none; }
+        /* Posiciones exactas controles móviles */
+        #btn-shoot { right: 25px; bottom: 80px; width: 68px; height: 68px; background: rgba(220, 38, 38, 0.4); border-color: #ef4444; }
+        #btn-aim { right: 105px; bottom: 95px; width: 48px; height: 48px; }
+        #btn-jump { right: 35px; bottom: 160px; width: 48px; height: 48px; }
+        #btn-mount { right: 95px; bottom: 155px; width: 44px; height: 44px; }
+        #btn-interact { right: 150px; bottom: 155px; width: 44px; height: 44px; background: rgba(14, 165, 233, 0.4); }
+
+        /* D-Pad Joystick Izquierdo */
+        #dpad {
+            position: absolute; left: 20px; bottom: 20px; width: 120px; height: 120px;
+            display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px);
+            pointer-events: auto;
+        }
+        .dp-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+
+        /* Mira Crosshair Central */
+        #crosshair {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 10px; height: 10px; border: 2px solid rgba(255,255,255,0.7);
+            border-radius: 50%; pointer-events: none; z-index: 10;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
     <div id="canvas-container"></div>
+    <div id="crosshair"></div>
 
-    <!-- HUD Jugador -->
-    <div class="hud">
-        <div>LVL <span id="player-lvl" style="color:#f59e0b;">1</span> (<span id="player-xp">0</span>/100 XP)</div>
-        <div style="margin-top:3px;">HP: <div class="bar-wrap"><div id="hp-bar" class="hp-bar"></div></div></div>
-        <div style="margin-top:2px;">MP: <div class="bar-wrap"><div id="mp-bar" class="mp-bar"></div></div></div>
-        <div style="margin-top:4px; color:#f59e0b;">ORO: <span id="gold-txt" style="color:white;">0</span> | MADERA: <span id="wood-txt" style="color:white;">0</span></div>
+    <!-- Minimapa -->
+    <div id="minimap-card">
+        <canvas id="minimap" width="110" height="110"></canvas>
     </div>
 
-    <!-- Menú de Botones para Abrir/Cerrar Ventanas -->
-    <div id="menu-bar">
-        <button class="toggle-btn" onclick="toggleWindow('craft-panel')" title="Mesa de Crafteo">🔨</button>
-        <button class="toggle-btn" onclick="toggleWindow('quest-tracker')" title="Misiones">📜</button>
-        <button class="toggle-btn" onclick="toggleWindow('minimap-wrapper')" title="Minimapa">🗺️</button>
+    <!-- Estados del Jugador -->
+    <div id="status-bar">
+        <div>LVL <span id="p-lvl" style="color:#f59e0b">1</span> (<span id="p-xp">0</span>/100 XP)</div>
+        <div style="margin-top:2px;">HP <div class="bar-wrap"><div id="hp-bar" class="hp-bar"></div></div></div>
+        <div style="margin-top:2px;">MP <div class="bar-wrap"><div id="mp-bar" class="mp-bar"></div></div></div>
     </div>
 
-    <!-- Ventana Minimapa -->
-    <div id="minimap-wrapper">
-        <canvas id="minimap" width="120" height="120"></canvas>
+    <!-- Banner de Misión Activa -->
+    <div id="quest-hud">
+        <span id="quest-text" style="color:#fde047;">Misión: Habla con el Sabio (?)</span>
     </div>
 
-    <!-- Ventana Crafteo -->
-    <div id="craft-panel" class="ui-window">
-        <strong style="color:#f59e0b;">MESA DE CRAFTEO</strong>
-        <div style="margin-top:3px;">Madera: <span id="c-wood">0</span></div>
-        <button class="craft-btn" onclick="craftItem('espada')">⚔️ Espada Reforzada (5 Mad)</button>
-        <button class="craft-btn" onclick="craftItem('arco')">🏹 Arco Largo (8 Mad)</button>
-        <button class="craft-btn" onclick="craftItem('pocio')">🧪 Poción Vida (20 Oro)</button>
+    <!-- Selector de Armas (Hotbar Fortnite) -->
+    <div id="hotbar">
+        <div class="slot active" id="slot-0" onclick="selectSlot(0)">⚔️<span class="slot-ammo">∞</span></div>
+        <div class="slot" id="slot-1" onclick="selectSlot(1)">🏹<span class="slot-ammo" id="ammo-bow">15</span></div>
+        <div class="slot" id="slot-2" onclick="selectSlot(2)">🔥<span class="slot-ammo">MP</span></div>
+        <div class="slot" id="slot-3" onclick="selectSlot(3)">🪓<span class="slot-ammo">Tala</span></div>
     </div>
 
-    <!-- Ventana Misiones -->
-    <div id="quest-tracker" class="ui-window">
-        <strong style="color:#f59e0b;">MISIONES ACTIVAS</strong>
-        <div id="quest-desc" style="margin-top:4px; color:#cbd5e1;">- Caer 3 Sombras (<span id="q-count">0</span>/3)</div>
-    </div>
+    <!-- Capa de Controles Táctiles -->
+    <div id="touch-layer">
+        <div class="touch-btn" id="btn-shoot">🎯</div>
+        <div class="touch-btn" id="btn-aim">🔍</div>
+        <div class="touch-btn" id="btn-jump">⬆️</div>
+        <div class="touch-btn" id="btn-mount">🐎</div>
+        <div class="touch-btn" id="btn-interact">💬</div>
 
-    <!-- Botones Táctiles con SVG Icons -->
-    <div id="touch-controls">
-        <div class="dpad">
-            <div></div><div class="dbtn" id="btn-up">▲</div><div></div>
-            <div class="dbtn" id="btn-left">◀</div><div></div><div class="dbtn" id="btn-right">▶</div>
-            <div></div><div class="dbtn" id="btn-down">▼</div><div></div>
-        </div>
-        <div class="action-btns">
-            <div class="abtn btn-sword" id="btn-attack">
-                <svg viewBox="0 0 24 24"><path d="M6.92 5c-.39 0-.78.15-1.07.44l-2.41 2.42c-.59.59-.59 1.54 0 2.13l6.3 6.3-2.12 2.12c-.39.39-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0l2.12-2.12 6.3 6.3c.59.59 1.54.59 2.13 0l2.42-2.41c.59-.59.59-1.54 0-2.13l-6.3-6.3 2.12-2.12c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0l-2.12 2.12-6.3-6.3c-.29-.29-.68-.44-1.07-.44z"/></svg>
-            </div>
-            <div class="abtn btn-magic" id="btn-magic">
-                <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z"/></svg>
-            </div>
-            <div class="abtn btn-bow" id="btn-bow">
-                <svg viewBox="0 0 24 24"><path d="M18 3v2h-2V3h2zm-4 4h2V5h-2v2zm-2 2h2V7h-2v2zm-2 2h2V9h-2v2zm-2 2h2v-2H8v2zm-2 2h2v-2H6v2zm-2 2h2v-2H4v2zm-2 2h2v-2H2v2z"/></svg>
-            </div>
-            <div class="abtn btn-chop" id="btn-chop">
-                <svg viewBox="0 0 24 24"><path d="M15 2l-3 3 2 2 3-3V2zm-4 4L3 14v3h3l8-8-3-3z"/></svg>
-            </div>
-            <div class="abtn btn-mount" id="btn-mount">
-                <svg viewBox="0 0 24 24"><path d="M19 7c-1.1 0-2 .9-2 2v2H7V9c0-1.1-.9-2-2-2S3 7.9 3 9v8h2v3h2v-3h10v3h2v-3h2V9c0-1.1-.9-2-2-2z"/></svg>
-            </div>
-            <div class="abtn btn-interact" id="btn-action">
-                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-            </div>
+        <div id="dpad">
+            <div></div><div class="dp-btn" id="btn-up">▲</div><div></div>
+            <div class="dp-btn" id="btn-left">◀</div><div></div><div class="dp-btn" id="btn-right">▶</div>
+            <div></div><div class="dp-btn" id="btn-down">▼</div><div></div>
         </div>
     </div>
-
-    <div class="credits">Creado por Dani v1</div>
 
 <script>
-    // --- MOTOR Y THREE.JS ---
-    const container = document.getElementById('canvas-container');
+    // --- ESCENA Y CONFIGURACIÓN ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f172a);
-    scene.fog = new THREE.FogExp2(0x0f172a, 0.009);
+    scene.background = new THREE.Color(0x0284c7);
+    scene.fog = new THREE.FogExp2(0x0284c7, 0.008);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    const minimapCanvas = document.getElementById('minimap');
-    const mctx = minimapCanvas.getContext('2d');
+    const minimapCtx = document.getElementById('minimap').getContext('2d');
 
-    const ambientLight = new THREE.AmbientLight(0x94a3b8, 0.8);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfde047, 0.9);
-    sunLight.position.set(50, 80, 30);
-    sunLight.castShadow = true;
-    scene.add(sunLight);
+    const sun = new THREE.DirectionalLight(0xfffbeb, 0.9);
+    sun.position.set(40, 60, 20);
+    sun.castShadow = true;
+    scene.add(sun);
 
-    let p = { lvl: 1, xp: 0, hp: 100, maxHp: 100, mp: 80, maxMp: 80, gold: 0, wood: 0, speed: 0.18, isMounted: false, questKills: 0 };
+    // --- ESTADO Y RECURSOS ---
+    let p = {
+        lvl: 1, xp: 0, hp: 100, maxHp: 100, mp: 80, maxMp: 80,
+        speed: 0.18, activeSlot: 0, arrows: 15, isMounted: false,
+        questState: 0, // 0: Hablar NPC, 1: Derrotar 2 Sombras, 2: Listo para entregar
+    };
+
     const keys = { up: false, down: false, left: false, right: false };
 
-    // --- TERRENO Y ÁRBOLES DETALLADOS ---
-    const floorGeo = new THREE.PlaneGeometry(250, 250);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
+    // Terreno
+    const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(250, 250),
+        new THREE.MeshStandardMaterial({ color: 0x15803d })
+    );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Árboles Complejos (Copa Multinivel)
-    const trees = [];
-    function createDetailedTree(x, z) {
-        const group = new THREE.Group();
-        
-        // Tronco con textura visual
-        const tGeo = new THREE.CylinderGeometry(0.3, 0.5, 3, 8);
-        const tMat = new THREE.MeshStandardMaterial({ color: 0x451a03 });
-        const trunk = new THREE.Mesh(tGeo, tMat);
-        trunk.position.y = 1.5;
-        trunk.castShadow = true;
-        group.add(trunk);
-
-        // Copas escalonadas (3 niveles)
-        const leafMat = new THREE.MeshStandardMaterial({ color: 0x166534, flatShading: true });
-        for(let i=0; i<3; i++) {
-            const lGeo = new THREE.ConeGeometry(2.2 - i*0.5, 2.2, 7);
-            const leaves = new THREE.Mesh(lGeo, leafMat);
-            leaves.position.y = 2.8 + i*1.2;
-            leaves.castShadow = true;
-            group.add(leaves);
-        }
-
-        group.position.set(x, 0, z);
-        scene.add(group);
-        trees.push({ group, hp: 3 });
-    }
-
-    for(let i=0; i<30; i++) {
-        let rx = (Math.random()-0.5)*180;
-        let rz = (Math.random()-0.5)*180;
-        if(Math.hypot(rx, rz) > 12) createDetailedTree(rx, rz);
-    }
-
-    // --- MODELADO DETALLADO DE HÉROE Y MONTURA ---
+    // Jugador
     const playerGroup = new THREE.Group();
-
-    // Héroe Detallado
-    const heroMesh = new THREE.Group();
-    // Armadura / Pecho
-    const chest = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.4), new THREE.MeshStandardMaterial({ color: 0x1e3a8a }));
-    chest.position.y = 0.8;
-    heroMesh.add(chest);
-
-    // Hombreras
-    const shoulderGeo = new THREE.SphereGeometry(0.2, 6, 6);
-    const shoulderMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8 });
-    const sLeft = new THREE.Mesh(shoulderGeo, shoulderMat); sLeft.position.set(-0.45, 1.1, 0);
-    const sRight = new THREE.Mesh(shoulderGeo, shoulderMat); sRight.position.set(0.45, 1.1, 0);
-    heroMesh.add(sLeft); heroMesh.add(sRight);
-
-    // Cabeza y Cabello
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 10), new THREE.MeshStandardMaterial({ color: 0xffdbac }));
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.2, 0.5), new THREE.MeshStandardMaterial({ color: 0x2563eb }));
+    body.position.y = 0.6;
+    playerGroup.add(body);
+    
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshStandardMaterial({ color: 0xfde047 }));
     head.position.y = 1.4;
-    heroMesh.add(head);
+    playerGroup.add(head);
 
-    const hair = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0xb45309 }));
-    hair.position.set(0, 1.65, -0.05); hair.rotation.x = -0.3;
-    heroMesh.add(hair);
-
-    playerGroup.add(heroMesh);
-
-    // Montura Detallada (Caballo)
-    const mountGroup = new THREE.Group();
-    const horseBody = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.0, 2.0), new THREE.MeshStandardMaterial({ color: 0x581c87 }));
-    horseBody.position.y = 0.9;
-    mountGroup.add(horseBody);
-
-    const horseNeck = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.7), new THREE.MeshStandardMaterial({ color: 0x581c87 }));
-    horseNeck.position.set(0, 1.5, -0.7); horseNeck.rotation.x = 0.4;
-    mountGroup.add(horseNeck);
-
-    mountGroup.visible = false;
-    playerGroup.add(mountGroup);
-
-    playerGroup.position.set(0, 0, 0);
     scene.add(playerGroup);
 
-    // --- ENEMY SYSTEM ---
+    // NPC Sabio (Para Entregar Misiones)
+    const npcGroup = new THREE.Group();
+    const npcBody = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4), new THREE.MeshStandardMaterial({ color: 0x0284c7 }));
+    npcBody.position.y = 0.7;
+    npcGroup.add(npcBody);
+    npcGroup.position.set(8, 0, 8);
+    scene.add(npcGroup);
+
+    // Enemigos
     const enemies = [];
-    function createEnemy(x, z) {
-        const group = new THREE.Group();
-        const body = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.8, 8), new THREE.MeshStandardMaterial({ color: 0x312e81, flatShading: true }));
-        body.rotation.x = Math.PI; body.position.y = 1.0;
-        group.add(body);
-
-        group.position.set(x, 0, z);
-        scene.add(group);
-        enemies.push({ group, hp: 40 });
+    function spawnEnemy(x, z) {
+        const mesh = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.6, 8), new THREE.MeshStandardMaterial({ color: 0x4c1d95 }));
+        mesh.rotation.x = Math.PI;
+        mesh.position.set(x, 0.8, z);
+        scene.add(mesh);
+        enemies.push({ mesh, hp: 40 });
     }
-    createEnemy(15, 15); createEnemy(-20, 20);
+    spawnEnemy(-15, 15); spawnEnemy(15, -20);
 
-    // --- FUNCIONES UI Y CONTROLES ---
-    function toggleWindow(id) {
-        const el = document.getElementById(id);
-        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    // --- EFECTOS VISUALES (VFX) ---
+    const vfxList = [];
+
+    function triggerSlashVFX() {
+        const slashGeo = new THREE.RingGeometry(0.5, 1.2, 8, 1, 0, Math.PI);
+        const slashMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
+        const slash = new THREE.Mesh(slashGeo, slashMat);
+        
+        slash.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
+        slash.rotation.copy(playerGroup.rotation);
+        slash.rotation.x = Math.PI / 2;
+        scene.add(slash);
+        vfxList.push({ mesh: slash, life: 10 });
     }
 
-    function attack() {
+    function triggerFireballVFX() {
+        if(p.mp < 20) return;
+        p.mp -= 20;
+        updateHUD();
+
+        const ball = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+        ball.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, -0.5));
+        const dir = new THREE.Vector3(0,0,-1).applyQuaternion(playerGroup.quaternion);
+        scene.add(ball);
+        vfxList.push({ mesh: ball, dir, life: 40, isProj: true });
+    }
+
+    // --- ACCIONES Y CONTROLES ---
+    function selectSlot(index) {
+        p.activeSlot = index;
+        document.querySelectorAll('.slot').forEach((s, i) => {
+            s.classList.toggle('active', i === index);
+        });
+    }
+
+    function executeAttack() {
+        if(p.activeSlot === 0) { // Espada
+            triggerSlashVFX();
+            checkMeleeHit();
+        } else if(p.activeSlot === 2) { // Magia
+            triggerFireballVFX();
+        }
+    }
+
+    function checkMeleeHit() {
         enemies.forEach((enemy, i) => {
-            if(enemy.group.position.distanceTo(playerGroup.position) < 3) {
-                enemy.hp -= 20;
+            if(enemy.mesh.position.distanceTo(playerGroup.position) < 3) {
+                enemy.hp -= 25;
                 if(enemy.hp <= 0) {
-                    scene.remove(enemy.group);
+                    scene.remove(enemy.mesh);
                     enemies.splice(i, 1);
-                    p.xp += 30; p.gold += 15; p.questKills++;
+                    p.xp += 40;
+                    if(p.questState === 1) {
+                        p.questState = 2; // Listo para entregar
+                        updateQuestHUD();
+                    }
                     updateHUD();
                 }
             }
         });
     }
 
-    function toggleMount() {
-        p.isMounted = !p.isMounted;
-        mountGroup.visible = p.isMounted;
-        heroMesh.position.y = p.isMounted ? 0.8 : 0;
-        p.speed = p.isMounted ? 0.35 : 0.18;
+    function interactNPC() {
+        const dist = playerGroup.position.distanceTo(npcGroup.position);
+        if(dist < 4) {
+            if(p.questState === 0) {
+                p.questState = 1;
+                alert("Sabio: 'Derrota a las Sombras del Valle y regresa por tu recompensa.'");
+            } else if(p.questState === 2) {
+                p.questState = 3;
+                p.xp += 100;
+                p.lvl++;
+                alert("Sabio: '¡Excelente trabajo! Has subido de nivel.'");
+            }
+            updateQuestHUD();
+            updateHUD();
+        }
     }
 
-    function chopTree() {
-        trees.forEach((tree, i) => {
-            if(tree.group.position.distanceTo(playerGroup.position) < 3.5) {
-                tree.hp--;
-                p.wood += 2;
-                updateHUD();
-                if(tree.hp <= 0) { scene.remove(tree.group); trees.splice(i, 1); }
-            }
-        });
+    function updateQuestHUD() {
+        const qText = document.getElementById('quest-text');
+        if(p.questState === 0) qText.textContent = "Misión: Habla con el Sabio (?)";
+        else if(p.questState === 1) qText.textContent = "Misión: Elimina a las Sombras";
+        else if(p.questState === 2) qText.textContent = "¡Misión Cumplida! Entrega al Sabio (!)";
+        else qText.textContent = "Misiones Completadas";
     }
 
     function updateHUD() {
-        document.getElementById('player-lvl').textContent = p.lvl;
-        document.getElementById('player-xp').textContent = p.xp;
+        document.getElementById('p-lvl').textContent = p.lvl;
+        document.getElementById('p-xp').textContent = p.xp;
         document.getElementById('hp-bar').style.width = `${p.hp}%`;
         document.getElementById('mp-bar').style.width = `${p.mp}%`;
-        document.getElementById('gold-txt').textContent = p.gold;
-        document.getElementById('wood-txt').textContent = p.wood;
-        document.getElementById('c-wood').textContent = p.wood;
-        document.getElementById('q-count').textContent = Math.min(3, p.questKills);
     }
 
-    function bindTouch(id, fn) {
-        document.getElementById(id).addEventListener('touchstart', (e)=>{ e.preventDefault(); fn(); });
-        document.getElementById(id).addEventListener('click', fn);
+    // --- EVENTOS BINDING ---
+    function bind(id, fn) {
+        const el = document.getElementById(id);
+        el.addEventListener('touchstart', (e)=>{ e.preventDefault(); fn(); });
+        el.addEventListener('click', fn);
     }
 
-    bindTouch('btn-attack', attack);
-    bindTouch('btn-mount', toggleMount);
-    bindTouch('btn-chop', chopTree);
+    bind('btn-shoot', executeAttack);
+    bind('btn-interact', interactNPC);
 
     function bindDir(id, k) {
         const el = document.getElementById(id);
@@ -350,75 +315,65 @@
     bindDir('btn-up','up'); bindDir('btn-down','down');
     bindDir('btn-left','left'); bindDir('btn-right','right');
 
-    window.addEventListener('keydown', e => {
-        const k = e.key.toLowerCase();
-        if (k==='w'||k==='arrowup') keys.up = true;
-        if (k==='s'||k==='arrowdown') keys.down = true;
-        if (k==='a'||k==='arrowleft') keys.left = true;
-        if (k==='d'||k==='arrowright') keys.right = true;
-    });
+    // --- MINIMAPA CON ICONOS DE NPC DINÁMICOS ---
+    function drawMinimap() {
+        minimapCtx.clearRect(0,0,110,110);
+        const cx = 55, cy = 55, scale = 0.6;
 
-    window.addEventListener('keyup', e => {
-        const k = e.key.toLowerCase();
-        if (k==='w'||k==='arrowup') keys.up = false;
-        if (k==='s'||k==='arrowdown') keys.down = false;
-        if (k==='a'||k==='arrowleft') keys.left = false;
-        if (k==='d'||k==='arrowright') keys.right = false;
-    });
+        minimapCtx.fillStyle = '#064e3b';
+        minimapCtx.fillRect(0,0,110,110);
 
-    // --- BUCLE Y RENDERIZADO ---
-    function update() {
-        if (keys.left) playerGroup.rotation.y += 0.045;
-        if (keys.right) playerGroup.rotation.y -= 0.045;
+        // Render NPC Icon en Minimapa
+        let nx = (npcGroup.position.x - playerGroup.position.x) * scale;
+        let nz = (npcGroup.position.z - playerGroup.position.z) * scale;
+        
+        minimapCtx.font = 'bold 12px sans-serif';
+        if(p.questState === 0) {
+            minimapCtx.fillStyle = '#3b82f6';
+            minimapCtx.fillText('?', cx + nx - 3, cy + nz + 4);
+        } else if(p.questState === 2) {
+            minimapCtx.fillStyle = '#f59e0b';
+            minimapCtx.fillText('!', cx + nx - 3, cy + nz + 4);
+        }
+
+        // Flecha Jugador
+        minimapCtx.save();
+        minimapCtx.translate(cx, cy);
+        minimapCtx.rotate(-playerGroup.rotation.y);
+        minimapCtx.fillStyle = '#ffffff';
+        minimapCtx.beginPath();
+        minimapCtx.moveTo(0, -5); minimapCtx.lineTo(3, 3); minimapCtx.lineTo(-3, 3);
+        minimapCtx.closePath(); minimapCtx.fill();
+        minimapCtx.restore();
+    }
+
+    // --- LOOP PRINCIPAL ---
+    function animate() {
+        requestAnimationFrame(animate);
+
+        if (keys.left) playerGroup.rotation.y += 0.04;
+        if (keys.right) playerGroup.rotation.y -= 0.04;
         if (keys.up) playerGroup.translateZ(-p.speed);
         if (keys.down) playerGroup.translateZ(p.speed);
 
-        const cameraOffset = new THREE.Vector3(0, 4.5, 7.5).applyMatrix4(playerGroup.matrixWorld);
-        camera.position.lerp(cameraOffset, 0.1);
-        camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
-
-        drawMinimap();
-    }
-
-    function drawMinimap() {
-        mctx.clearRect(0, 0, 120, 120);
-        const cx = 60, cy = 60, scale = 0.6;
-
-        mctx.fillStyle = '#064e3b';
-        mctx.fillRect(0, 0, 120, 120);
-
-        enemies.forEach(e => {
-            let dx = (e.group.position.x - playerGroup.position.x) * scale;
-            let dz = (e.group.position.z - playerGroup.position.z) * scale;
-            if (Math.hypot(dx, dz) < 50) {
-                mctx.fillStyle = '#ef4444';
-                mctx.beginPath();
-                mctx.arc(cx + dx, cy + dz, 3, 0, Math.PI * 2);
-                mctx.fill();
+        // Render VFX
+        vfxList.forEach((v, i) => {
+            if(v.isProj) v.mesh.position.addScaledVector(v.dir, 0.4);
+            v.life--;
+            if(v.life <= 0) {
+                scene.remove(v.mesh);
+                vfxList.splice(i, 1);
             }
         });
 
-        mctx.save();
-        mctx.translate(cx, cy);
-        mctx.rotate(-playerGroup.rotation.y);
-        mctx.fillStyle = '#3b82f6';
-        mctx.beginPath();
-        mctx.moveTo(0, -6); mctx.lineTo(4, 4); mctx.lineTo(-4, 4);
-        mctx.closePath(); mctx.fill();
-        mctx.restore();
-    }
+        // Camara Third Person
+        const offset = new THREE.Vector3(0, 3.5, 6).applyMatrix4(playerGroup.matrixWorld);
+        camera.position.lerp(offset, 0.1);
+        camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
 
-    function animate() {
-        requestAnimationFrame(animate);
-        update();
+        drawMinimap();
         renderer.render(scene, camera);
     }
-
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
 
     animate();
 </script>
