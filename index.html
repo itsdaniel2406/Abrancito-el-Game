@@ -36,13 +36,14 @@
             border-radius: 10px;
             border: 2px solid #334155;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             pointer-events: none;
+            z-index: 10;
         }
 
         .bar-container {
-            width: 120px;
+            width: 100px;
             height: 12px;
             background: #334155;
             border-radius: 6px;
@@ -54,10 +55,30 @@
 
         .hp-bar { width: 100%; height: 100%; background: #ef4444; transition: width 0.2s; }
 
+        /* Minimapa */
+        #minimap-container {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 3px solid #f59e0b;
+            background: rgba(15, 23, 42, 0.9);
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            z-index: 10;
+        }
+
+        #minimap {
+            width: 100%;
+            height: 100%;
+        }
+
         /* Cuadro de Diálogo */
         #dialog-box {
             position: absolute;
-            bottom: 120px;
+            bottom: 110px;
             left: 50%;
             transform: translateX(-50%);
             width: 90%;
@@ -68,38 +89,36 @@
             padding: 15px;
             display: none;
             box-shadow: 0 4px 20px rgba(0,0,0,0.7);
-            z-index: 10;
+            z-index: 20;
         }
 
-        /* Controles Táctiles estilo GTA */
+        /* Controles Táctiles */
         #touch-controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 15px;
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
-            z-index: 5;
+            padding: 0 15px;
+            z-index: 10;
             pointer-events: none;
         }
 
-        .dpad, .action-btns {
-            pointer-events: auto;
-        }
+        .dpad, .action-btns { pointer-events: auto; }
 
         .dpad {
             display: grid;
-            grid-template-columns: repeat(3, 50px);
-            grid-template-rows: repeat(3, 50px);
-            gap: 4px;
+            grid-template-columns: repeat(3, 48px);
+            grid-template-rows: repeat(3, 48px);
+            gap: 3px;
         }
 
         .dbtn {
-            background: rgba(31, 41, 55, 0.8);
+            background: rgba(31, 41, 55, 0.85);
             border: 2px solid #4b5563;
-            border-radius: 10px;
+            border-radius: 8px;
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -110,13 +129,13 @@
 
         .action-btns {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: flex-end;
         }
 
         .abtn {
-            width: 60px;
-            height: 60px;
+            width: 58px;
+            height: 58px;
             border-radius: 50%;
             border: 2px solid #fff;
             color: white;
@@ -131,23 +150,21 @@
 
         .btn-a { background: #dc2626; }
         .btn-b { background: #2563eb; }
-        .abtn:active { transform: scale(0.9); }
+        .abtn:active { transform: scale(0.92); }
 
         .credits {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(15, 23, 42, 0.85);
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid #334155;
-            font-size: 12px;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
             color: #9ca3af;
             font-weight: bold;
+            z-index: 10;
             pointer-events: none;
         }
     </style>
-    <!-- Carga de Three.js para motor de gráficos 3D -->
+    <!-- Motor Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
@@ -156,14 +173,17 @@
 
     <div class="hud">
         <div>SALUD: <div class="bar-container"><div id="hp-bar" class="hp-bar"></div></div></div>
-        <div style="margin-top: 5px; color: #f59e0b;">MUNDO: <span id="zone-txt">Ciudad Central 3D</span></div>
+        <div style="margin-top: 4px; color: #f59e0b;">ZONA: <span>Valle Central 3D</span></div>
     </div>
 
-    <div class="credits">Creado por Dani v1</div>
+    <!-- Minimapa -->
+    <div id="minimap-container">
+        <canvas id="minimap" width="110" height="110"></canvas>
+    </div>
 
     <div id="dialog-box">
-        <strong id="npc-name" style="color: #f59e0b; font-size: 16px;"></strong>
-        <p id="npc-text" style="margin: 6px 0 0 0; font-size: 14px; line-height: 1.4;"></p>
+        <strong id="npc-name" style="color: #f59e0b; font-size: 15px;"></strong>
+        <p id="npc-text" style="margin: 5px 0 0 0; font-size: 13px; line-height: 1.4;"></p>
     </div>
 
     <div id="touch-controls">
@@ -178,12 +198,14 @@
         </div>
     </div>
 
+    <div class="credits">Creado por Dani v1</div>
+
 <script>
-    // --- MOTOR Y ESCENA 3D ---
+    // --- ESCENA Y CONFIGURACIÓN THREE.JS ---
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87ceeb); // Cielo azul estilo San Andreas
-    scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
+    scene.background = new THREE.Color(0x7dd3fc); // Cielo claro
+    scene.fog = new THREE.FogExp2(0x7dd3fc, 0.012);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -191,117 +213,197 @@
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
+    // Canvas Minimapa
+    const minimapCanvas = document.getElementById('minimap');
+    const mctx = minimapCanvas.getContext('2d');
+
     // Luces
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(50, 80, 50);
+    dirLight.position.set(40, 60, 40);
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    // --- ESTADO DEL JUEGO ---
-    let playerState = {
-        hp: 100, maxHp: 100,
-        speed: 0.15,
-        rotSpeed: 0.04
-    };
-
+    let playerState = { hp: 100, speed: 0.16, rotSpeed: 0.045, isAttacking: false, attackTimer: 0 };
     const keys = { up: false, down: false, left: false, right: false };
 
-    // --- CONSTRUCCIÓN DEL MUNDO ABIERTO (CIUDAD Y CALLES) ---
-    // Suelo / Calles
-    const floorGeo = new THREE.PlaneGeometry(200, 200);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+    // --- CONSTRUCCIÓN DEL MUNDO (FAUNA, ARBOLES Y MONTAÑAS) ---
+    // Terreno principal
+    const mapSize = 250;
+    const floorGeo = new THREE.PlaneGeometry(mapSize, mapSize);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x15803d });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Bloques de Pasto / Parques
-    const parkGeo = new THREE.BoxGeometry(40, 0.2, 40);
-    const parkMat = new THREE.MeshStandardMaterial({ color: 0x2e7d32 });
-    const park = new THREE.Mesh(parkGeo, parkMat);
-    park.position.set(-30, 0.1, -30);
-    scene.add(park);
-
-    // Edificios
-    function createBuilding(x, z, w, h, d, color) {
-        const geo = new THREE.BoxGeometry(w, h, d);
-        const mat = new THREE.MeshStandardMaterial({ color: color });
+    // Montañas alrededor del mapa
+    function createMountain(x, z, radius, height) {
+        const geo = new THREE.ConeGeometry(radius, height, 7);
+        const mat = new THREE.MeshStandardMaterial({ color: 0x475569, flatShading: true });
         const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(x, h/2, z);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
+        mesh.position.set(x, height / 2, z);
         scene.add(mesh);
     }
 
-    createBuilding(30, 30, 20, 40, 20, 0x94a3b8);
-    createBuilding(-30, 30, 25, 30, 15, 0x64748b);
-    createBuilding(40, -30, 18, 50, 18, 0x475569);
+    for (let i = 0; i < 16; i++) {
+        let angle = (i / 16) * Math.PI * 2;
+        let dist = 110;
+        createMountain(Math.cos(angle) * dist, Math.sin(angle) * dist, 25 + Math.random() * 10, 30 + Math.random() * 20);
+    }
 
-    // --- PERSONAJE PRINCIPAL (ABRAHANCITO 3D) ---
+    // Bosque y Rocas
+    function createTree(x, z) {
+        const group = new THREE.Group();
+        // Tronco
+        const tGeo = new THREE.CylinderGeometry(0.3, 0.4, 2, 6);
+        const tMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+        const trunk = new THREE.Mesh(tGeo, tMat);
+        trunk.position.y = 1;
+        group.add(trunk);
+        // Hojas
+        const lGeo = new THREE.ConeGeometry(2, 4, 6);
+        const lMat = new THREE.MeshStandardMaterial({ color: 0x166534, flatShading: true });
+        const leaves = new THREE.Mesh(lGeo, lMat);
+        leaves.position.y = 3.5;
+        group.add(leaves);
+
+        group.position.set(x, 0, z);
+        scene.add(group);
+    }
+
+    function createRock(x, z) {
+        const geo = new THREE.DodecahedronGeometry(1 + Math.random(), 0);
+        const mat = new THREE.MeshStandardMaterial({ color: 0x64748b, flatShading: true });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, 0.5, z);
+        scene.add(mesh);
+    }
+
+    // Generar vegetación aleatoria
+    for (let i = 0; i < 40; i++) {
+        let rx = (Math.random() - 0.5) * 160;
+        let rz = (Math.random() - 0.5) * 160;
+        if (Math.hypot(rx, rz) > 10) createTree(rx, rz);
+    }
+    for (let i = 0; i < 25; i++) {
+        let rx = (Math.random() - 0.5) * 160;
+        let rz = (Math.random() - 0.5) * 160;
+        if (Math.hypot(rx, rz) > 10) createRock(rx, rz);
+    }
+
+    // --- PERSONAJE: ABRAHANCITO (HOMBRE CHIQUITO CON ESPADA) ---
     const playerGroup = new THREE.Group();
 
-    // Cuerpo
-    const bodyGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.4, 8);
+    // Cuerpo / Túnica
+    const bodyGeo = new THREE.CylinderGeometry(0.35, 0.4, 0.8, 8);
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2563eb });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 0.7;
+    body.position.y = 0.5;
     playerGroup.add(body);
 
-    // Cabeza
-    const headGeo = new THREE.SphereGeometry(0.4, 8, 8);
+    // Cabeza estilo Chibi (Grande)
+    const headGeo = new THREE.SphereGeometry(0.38, 12, 12);
     const headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
     const head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 1.6;
+    head.position.y = 1.1;
     playerGroup.add(head);
 
-    // Sombrero estilo Vaquero / Heroico
-    const hatGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.1, 8);
+    // Sombrero / Gorro
+    const hatGeo = new THREE.ConeGeometry(0.5, 0.4, 8);
     const hatMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b });
     const hat = new THREE.Mesh(hatGeo, hatMat);
-    hat.position.y = 1.9;
+    hat.position.set(0, 1.4, -0.05);
+    hat.rotation.x = -0.2;
     playerGroup.add(hat);
 
-    playerGroup.position.set(0, 0, 0);
+    // ESPADA EN LA ESPALDA
+    const swordGroup = new THREE.Group();
+    // Empuñadura
+    const hiltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.3, 6);
+    const hiltMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+    const hilt = new THREE.Mesh(hiltGeo, hiltMat);
+    hilt.position.y = 0.5;
+    swordGroup.add(hilt);
+    // Hoja
+    const bladeGeo = new THREE.BoxGeometry(0.08, 0.9, 0.02);
+    const bladeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.8 });
+    const blade = new THREE.Mesh(bladeGeo, bladeMat);
+    blade.position.y = 1.0;
+    swordGroup.add(blade);
+
+    // Posición en la espalda por defecto
+    swordGroup.position.set(0, 0.5, -0.35);
+    swordGroup.rotation.set(0, 0, -Math.PI / 4);
+    playerGroup.add(swordGroup);
+
     scene.add(playerGroup);
 
-    // --- ENEMIGOS Y NPCS 3D ---
-    // NPCs
-    const npcs = [];
-    function createNPC(x, z, name, dialog, color) {
+    // --- CREATURAS / VILLANOS (FANTASMAS SOMBRÍOS EN LUGAR DE CUBOS) ---
+    const enemies = [];
+    function createEnemy(x, z) {
         const group = new THREE.Group();
-        const mGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.4, 8);
-        const mMat = new THREE.MeshStandardMaterial({ color: color });
-        const mesh = new THREE.Mesh(mGeo, mMat);
-        mesh.position.y = 0.7;
+
+        // Cuerpo Flotante Conico
+        const eGeo = new THREE.ConeGeometry(0.7, 1.6, 8);
+        const eMat = new THREE.MeshStandardMaterial({ color: 0x312e81, flatShading: true });
+        const body = new THREE.Mesh(eGeo, eMat);
+        body.rotation.x = Math.PI;
+        body.position.y = 1.0;
+        group.add(body);
+
+        // Ojos Amarillos Brillantes
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+        const eyeGeo = new THREE.SphereGeometry(0.1, 6, 6);
+        const eye1 = new THREE.Mesh(eyeGeo, eyeMat);
+        eye1.position.set(-0.2, 1.1, 0.4);
+        const eye2 = new THREE.Mesh(eyeGeo, eyeMat);
+        eye2.position.set(0.2, 1.1, 0.4);
+        group.add(eye1); group.add(eye2);
+
+        // Sombra en base
+        const sGeo = new THREE.CircleGeometry(0.6, 8);
+        const sMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.4 });
+        const shadow = new THREE.Mesh(sGeo, sMat);
+        shadow.rotation.x = -Math.PI / 2;
+        shadow.position.y = 0.02;
+        group.add(shadow);
+
+        group.position.set(x, 0, z);
+        scene.add(group);
+        enemies.push({ group, hp: 40, speed: 0.035, floatOffset: Math.random() * 100 });
+    }
+
+    createEnemy(15, 15);
+    createEnemy(-25, 20);
+    createEnemy(30, -20);
+
+    // --- NPCS ---
+    const npcs = [];
+    function createNPC(x, z, name, dialog) {
+        const group = new THREE.Group();
+        const nGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.9, 8);
+        const nMat = new THREE.MeshStandardMaterial({ color: 0x10b981 });
+        const mesh = new THREE.Mesh(nGeo, nMat);
+        mesh.position.y = 0.45;
         group.add(mesh);
+
+        const hGeo = new THREE.SphereGeometry(0.35, 8, 8);
+        const hMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+        const head = new THREE.Mesh(hGeo, hMat);
+        head.position.y = 1.0;
+        group.add(head);
 
         group.position.set(x, 0, z);
         scene.add(group);
         npcs.push({ group, name, dialog });
     }
 
-    createNPC(5, -5, "Ciudadano", "¡Bienvenido a la ciudad 3D Abrahancito! Puedes explorar libremente.", 0x10b981);
-    createNPC(-15, -20, "Mecánico", "Hay villanos cerca de los edificios, pero no hacen mucho daño.", 0xf59e0b);
+    createNPC(6, -6, "Guardián del Valle", "¡Abrahancito! Los Fantasmas de la Sombra han regresado. Usa tu espada para ahuyentarlos.");
 
-    // ENEMIGOS (Dificultad Baja)
-    const enemies = [];
-    function createEnemy(x, z) {
-        const geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-        const mat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(x, 0.6, z);
-        mesh.castShadow = true;
-        scene.add(mesh);
-        enemies.push({ mesh, hp: 30, speed: 0.03 }); // Velocidad lenta para bajar dificultad
-    }
-
-    createEnemy(20, 15);
-    createEnemy(-20, 20);
-
-    // --- CONTROLES Y EVENTOS ---
+    // --- CONTROLES ---
     window.addEventListener('keydown', e => {
         const k = e.key.toLowerCase();
         if (k === 'w' || k === 'arrowup') keys.up = true;
@@ -330,52 +432,66 @@
 
     bindTouch('btn-up', 'up'); bindTouch('btn-down', 'down');
     bindTouch('btn-left', 'left'); bindTouch('btn-right', 'right');
-
     document.getElementById('btn-attack').addEventListener('click', attack);
     document.getElementById('btn-action').addEventListener('click', interact);
 
-    // --- BUCLE Y LÓGICA DE JUEGO ---
+    // --- LÓGICA DE JUEGO Y ANIMACIONES ---
     function update() {
-        // Movimiento de Abrahancito
+        // Movimiento Abrahancito
         if (keys.left) playerGroup.rotation.y += playerState.rotSpeed;
         if (keys.right) playerGroup.rotation.y -= playerState.rotSpeed;
 
-        if (keys.up) {
-            playerGroup.translateZ(-playerState.speed);
-        }
-        if (keys.down) {
-            playerGroup.translateZ(playerState.speed);
+        if (keys.up) playerGroup.translateZ(-playerState.speed);
+        if (keys.down) playerGroup.translateZ(playerState.speed);
+
+        // Animación de Ataque (Saca la espada)
+        if (playerState.isAttacking) {
+            playerState.attackTimer--;
+            swordGroup.position.set(0.3, 0.6, 0.3);
+            swordGroup.rotation.set(Math.PI / 2, 0, 0);
+            if (playerState.attackTimer <= 0) {
+                playerState.isAttacking = false;
+                // Vuelve a la espalda
+                swordGroup.position.set(0, 0.5, -0.35);
+                swordGroup.rotation.set(0, 0, -Math.PI / 4);
+            }
         }
 
-        // Cámara en 3ra Persona estilo GTA
-        const cameraOffset = new THREE.Vector3(0, 4, 8).applyMatrix4(playerGroup.matrixWorld);
+        // Camara Tercera Persona
+        const cameraOffset = new THREE.Vector3(0, 3.5, 6.5).applyMatrix4(playerGroup.matrixWorld);
         camera.position.lerp(cameraOffset, 0.1);
-        camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
+        camera.lookAt(playerGroup.position.x, playerGroup.position.y + 0.8, playerGroup.position.z);
 
-        // Movimiento Lento de Enemigos (Baja Dificultad)
-        enemies.forEach((enemy, i) => {
-            const dist = enemy.mesh.position.distanceTo(playerGroup.position);
-            if (dist < 12 && dist > 1.2) {
-                enemy.mesh.lookAt(playerGroup.position);
-                enemy.mesh.translateZ(enemy.speed);
+        // Enemigos: Flotación + Movimiento Lento
+        const time = Date.now() * 0.003;
+        enemies.forEach((enemy) => {
+            enemy.group.children[0].position.y = 1.0 + Math.sin(time + enemy.floatOffset) * 0.15;
+
+            const dist = enemy.group.position.distanceTo(playerGroup.position);
+            if (dist < 14 && dist > 1.2) {
+                enemy.group.lookAt(playerGroup.position);
+                enemy.group.translateZ(enemy.speed);
             } else if (dist <= 1.2) {
-                // Daño bajo al jugador
-                playerState.hp = Math.max(0, playerState.hp - 0.1);
+                playerState.hp = Math.max(0, playerState.hp - 0.08);
                 document.getElementById('hp-bar').style.width = `${playerState.hp}%`;
             }
         });
+
+        drawMinimap();
     }
 
     function attack() {
-        enemies.forEach((enemy, i) => {
-            const dist = enemy.mesh.position.distanceTo(playerGroup.position);
-            if (dist < 3) {
-                enemy.hp -= 15;
-                enemy.mesh.position.x += Math.sin(playerGroup.rotation.y) * -1;
-                enemy.mesh.position.z += Math.cos(playerGroup.rotation.y) * -1;
+        if (playerState.isAttacking) return;
+        playerState.isAttacking = true;
+        playerState.attackTimer = 12;
 
+        enemies.forEach((enemy, i) => {
+            const dist = enemy.group.position.distanceTo(playerGroup.position);
+            if (dist < 2.8) {
+                enemy.hp -= 20;
+                enemy.group.translateZ(-1.5);
                 if (enemy.hp <= 0) {
-                    scene.remove(enemy.mesh);
+                    scene.remove(enemy.group);
                     enemies.splice(i, 1);
                 }
             }
@@ -391,7 +507,7 @@
 
         npcs.forEach(npc => {
             const dist = npc.group.position.distanceTo(playerGroup.position);
-            if (dist < 4) {
+            if (dist < 3.5) {
                 document.getElementById('npc-name').textContent = npc.name;
                 document.getElementById('npc-text').textContent = npc.dialog;
                 dialogBox.style.display = 'block';
@@ -399,14 +515,59 @@
         });
     }
 
-    // Renderizado Continuo
+    // --- DIBUJAR MINIMAPA 2D ---
+    function drawMinimap() {
+        mctx.clearRect(0, 0, 110, 110);
+
+        const centerX = 55;
+        const centerY = 55;
+        const scale = 0.8;
+
+        // Fondo Mapa
+        mctx.fillStyle = '#15803d';
+        mctx.fillRect(0, 0, 110, 110);
+
+        // Enemigos (Rojo)
+        mctx.fillStyle = '#ef4444';
+        enemies.forEach(e => {
+            let dx = (e.group.position.x - playerGroup.position.x) * scale;
+            let dz = (e.group.position.z - playerGroup.position.z) * scale;
+            if (Math.hypot(dx, dz) < 50) {
+                mctx.beginPath();
+                mctx.arc(centerX + dx, centerY + dz, 3, 0, Math.PI * 2);
+                mctx.fill();
+            }
+        });
+
+        // NPCs (Verde)
+        mctx.fillStyle = '#10b981';
+        npcs.forEach(n => {
+            let dx = (n.group.position.x - playerGroup.position.x) * scale;
+            let dz = (n.group.position.z - playerGroup.position.z) * scale;
+            if (Math.hypot(dx, dz) < 50) {
+                mctx.beginPath();
+                mctx.arc(centerX + dx, centerY + dz, 3.5, 0, Math.PI * 2);
+                mctx.fill();
+            }
+        });
+
+        // Jugador (Azul)
+        mctx.fillStyle = '#3b82f6';
+        mctx.beginPath();
+        mctx.arc(centerX, centerY, 4.5, 0, Math.PI * 2);
+        mctx.fill();
+        mctx.strokeStyle = '#fff';
+        mctx.lineWidth = 1.5;
+        mctx.stroke();
+    }
+
+    // Bucle Principal
     function animate() {
         requestAnimationFrame(animate);
         update();
         renderer.render(scene, camera);
     }
 
-    // Ajuste de Pantalla Celular / PC
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
