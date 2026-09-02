@@ -3,86 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Abrahancito: Realm of Legends 3D - v1</title>
+    <title>Abrahancito: Realm of Legends 3D - v2</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-        body { margin: 0; padding: 0; overflow: hidden; background-color: #050811; font-family: 'Georgia', serif; color: white; }
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #050811; font-family: 'Segoe UI', Roboto, sans-serif; color: white; }
         #canvas-container { width: 100vw; height: 100vh; display: block; }
 
-        /* HUD Principal Estilo Fantasy RPG */
+        /* HUD Principal Superior */
         .hud {
-            position: absolute; top: 15px; left: 15px;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 12px 16px; border-radius: 8px;
-            border: 2px solid #b45309; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-            font-size: 12px; font-weight: bold; pointer-events: none; z-index: 10;
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(15, 23, 42, 0.9); padding: 8px 12px; border-radius: 8px;
+            border: 2px solid #b45309; box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            font-size: 11px; font-weight: bold; pointer-events: none; z-index: 10;
         }
 
-        .bar-wrap { width: 130px; height: 12px; background: #1e293b; border-radius: 6px; overflow: hidden; display: inline-block; vertical-align: middle; border: 1px solid #475569; }
+        .bar-wrap { width: 110px; height: 10px; background: #1e293b; border-radius: 5px; overflow: hidden; display: inline-block; vertical-align: middle; border: 1px solid #475569; }
         .hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #dc2626, #ef4444); transition: width 0.2s; }
         .mp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); transition: width 0.2s; }
 
-        /* Boss Bar */
-        #boss-hud {
-            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            width: 80%; max-width: 400px; background: rgba(15, 23, 42, 0.95);
-            border: 2px solid #ef4444; border-radius: 8px; padding: 8px 15px;
-            text-align: center; display: none; z-index: 10; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        /* Barra de Menú Toggle UI */
+        #menu-bar {
+            position: absolute; top: 10px; right: 10px;
+            display: flex; gap: 8px; z-index: 20;
         }
-        .boss-bar { width: 100%; height: 14px; background: #450a0a; border-radius: 4px; overflow: hidden; border: 1px solid #991b1b; }
-        .boss-hp { width: 100%; height: 100%; background: #dc2626; transition: width 0.2s; }
+        .toggle-btn {
+            background: rgba(15, 23, 42, 0.9); border: 2px solid #f59e0b;
+            border-radius: 8px; padding: 8px; cursor: pointer; color: white;
+            display: flex; align-items: center; justify-content: center;
+            width: 38px; height: 38px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .toggle-btn:active { transform: scale(0.95); background: #334155; }
 
-        /* Minimapa con Brújula */
+        /* Ventana Minimapa Flotante */
         #minimap-wrapper {
-            position: absolute; top: 15px; right: 15px;
+            position: absolute; top: 55px; right: 10px;
             width: 120px; height: 120px; border-radius: 50%;
-            border: 3px solid #f59e0b; background: rgba(15, 23, 42, 0.9);
-            overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.8); z-index: 10;
+            border: 3px solid #f59e0b; background: rgba(15, 23, 42, 0.95);
+            overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.8); z-index: 15;
+            display: none;
         }
         #minimap { width: 100%; height: 100%; }
 
-        /* Panel de Inventario y Crafteo */
-        #craft-panel {
-            position: absolute; top: 150px; left: 15px;
-            background: rgba(15, 23, 42, 0.92); border: 2px solid #3b82f6;
-            border-radius: 8px; padding: 10px; font-size: 11px; z-index: 10;
-            width: 160px; pointer-events: auto;
+        /* Ventanas Modales UI (Crafteo y Misiones) */
+        .ui-window {
+            position: absolute; top: 55px; left: 10px;
+            background: rgba(15, 23, 42, 0.95); border: 2px solid #3b82f6;
+            border-radius: 8px; padding: 10px; font-size: 11px; z-index: 15;
+            width: 180px; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
         }
         .craft-btn {
             background: #1e3a8a; border: 1px solid #3b82f6; color: white;
-            padding: 4px 8px; margin-top: 4px; width: 100%; border-radius: 4px;
-            cursor: pointer; font-size: 10px; font-weight: bold;
+            padding: 5px; margin-top: 5px; width: 100%; border-radius: 4px;
+            cursor: pointer; font-size: 10px; font-weight: bold; text-align: left;
         }
         .craft-btn:active { background: #2563eb; }
 
-        /* Misiones */
-        #quest-tracker {
-            position: absolute; top: 150px; right: 15px;
-            background: rgba(15, 23, 42, 0.85); border: 1px solid #f59e0b;
-            border-radius: 8px; padding: 10px; font-size: 11px; z-index: 10; width: 140px;
-        }
-
-        /* Diálogos */
-        #dialog-box {
-            position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 500px; background: rgba(15, 23, 42, 0.95);
-            border: 2px solid #f59e0b; border-radius: 8px; padding: 12px;
-            display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.8); z-index: 20;
-        }
-
-        /* Controles Táctiles Avanzados */
+        /* Controles Táctiles con Íconos */
         #touch-controls {
             position: absolute; bottom: 15px; width: 100%;
             display: flex; justify-content: space-between; padding: 0 15px;
             z-index: 10; pointer-events: none;
         }
         .dpad, .action-btns { pointer-events: auto; }
-        .dpad { display: grid; grid-template-columns: repeat(3, 45px); grid-template-rows: repeat(3, 45px); gap: 2px; }
-        .dbtn { background: rgba(30, 41, 59, 0.85); border: 2px solid #475569; border-radius: 8px; color: white; font-size: 16px; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+        .dpad { display: grid; grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px); gap: 2px; }
+        .dbtn { background: rgba(30, 41, 59, 0.85); border: 2px solid #475569; border-radius: 8px; color: white; font-size: 14px; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
         
-        .action-btns { display: grid; grid-template-columns: repeat(3, 50px); gap: 8px; align-items: center; }
-        .abtn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #fff; color: white; font-weight: bold; font-size: 9px; display: flex; align-items: center; justify-content: center; touch-action: manipulation; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: center; }
-        
+        .action-btns { display: grid; grid-template-columns: repeat(3, 52px); gap: 8px; align-items: center; }
+        .abtn {
+            width: 52px; height: 52px; border-radius: 50%; border: 2px solid #fff;
+            color: white; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            touch-action: manipulation; box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+        }
+        .abtn svg { width: 22px; height: 22px; fill: white; }
+
         .btn-sword { background: #dc2626; }
         .btn-magic { background: #2563eb; }
         .btn-bow { background: #16a34a; }
@@ -100,44 +93,40 @@
 
     <!-- HUD Jugador -->
     <div class="hud">
-        <div>NIVEL <span id="player-lvl" style="color:#f59e0b;">1</span> (<span id="player-xp">0</span>/100 XP)</div>
-        <div style="margin-top:4px;">HP: <div class="bar-wrap"><div id="hp-bar" class="hp-bar"></div></div></div>
-        <div style="margin-top:3px;">MP: <div class="bar-wrap"><div id="mp-bar" class="mp-bar"></div></div></div>
-        <div style="margin-top:5px; color:#f59e0b;">ORO: <span id="gold-txt" style="color:white;">0</span> | ORO TALA: <span id="wood-txt" style="color:white;">0</span></div>
+        <div>LVL <span id="player-lvl" style="color:#f59e0b;">1</span> (<span id="player-xp">0</span>/100 XP)</div>
+        <div style="margin-top:3px;">HP: <div class="bar-wrap"><div id="hp-bar" class="hp-bar"></div></div></div>
+        <div style="margin-top:2px;">MP: <div class="bar-wrap"><div id="mp-bar" class="mp-bar"></div></div></div>
+        <div style="margin-top:4px; color:#f59e0b;">ORO: <span id="gold-txt" style="color:white;">0</span> | MADERA: <span id="wood-txt" style="color:white;">0</span></div>
     </div>
 
-    <!-- HUD Boss -->
-    <div id="boss-hud">
-        <div id="boss-name" style="color:#f87171; font-weight:bold; font-size:12px; margin-bottom:3px;">SEÑOR DE LAS SOMBRAS (BOSS)</div>
-        <div class="boss-bar"><div id="boss-hp" class="boss-hp"></div></div>
+    <!-- Menú de Botones para Abrir/Cerrar Ventanas -->
+    <div id="menu-bar">
+        <button class="toggle-btn" onclick="toggleWindow('craft-panel')" title="Mesa de Crafteo">🔨</button>
+        <button class="toggle-btn" onclick="toggleWindow('quest-tracker')" title="Misiones">📜</button>
+        <button class="toggle-btn" onclick="toggleWindow('minimap-wrapper')" title="Minimapa">🗺️</button>
     </div>
 
-    <!-- Minimapa -->
+    <!-- Ventana Minimapa -->
     <div id="minimap-wrapper">
         <canvas id="minimap" width="120" height="120"></canvas>
     </div>
 
-    <!-- Panel de Crafteo -->
-    <div id="craft-panel">
+    <!-- Ventana Crafteo -->
+    <div id="craft-panel" class="ui-window">
         <strong style="color:#f59e0b;">MESA DE CRAFTEO</strong>
-        <div style="margin-top:3px;">Madera: <span id="c-wood">0</span> | Cuero: <span id="c-leather">0</span></div>
-        <button class="craft-btn" onclick="craftItem('espada')">Craft Espada (5 Mad)</button>
-        <button class="craft-btn" onclick="craftItem('arco')">Craft Arco (8 Mad + 2 Cue)</button>
-        <button class="craft-btn" onclick="craftItem('pocio')">Poción HP (20 Oro)</button>
+        <div style="margin-top:3px;">Madera: <span id="c-wood">0</span></div>
+        <button class="craft-btn" onclick="craftItem('espada')">⚔️ Espada Reforzada (5 Mad)</button>
+        <button class="craft-btn" onclick="craftItem('arco')">🏹 Arco Largo (8 Mad)</button>
+        <button class="craft-btn" onclick="craftItem('pocio')">🧪 Poción Vida (20 Oro)</button>
     </div>
 
-    <!-- Misiones -->
-    <div id="quest-tracker">
-        <strong style="color:#f59e0b;">MISIONES</strong>
-        <div id="quest-desc" style="margin-top:4px; color:#cbd5e1;">- Derrota 3 Fantasmas (<span id="q-count">0</span>/3)</div>
+    <!-- Ventana Misiones -->
+    <div id="quest-tracker" class="ui-window">
+        <strong style="color:#f59e0b;">MISIONES ACTIVAS</strong>
+        <div id="quest-desc" style="margin-top:4px; color:#cbd5e1;">- Caer 3 Sombras (<span id="q-count">0</span>/3)</div>
     </div>
 
-    <div id="dialog-box">
-        <strong id="npc-name" style="color: #f59e0b; font-size: 14px;"></strong>
-        <p id="npc-text" style="margin: 4px 0 0 0; font-size: 12px; line-height: 1.3;"></p>
-    </div>
-
-    <!-- Botones Táctiles -->
+    <!-- Botones Táctiles con SVG Icons -->
     <div id="touch-controls">
         <div class="dpad">
             <div></div><div class="dbtn" id="btn-up">▲</div><div></div>
@@ -145,205 +134,228 @@
             <div></div><div class="dbtn" id="btn-down">▼</div><div></div>
         </div>
         <div class="action-btns">
-            <div class="abtn btn-sword" id="btn-attack">ESPADA</div>
-            <div class="abtn btn-magic" id="btn-magic">HECHIZO</div>
-            <div class="abtn btn-bow" id="btn-bow">ARCO</div>
-            <div class="abtn btn-chop" id="btn-chop">TALAR</div>
-            <div class="abtn btn-mount" id="btn-mount">MONTURA</div>
-            <div class="abtn btn-interact" id="btn-action">HABLAR</div>
+            <div class="abtn btn-sword" id="btn-attack">
+                <svg viewBox="0 0 24 24"><path d="M6.92 5c-.39 0-.78.15-1.07.44l-2.41 2.42c-.59.59-.59 1.54 0 2.13l6.3 6.3-2.12 2.12c-.39.39-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0l2.12-2.12 6.3 6.3c.59.59 1.54.59 2.13 0l2.42-2.41c.59-.59.59-1.54 0-2.13l-6.3-6.3 2.12-2.12c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0l-2.12 2.12-6.3-6.3c-.29-.29-.68-.44-1.07-.44z"/></svg>
+            </div>
+            <div class="abtn btn-magic" id="btn-magic">
+                <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z"/></svg>
+            </div>
+            <div class="abtn btn-bow" id="btn-bow">
+                <svg viewBox="0 0 24 24"><path d="M18 3v2h-2V3h2zm-4 4h2V5h-2v2zm-2 2h2V7h-2v2zm-2 2h2V9h-2v2zm-2 2h2v-2H8v2zm-2 2h2v-2H6v2zm-2 2h2v-2H4v2zm-2 2h2v-2H2v2z"/></svg>
+            </div>
+            <div class="abtn btn-chop" id="btn-chop">
+                <svg viewBox="0 0 24 24"><path d="M15 2l-3 3 2 2 3-3V2zm-4 4L3 14v3h3l8-8-3-3z"/></svg>
+            </div>
+            <div class="abtn btn-mount" id="btn-mount">
+                <svg viewBox="0 0 24 24"><path d="M19 7c-1.1 0-2 .9-2 2v2H7V9c0-1.1-.9-2-2-2S3 7.9 3 9v8h2v3h2v-3h10v3h2v-3h2V9c0-1.1-.9-2-2-2z"/></svg>
+            </div>
+            <div class="abtn btn-interact" id="btn-action">
+                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+            </div>
         </div>
     </div>
 
     <div class="credits">Creado por Dani v1</div>
 
 <script>
-    // --- MOTOR Y CONFIGURACIÓN ESTILO WOW / LOL ---
+    // --- MOTOR Y THREE.JS ---
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1e1b4b); // Atmósfera noche mágica
-    scene.fog = new THREE.FogExp2(0x1e1b4b, 0.008);
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.009);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
     const minimapCanvas = document.getElementById('minimap');
     const mctx = minimapCanvas.getContext('2d');
 
-    // Iluminación Estilizada
-    const ambientLight = new THREE.AmbientLight(0xc7d2fe, 0.7);
+    const ambientLight = new THREE.AmbientLight(0x94a3b8, 0.8);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfef08a, 1.0);
-    sunLight.position.set(60, 100, 40);
+    const sunLight = new THREE.DirectionalLight(0xfde047, 0.9);
+    sunLight.position.set(50, 80, 30);
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 1024;
-    sunLight.shadow.mapSize.height = 1024;
     scene.add(sunLight);
 
-    // --- ESTADO DEL JUGADOR Y RECURSOS ---
-    let p = {
-        lvl: 1, xp: 0, hp: 100, maxHp: 100, mp: 80, maxMp: 80,
-        gold: 0, wood: 0, leather: 0,
-        speed: 0.18, isMounted: false,
-        hasBow: false, hasBetterSword: false,
-        questKills: 0
-    };
-
+    let p = { lvl: 1, xp: 0, hp: 100, maxHp: 100, mp: 80, maxMp: 80, gold: 0, wood: 0, speed: 0.18, isMounted: false, questKills: 0 };
     const keys = { up: false, down: false, left: false, right: false };
 
-    // --- CREACIÓN DEL MUNDO (AGUA, ÁRBOLES, MONTAÑAS, FAUNA) ---
-    const mapSize = 300;
-    
-    // Terreno estilizado
-    const floorGeo = new THREE.PlaneGeometry(mapSize, mapSize, 32, 32);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.8 });
+    // --- TERRENO Y ÁRBOLES DETALLADOS ---
+    const floorGeo = new THREE.PlaneGeometry(250, 250);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Lago / Río Estilo Stylized Water
-    const waterGeo = new THREE.CircleGeometry(35, 32);
-    const waterMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, transparent: true, opacity: 0.7, roughness: 0.1 });
-    const water = new THREE.Mesh(waterGeo, waterMat);
-    water.rotation.x = -Math.PI / 2;
-    water.position.set(-40, 0.1, -30);
-    scene.add(water);
-
-    // Arboles Talables
+    // Árboles Complejos (Copa Multinivel)
     const trees = [];
-    function createTree(x, z) {
+    function createDetailedTree(x, z) {
         const group = new THREE.Group();
-        const tGeo = new THREE.CylinderGeometry(0.4, 0.6, 3, 7);
+        
+        // Tronco con textura visual
+        const tGeo = new THREE.CylinderGeometry(0.3, 0.5, 3, 8);
         const tMat = new THREE.MeshStandardMaterial({ color: 0x451a03 });
         const trunk = new THREE.Mesh(tGeo, tMat);
         trunk.position.y = 1.5;
         trunk.castShadow = true;
         group.add(trunk);
 
-        const lGeo = new THREE.DodecahedronGeometry(2, 1);
-        const lMat = new THREE.MeshStandardMaterial({ color: 0x15803d, flatShading: true });
-        const leaves = new THREE.Mesh(lGeo, lMat);
-        leaves.position.y = 4;
-        leaves.castShadow = true;
-        group.add(leaves);
+        // Copas escalonadas (3 niveles)
+        const leafMat = new THREE.MeshStandardMaterial({ color: 0x166534, flatShading: true });
+        for(let i=0; i<3; i++) {
+            const lGeo = new THREE.ConeGeometry(2.2 - i*0.5, 2.2, 7);
+            const leaves = new THREE.Mesh(lGeo, leafMat);
+            leaves.position.y = 2.8 + i*1.2;
+            leaves.castShadow = true;
+            group.add(leaves);
+        }
 
         group.position.set(x, 0, z);
         scene.add(group);
-        trees.push({ group, hp: 3, x, z });
+        trees.push({ group, hp: 3 });
     }
 
-    for(let i=0; i<35; i++) {
-        let rx = (Math.random()-0.5)*220;
-        let rz = (Math.random()-0.5)*220;
-        if(Math.hypot(rx+40, rz+30) > 40 && Math.hypot(rx, rz) > 15) createTree(rx, rz);
+    for(let i=0; i<30; i++) {
+        let rx = (Math.random()-0.5)*180;
+        let rz = (Math.random()-0.5)*180;
+        if(Math.hypot(rx, rz) > 12) createDetailedTree(rx, rz);
     }
 
-    // Fauna (Ciervos / Animales)
-    const animals = [];
-    function createAnimal(x, z) {
-        const group = new THREE.Group();
-        const bGeo = new THREE.BoxGeometry(1.2, 0.8, 1.6);
-        const bMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
-        const body = new THREE.Mesh(bGeo, bMat);
-        body.position.y = 0.8;
-        group.add(body);
-
-        group.position.set(x, 0, z);
-        scene.add(group);
-        animals.push({ group, hp: 20, dir: Math.random()*Math.PI*2 });
-    }
-    createAnimal(-20, -10); createAnimal(-50, -40);
-
-    // --- PERSONAJE & MONTURA ---
+    // --- MODELADO DETALLADO DE HÉROE Y MONTURA ---
     const playerGroup = new THREE.Group();
 
-    // Héroe Chibi
-    const bodyGeo = new THREE.CylinderGeometry(0.35, 0.4, 0.9, 8);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8 });
-    const pBody = new THREE.Mesh(bodyGeo, bodyMat);
-    pBody.position.y = 0.55;
-    playerGroup.add(pBody);
+    // Héroe Detallado
+    const heroMesh = new THREE.Group();
+    // Armadura / Pecho
+    const chest = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.4), new THREE.MeshStandardMaterial({ color: 0x1e3a8a }));
+    chest.position.y = 0.8;
+    heroMesh.add(chest);
 
-    const headGeo = new THREE.SphereGeometry(0.38, 12, 12);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
-    const pHead = new THREE.Mesh(headGeo, headMat);
-    pHead.position.y = 1.25;
-    playerGroup.add(pHead);
+    // Hombreras
+    const shoulderGeo = new THREE.SphereGeometry(0.2, 6, 6);
+    const shoulderMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8 });
+    const sLeft = new THREE.Mesh(shoulderGeo, shoulderMat); sLeft.position.set(-0.45, 1.1, 0);
+    const sRight = new THREE.Mesh(shoulderGeo, shoulderMat); sRight.position.set(0.45, 1.1, 0);
+    heroMesh.add(sLeft); heroMesh.add(sRight);
 
-    // Espada
-    const swordGroup = new THREE.Group();
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.0, 0.02), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9 }));
-    blade.position.y = 0.5;
-    swordGroup.add(blade);
-    swordGroup.position.set(0, 0.6, -0.35);
-    swordGroup.rotation.set(0, 0, -Math.PI/4);
-    playerGroup.add(swordGroup);
+    // Cabeza y Cabello
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 10), new THREE.MeshStandardMaterial({ color: 0xffdbac }));
+    head.position.y = 1.4;
+    heroMesh.add(head);
 
-    // Montura (Caballo Estilizado)
+    const hair = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0xb45309 }));
+    hair.position.set(0, 1.65, -0.05); hair.rotation.x = -0.3;
+    heroMesh.add(hair);
+
+    playerGroup.add(heroMesh);
+
+    // Montura Detallada (Caballo)
     const mountGroup = new THREE.Group();
-    const mBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 2.2), new THREE.MeshStandardMaterial({ color: 0x581c87 }));
-    mBody.position.y = 0.8;
-    mountGroup.add(mBody);
+    const horseBody = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.0, 2.0), new THREE.MeshStandardMaterial({ color: 0x581c87 }));
+    horseBody.position.y = 0.9;
+    mountGroup.add(horseBody);
+
+    const horseNeck = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.7), new THREE.MeshStandardMaterial({ color: 0x581c87 }));
+    horseNeck.position.set(0, 1.5, -0.7); horseNeck.rotation.x = 0.4;
+    mountGroup.add(horseNeck);
+
     mountGroup.visible = false;
     playerGroup.add(mountGroup);
 
     playerGroup.position.set(0, 0, 0);
     scene.add(playerGroup);
 
-    // --- VILLANOS & BOSS (RESPAWN + DROPS) ---
+    // --- ENEMY SYSTEM ---
     const enemies = [];
-    let boss = null;
-
-    function createEnemy(x, z, isBoss=false) {
+    function createEnemy(x, z) {
         const group = new THREE.Group();
-        const scale = isBoss ? 2.5 : 1.0;
-
-        const eGeo = new THREE.ConeGeometry(0.7*scale, 1.8*scale, 8);
-        const eMat = new THREE.MeshStandardMaterial({ color: isBoss ? 0x991b1b : 0x312e81, flatShading: true });
-        const body = new THREE.Mesh(eGeo, eMat);
-        body.rotation.x = Math.PI;
-        body.position.y = 1.1*scale;
+        const body = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.8, 8), new THREE.MeshStandardMaterial({ color: 0x312e81, flatShading: true }));
+        body.rotation.x = Math.PI; body.position.y = 1.0;
         group.add(body);
-
-        // Ojos
-        const eyeMat = new THREE.MeshBasicMaterial({ color: isBoss ? 0xef4444 : 0xfacc15 });
-        const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.1*scale, 6, 6), eyeMat);
-        eye1.position.set(-0.2*scale, 1.2*scale, 0.4*scale);
-        group.add(eye1);
 
         group.position.set(x, 0, z);
         scene.add(group);
+        enemies.push({ group, hp: 40 });
+    }
+    createEnemy(15, 15); createEnemy(-20, 20);
 
-        const enemyObj = { group, hp: isBoss ? 300 : 40, maxHp: isBoss ? 300 : 40, isBoss, x, z };
-        enemies.push(enemyObj);
-        if(isBoss) boss = enemyObj;
+    // --- FUNCIONES UI Y CONTROLES ---
+    function toggleWindow(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
     }
 
-    // Generar campamento de villanos y Boss al Norte
-    createEnemy(20, 20); createEnemy(-20, 30); createEnemy(40, -10);
-    createEnemy(0, -90, true); // Boss en el Norte
+    function attack() {
+        enemies.forEach((enemy, i) => {
+            if(enemy.group.position.distanceTo(playerGroup.position) < 3) {
+                enemy.hp -= 20;
+                if(enemy.hp <= 0) {
+                    scene.remove(enemy.group);
+                    enemies.splice(i, 1);
+                    p.xp += 30; p.gold += 15; p.questKills++;
+                    updateHUD();
+                }
+            }
+        });
+    }
 
-    // Projectiles (Magia / Flechas)
-    const projectiles = [];
+    function toggleMount() {
+        p.isMounted = !p.isMounted;
+        mountGroup.visible = p.isMounted;
+        heroMesh.position.y = p.isMounted ? 0.8 : 0;
+        p.speed = p.isMounted ? 0.35 : 0.18;
+    }
 
-    // --- CONTROLES Y TECLAS ---
+    function chopTree() {
+        trees.forEach((tree, i) => {
+            if(tree.group.position.distanceTo(playerGroup.position) < 3.5) {
+                tree.hp--;
+                p.wood += 2;
+                updateHUD();
+                if(tree.hp <= 0) { scene.remove(tree.group); trees.splice(i, 1); }
+            }
+        });
+    }
+
+    function updateHUD() {
+        document.getElementById('player-lvl').textContent = p.lvl;
+        document.getElementById('player-xp').textContent = p.xp;
+        document.getElementById('hp-bar').style.width = `${p.hp}%`;
+        document.getElementById('mp-bar').style.width = `${p.mp}%`;
+        document.getElementById('gold-txt').textContent = p.gold;
+        document.getElementById('wood-txt').textContent = p.wood;
+        document.getElementById('c-wood').textContent = p.wood;
+        document.getElementById('q-count').textContent = Math.min(3, p.questKills);
+    }
+
+    function bindTouch(id, fn) {
+        document.getElementById(id).addEventListener('touchstart', (e)=>{ e.preventDefault(); fn(); });
+        document.getElementById(id).addEventListener('click', fn);
+    }
+
+    bindTouch('btn-attack', attack);
+    bindTouch('btn-mount', toggleMount);
+    bindTouch('btn-chop', chopTree);
+
+    function bindDir(id, k) {
+        const el = document.getElementById(id);
+        el.addEventListener('touchstart', (e)=>{e.preventDefault(); keys[k]=true;});
+        el.addEventListener('touchend', (e)=>{e.preventDefault(); keys[k]=false;});
+    }
+    bindDir('btn-up','up'); bindDir('btn-down','down');
+    bindDir('btn-left','left'); bindDir('btn-right','right');
+
     window.addEventListener('keydown', e => {
         const k = e.key.toLowerCase();
         if (k==='w'||k==='arrowup') keys.up = true;
         if (k==='s'||k==='arrowdown') keys.down = true;
         if (k==='a'||k==='arrowleft') keys.left = true;
         if (k==='d'||k==='arrowright') keys.right = true;
-        if (k===' ') attackSword();
-        if (k==='1') castMagic();
-        if (k==='2') shootBow();
-        if (k==='t') chopTree();
-        if (k==='m') toggleMount();
-        if (k==='e') interact();
     });
 
     window.addEventListener('keyup', e => {
@@ -354,237 +366,45 @@
         if (k==='d'||k==='arrowright') keys.right = false;
     });
 
-    function bindTouch(id, fn) {
-        document.getElementById(id).addEventListener('touchstart', (e)=>{e.preventDefault(); fn();});
-        document.getElementById(id).addEventListener('click', fn);
-    }
-    bindTouch('btn-attack', attackSword);
-    bindTouch('btn-magic', castMagic);
-    bindTouch('btn-bow', shootBow);
-    bindTouch('btn-chop', chopTree);
-    bindTouch('btn-mount', toggleMount);
-    bindTouch('btn-action', interact);
-
-    function bindDir(id, k) {
-        const el = document.getElementById(id);
-        el.addEventListener('touchstart', (e)=>{e.preventDefault(); keys[k]=true;});
-        el.addEventListener('touchend', (e)=>{e.preventDefault(); keys[k]=false;});
-    }
-    bindDir('btn-up','up'); bindDir('btn-down','down');
-    bindDir('btn-left','left'); bindDir('btn-right','right');
-
-    // --- ACCIONES Y COMBATE ---
-    function attackSword() {
-        enemies.forEach((enemy, i) => {
-            if(enemy.group.position.distanceTo(playerGroup.position) < (enemy.isBoss ? 5 : 3)) {
-                let dmg = p.hasBetterSword ? 35 : 20;
-                damageEnemy(enemy, i, dmg);
-            }
-        });
-    }
-
-    function castMagic() {
-        if(p.mp < 20) return;
-        p.mp -= 20;
-        updateHUD();
-
-        const pGeo = new THREE.SphereGeometry(0.4, 8, 8);
-        const pMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6 });
-        const proj = new THREE.Mesh(pGeo, pMat);
-        proj.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
-        
-        const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
-        scene.add(proj);
-        projectiles.push({ mesh: proj, dir, life: 60, type: 'magic' });
-    }
-
-    function shootBow() {
-        if(!p.hasBow) return alert("¡Debes fabricar un Arco en la Mesa de Crafteo primero!");
-        
-        const pGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.8, 5);
-        const pMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
-        const proj = new THREE.Mesh(pGeo, pMat);
-        proj.rotation.x = Math.PI/2;
-        proj.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
-
-        const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
-        scene.add(proj);
-        projectiles.push({ mesh: proj, dir, life: 80, type: 'arrow' });
-    }
-
-    function chopTree() {
-        trees.forEach((tree, i) => {
-            if(tree.group.position.distanceTo(playerGroup.position) < 3.5) {
-                tree.hp--;
-                p.wood += 2;
-                updateHUD();
-                if(tree.hp <= 0) {
-                    scene.remove(tree.group);
-                    trees.splice(i, 1);
-                }
-            }
-        });
-    }
-
-    function toggleMount() {
-        p.isMounted = !p.isMounted;
-        mountGroup.visible = p.isMounted;
-        pBody.position.y = p.isMounted ? 1.4 : 0.55;
-        pHead.position.y = p.isMounted ? 2.1 : 1.25;
-        p.speed = p.isMounted ? 0.35 : 0.18;
-    }
-
-    function damageEnemy(enemy, index, dmg) {
-        enemy.hp -= dmg;
-        if(enemy.isBoss) {
-            document.getElementById('boss-hud').style.display = 'block';
-            document.getElementById('boss-hp').style.width = `${(enemy.hp/enemy.maxHp)*100}%`;
-        }
-
-        if(enemy.hp <= 0) {
-            scene.remove(enemy.group);
-            if(enemy.isBoss) document.getElementById('boss-hud').style.display = 'none';
-
-            // Loot & XP
-            p.gold += enemy.isBoss ? 100 : 15;
-            p.xp += enemy.isBoss ? 150 : 35;
-            p.questKills++;
-
-            if(p.xp >= 100) { p.lvl++; p.xp -= 100; p.maxHp += 20; p.hp = p.maxHp; }
-            
-            enemies.splice(index, 1);
-            updateHUD();
-
-            // Respawn
-            if(!enemy.isBoss) setTimeout(() => createEnemy(enemy.x, enemy.z), 15000);
-        }
-    }
-
-    function craftItem(item) {
-        if(item === 'espada' && p.wood >= 5) {
-            p.wood -= 5; p.hasBetterSword = true; alert("¡Espada de Hierro crafteada! (+Daño)");
-        } else if(item === 'arco' && p.wood >= 8) {
-            p.wood -= 8; p.hasBow = true; alert("¡Arco Crafteado! Usa el botón ARCO.");
-        } else if(item === 'pocio' && p.gold >= 20) {
-            p.gold -= 20; p.hp = Math.min(p.maxHp, p.hp + 50); alert("¡Poción de Vida Usada!");
-        } else {
-            alert("No tienes recursos suficientes.");
-        }
-        updateHUD();
-    }
-
-    function interact() {
-        if(playerGroup.position.distanceTo(new THREE.Vector3(0,0,0)) < 6) {
-            alert("Sabio del Valle: 'Derrota al Boss del Norte para liberar nuestras tierras.'");
-        }
-    }
-
-    function updateHUD() {
-        document.getElementById('player-lvl').textContent = p.lvl;
-        document.getElementById('player-xp').textContent = p.xp;
-        document.getElementById('hp-bar').style.width = `${(p.hp/p.maxHp)*100}%`;
-        document.getElementById('mp-bar').style.width = `${(p.mp/p.maxMp)*100}%`;
-        document.getElementById('gold-txt').textContent = p.gold;
-        document.getElementById('wood-txt').textContent = p.wood;
-        document.getElementById('c-wood').textContent = p.wood;
-        document.getElementById('q-count').textContent = Math.min(3, p.questKills);
-    }
-
-    // --- BUCLE PRINCIPAL & MINIMAPA ---
+    // --- BUCLE Y RENDERIZADO ---
     function update() {
-        // Regenerar Mana
-        p.mp = Math.min(p.maxMp, p.mp + 0.05);
-        document.getElementById('mp-bar').style.width = `${(p.mp/p.maxMp)*100}%`;
-
-        // Movimiento Jugador
         if (keys.left) playerGroup.rotation.y += 0.045;
         if (keys.right) playerGroup.rotation.y -= 0.045;
         if (keys.up) playerGroup.translateZ(-p.speed);
         if (keys.down) playerGroup.translateZ(p.speed);
 
-        // Camara Estilo WoW / Third Person
-        const cameraOffset = new THREE.Vector3(0, 4.5, 8).applyMatrix4(playerGroup.matrixWorld);
+        const cameraOffset = new THREE.Vector3(0, 4.5, 7.5).applyMatrix4(playerGroup.matrixWorld);
         camera.position.lerp(cameraOffset, 0.1);
         camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
-
-        // Proyectiles
-        projectiles.forEach((proj, i) => {
-            proj.mesh.position.addScaledVector(proj.dir, 0.5);
-            proj.life--;
-
-            enemies.forEach((enemy, ei) => {
-                if(proj.mesh.position.distanceTo(enemy.group.position) < 2) {
-                    damageEnemy(enemy, ei, proj.type === 'magic' ? 30 : 25);
-                    proj.life = 0;
-                }
-            });
-
-            if(proj.life <= 0) {
-                scene.remove(proj.mesh);
-                projectiles.splice(i, 1);
-            }
-        });
-
-        // Movimiento de Enemigos e Inteligencia Artificial
-        enemies.forEach(enemy => {
-            const dist = enemy.group.position.distanceTo(playerGroup.position);
-            if(dist < 15 && dist > (enemy.isBoss ? 3 : 1.5)) {
-                enemy.group.lookAt(playerGroup.position);
-                enemy.group.translateZ(enemy.isBoss ? 0.04 : 0.03);
-            } else if(dist <= (enemy.isBoss ? 3 : 1.5)) {
-                p.hp = Math.max(0, p.hp - (enemy.isBoss ? 0.4 : 0.1));
-                updateHUD();
-            }
-        });
 
         drawMinimap();
     }
 
-    // --- DIBUJAR MINIMAPA CON FLECHA Y BRÚJULA ---
     function drawMinimap() {
         mctx.clearRect(0, 0, 120, 120);
         const cx = 60, cy = 60, scale = 0.6;
 
-        // Fondo Mapa
         mctx.fillStyle = '#064e3b';
         mctx.fillRect(0, 0, 120, 120);
 
-        // Brújula N, S, E, O
-        mctx.fillStyle = '#f59e0b';
-        mctx.font = 'bold 10px sans-serif';
-        mctx.fillText('N', 56, 12);
-        mctx.fillText('S', 56, 116);
-        mctx.fillText('E', 108, 64);
-        mctx.fillText('O', 4, 64);
-
-        // Enemigos (Rojo / Violeta Boss)
         enemies.forEach(e => {
             let dx = (e.group.position.x - playerGroup.position.x) * scale;
             let dz = (e.group.position.z - playerGroup.position.z) * scale;
             if (Math.hypot(dx, dz) < 50) {
-                mctx.fillStyle = e.isBoss ? '#a855f7' : '#ef4444';
+                mctx.fillStyle = '#ef4444';
                 mctx.beginPath();
-                mctx.arc(cx + dx, cy + dz, e.isBoss ? 5 : 3, 0, Math.PI * 2);
+                mctx.arc(cx + dx, cy + dz, 3, 0, Math.PI * 2);
                 mctx.fill();
             }
         });
 
-        // Flecha de Dirección del Jugador
         mctx.save();
         mctx.translate(cx, cy);
         mctx.rotate(-playerGroup.rotation.y);
-
         mctx.fillStyle = '#3b82f6';
         mctx.beginPath();
-        mctx.moveTo(0, -7);
-        mctx.lineTo(5, 5);
-        mctx.lineTo(-5, 5);
-        mctx.closePath();
-        mctx.fill();
-        mctx.strokeStyle = '#ffffff';
-        mctx.lineWidth = 1;
-        mctx.stroke();
-
+        mctx.moveTo(0, -6); mctx.lineTo(4, 4); mctx.lineTo(-4, 4);
+        mctx.closePath(); mctx.fill();
         mctx.restore();
     }
 
