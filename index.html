@@ -22,18 +22,16 @@
             color: #fff;
         }
 
-        /* CONTENEDOR PRINCIPAL QUE FORZAMOS A HORIZONTAL */
         #game-stage {
             position: absolute;
             width: 100vw;
             height: 100vh;
             top: 0;
             left: 0;
-            background: #080d1a;
+            background: #0f172a;
             overflow: hidden;
         }
 
-        /* SI EL TELÉFONO ESTÁ EN VERTICAL, FORZAMOS ROTACIÓN DE 90º COMPLETA */
         @media screen and (orientation: portrait) {
             #game-stage {
                 width: 100vh;
@@ -51,7 +49,6 @@
             height: 100%;
         }
 
-        /* BOTÓN DE BLOQUEO FULLSCREEN */
         #btn-fullscreen {
             position: absolute;
             top: 50%;
@@ -84,7 +81,6 @@
             pointer-events: auto;
         }
 
-        /* HUD SUPERIOR */
         #hud-top {
             position: absolute;
             top: 10px;
@@ -97,7 +93,7 @@
         }
 
         .hud-card {
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.9);
             backdrop-filter: blur(6px);
             border: 1px solid rgba(99, 102, 241, 0.4);
             border-radius: 8px;
@@ -133,7 +129,6 @@
             cursor: pointer;
         }
 
-        /* CONTROLES MÓVILES - ESQUINAS INFERIORES */
         #controls-bottom {
             position: absolute;
             bottom: 12px;
@@ -144,7 +139,6 @@
             align-items: flex-end;
         }
 
-        /* CRUCETA IZQUIERDA */
         #dpad {
             width: 110px;
             height: 110px;
@@ -152,7 +146,7 @@
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             gap: 2px;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.7);
             padding: 4px;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.2);
@@ -171,7 +165,6 @@
         }
         .dp:active { background: rgba(99, 102, 241, 0.8); }
 
-        /* BOTONES DE ACCIÓN DERECHA */
         #action-btns {
             display: flex;
             gap: 10px;
@@ -193,7 +186,6 @@
         }
         .btn-act:active { transform: scale(0.9); }
 
-        /* PANEL LATERAL */
         #side-drawer {
             position: absolute;
             top: 0;
@@ -263,7 +255,7 @@
     <div id="game-stage">
         <canvas id="gameCanvas"></canvas>
 
-        <button id="btn-fullscreen" class="interactive" onclick="goLandscape()">🎮 INICIAR EN PANTALLA COMPLETA HORIZONTAL</button>
+        <button id="btn-fullscreen" class="interactive" onclick="goLandscape()">🎮 INICIAR PANTALLA COMPLETA</button>
 
         <div class="ui-layer">
             <div id="hud-top">
@@ -301,7 +293,7 @@
             <div style="font-size:10px; color:#94a3b8;">Misiones y Registro</div>
             <hr style="border-color:#334155;">
             <div id="chat-log">
-                <div><span style="color:#f59e0b;">Sistema:</span> Modo horizontal forzado activado.</div>
+                <div><span style="color:#f59e0b;">Sistema:</span> Estética Pixel Art Retro cargada.</div>
             </div>
             <button onclick="toggleDrawer()" style="padding:8px; background:#ef4444; border:none; color:white; font-weight:bold; border-radius:6px; cursor:pointer;">Cerrar</button>
         </div>
@@ -321,11 +313,8 @@
 
     function goLandscape() {
         const stage = document.body;
-        if (stage.requestFullscreen) {
-            stage.requestFullscreen();
-        } else if (stage.webkitRequestFullscreen) {
-            stage.webkitRequestFullscreen();
-        }
+        if (stage.requestFullscreen) { stage.requestFullscreen(); }
+        else if (stage.webkitRequestFullscreen) { stage.webkitRequestFullscreen(); }
 
         if (screen.orientation && screen.orientation.lock) {
             screen.orientation.lock('landscape').catch(() => {});
@@ -361,7 +350,12 @@
 
     const maps = {
         "Pradera Principal": {
-            tile1: "#2d5a27", tile2: "#24491f",
+            tile1: "#347433", tile2: "#275926",
+            trees: [
+                {x: 0, y: 0}, {x: 1, y: 0}, {x: 0, y: 1}, {x: 11, y: 0}, {x: 11, y: 1},
+                {x: 0, y: 11}, {x: 1, y: 11}, {x: 6, y: 1}, {x: 1, y: 6}, {x: 10, y: 5},
+                {x: 7, y: 9}, {x: 3, y: 10}
+            ],
             npcs: [
                 { x: 2, y: 2, name: "Sabio Orestes", icon: "🧙‍♂️", quest: "Derrota al Orco Voraz." },
                 { x: 9, y: 2, name: "Mercader Kael", icon: "👨‍🌾", quest: "Cruza el portal al Bosque." }
@@ -373,7 +367,12 @@
             portal: { x: 10, y: 10, target: "Bosque Sombrío" }
         },
         "Bosque Sombrío": {
-            tile1: "#1f2937", tile2: "#111827",
+            tile1: "#1e293b", tile2: "#0f172a",
+            trees: [
+                {x: 0, y: 0}, {x: 1, y: 0}, {x: 2, y: 0}, {x: 0, y: 2}, {x: 11, y: 0},
+                {x: 11, y: 11}, {x: 10, y: 10}, {x: 5, y: 2}, {x: 8, y: 3}, {x: 2, y: 8},
+                {x: 9, y: 8}, {x: 4, y: 11}
+            ],
             npcs: [
                 { x: 3, y: 3, name: "Guardiana Vanya", icon: "🧝‍♀️", quest: "Limpia la zona." }
             ],
@@ -402,14 +401,14 @@
         ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
         ctx.lineTo(pt.isoX, pt.isoY + TILE_H + h);
         ctx.lineTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2 + h);
-        ctx.fillStyle = "#0f172a"; ctx.fill();
+        ctx.fillStyle = "#1c1917"; ctx.fill();
 
         ctx.beginPath();
         ctx.moveTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2);
         ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
         ctx.lineTo(pt.isoX, pt.isoY + TILE_H + h);
         ctx.lineTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2 + h);
-        ctx.fillStyle = "#1e293b"; ctx.fill();
+        ctx.fillStyle = "#292524"; ctx.fill();
 
         ctx.beginPath();
         ctx.moveTo(pt.isoX, pt.isoY);
@@ -419,58 +418,112 @@
         ctx.closePath();
         ctx.fillStyle = (x + y) % 2 === 0 ? color1 : color2;
         ctx.fill();
-        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.strokeStyle = "rgba(0,0,0,0.25)";
         ctx.stroke();
     }
 
     function drawShadow(pt, rx, ry) {
         ctx.beginPath();
         ctx.ellipse(pt.isoX, pt.isoY + TILE_H / 2, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
         ctx.fill();
     }
 
-    function drawHero(x, y) {
+    /* --- SPRITES EN PIXEL ART RETRO DE DETALLE ELEVADO --- */
+
+    function drawHeroPixel(x, y) {
         const pt = toIso(x, y);
-        drawShadow(pt, 14, 6);
+        drawShadow(pt, 12, 5);
 
-        ctx.fillStyle = '#15803d'; ctx.fillRect(pt.isoX - 7, pt.isoY - 20, 14, 14);
-        ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(pt.isoX, pt.isoY - 25, 6, 0, Math.PI * 2); ctx.fill();
+        const bx = pt.isoX - 8;
+        const by = pt.isoY - 22;
 
-        ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = '#38bdf8'; ctx.textAlign = 'center';
-        ctx.fillText(p.name, pt.isoX, pt.isoY - 36);
+        // Cuerpo / Armadura Metalica
+        ctx.fillStyle = "#475569"; ctx.fillRect(bx + 3, by + 10, 10, 10);
+        ctx.fillStyle = "#0284c7"; ctx.fillRect(bx + 5, by + 12, 6, 6); // Pechera azul brillante
+        ctx.fillStyle = "#94a3b8"; ctx.fillRect(bx + 1, by + 10, 3, 7);  // Hombrera izq
+        ctx.fillStyle = "#94a3b8"; ctx.fillRect(bx + 12, by + 10, 3, 7); // Hombrera der
+
+        // Casco & Sombrero estilo retro
+        ctx.fillStyle = "#1e293b"; ctx.fillRect(bx + 2, by + 2, 12, 9);
+        ctx.fillStyle = "#f59e0b"; ctx.fillRect(bx + 1, by + 7, 14, 2);  // Borde visera
+        ctx.fillStyle = "#38bdf8"; ctx.fillRect(bx + 5, by + 5, 6, 2);   // Visor brillante
+
+        // Nombre
+        ctx.font = 'bold 10px monospace'; ctx.fillStyle = '#38bdf8'; ctx.textAlign = 'center';
+        ctx.fillText(p.name, pt.isoX, pt.isoY - 28);
     }
 
-    function drawEnemies(enemies) {
-        enemies.forEach(e => {
-            if (!e.alive) return;
-            const pt = toIso(e.x, e.y);
-            drawShadow(pt, 14, 6);
+    function drawEnemyPixel(e) {
+        if (!e.alive) return;
+        const pt = toIso(e.x, e.y);
+        drawShadow(pt, 12, 5);
+        const bx = pt.isoX - 8;
+        const by = pt.isoY - 22;
 
-            ctx.fillStyle = e.type === 'orc' ? '#166534' : (e.type === 'knight' ? '#020617' : '#581c87');
-            ctx.fillRect(pt.isoX - 7, pt.isoY - 20, 14, 14);
+        if (e.type === 'orc') {
+            ctx.fillStyle = "#15803d"; ctx.fillRect(bx + 2, by + 3, 12, 16); // Piel orco
+            ctx.fillStyle = "#854d0e"; ctx.fillRect(bx + 3, by + 10, 10, 7);  // Cuero
+            ctx.fillStyle = "#ef4444"; ctx.fillRect(bx + 4, by + 6, 2, 2);   // Ojos rojos
+            ctx.fillStyle = "#ef4444"; ctx.fillRect(bx + 10, by + 6, 2, 2);
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(bx + 4, by + 10, 2, 2);  // Colmillos
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(bx + 10, by + 10, 2, 2);
+        } else if (e.type === 'knight') {
+            ctx.fillStyle = "#090d16"; ctx.fillRect(bx + 2, by + 2, 12, 17); // Armadura negra
+            ctx.fillStyle = "#dc2626"; ctx.fillRect(bx + 4, by + 6, 8, 2);   // Visor rojo
+            ctx.fillStyle = "#475569"; ctx.fillRect(bx + 1, by + 8, 14, 2);
+        } else if (e.type === 'demon') {
+            ctx.fillStyle = "#6b21a8"; ctx.fillRect(bx + 2, by + 4, 12, 15);
+            ctx.fillStyle = "#a855f7"; ctx.fillRect(bx, by, 3, 5);          // Cuernos
+            ctx.fillStyle = "#a855f7"; ctx.fillRect(bx + 13, by, 3, 5);
+            ctx.fillStyle = "#facc15"; ctx.fillRect(bx + 4, by + 7, 3, 2);   // Ojos amarillos
+            ctx.fillStyle = "#facc15"; ctx.fillRect(bx + 9, by + 7, 3, 2);
+        }
 
-            ctx.font = '9px sans-serif'; ctx.fillStyle = '#ef4444'; ctx.textAlign = 'center';
-            ctx.fillText(e.name, pt.isoX, pt.isoY - 28);
-        });
+        ctx.font = '9px monospace'; ctx.fillStyle = '#ef4444'; ctx.textAlign = 'center';
+        ctx.fillText(e.name, pt.isoX, pt.isoY - 28);
     }
 
-    function drawNPCs(npcs) {
-        npcs.forEach(n => {
-            const pt = toIso(n.x, n.y);
-            drawShadow(pt, 10, 5);
-            ctx.font = '16px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText(n.icon, pt.isoX, pt.isoY - 6);
-            ctx.font = '9px sans-serif'; ctx.fillStyle = '#f59e0b';
-            ctx.fillText(n.name, pt.isoX, pt.isoY - 26);
-        });
+    function drawNPCPixel(n) {
+        const pt = toIso(n.x, n.y);
+        drawShadow(pt, 10, 4);
+        const bx = pt.isoX - 8;
+        const by = pt.isoY - 22;
+
+        // Túnica
+        ctx.fillStyle = "#4338ca"; ctx.fillRect(bx + 3, by + 8, 10, 12);
+        ctx.fillStyle = "#f59e0b"; ctx.fillRect(bx + 2, by + 2, 12, 4);  // Sombrero
+        ctx.fillStyle = "#4338ca"; ctx.fillRect(bx + 5, by - 3, 6, 5);
+        ctx.fillStyle = "#fde047"; ctx.fillRect(bx + 7, by - 1, 2, 2);   // Gema en sombrero
+
+        ctx.font = '9px monospace'; ctx.fillStyle = '#f59e0b'; ctx.textAlign = 'center';
+        ctx.fillText(n.name, pt.isoX, pt.isoY - 26);
+    }
+
+    function drawTreePixel(x, y) {
+        const pt = toIso(x, y);
+        drawShadow(pt, 16, 7);
+
+        const bx = pt.isoX - 10;
+        const by = pt.isoY - 36;
+
+        // Tronco Pixel
+        ctx.fillStyle = "#78350f"; ctx.fillRect(bx + 7, by + 22, 6, 14);
+        ctx.fillStyle = "#451a03"; ctx.fillRect(bx + 10, by + 22, 3, 14);
+
+        // Copa de Arbol por capas Pixel Art
+        ctx.fillStyle = "#14532d"; ctx.fillRect(bx, by + 12, 20, 12);
+        ctx.fillStyle = "#166534"; ctx.fillRect(bx + 2, by + 6, 16, 10);
+        ctx.fillStyle = "#22c55e"; ctx.fillRect(bx + 5, by, 10, 8);
+        ctx.fillStyle = "#86efac"; ctx.fillRect(bx + 7, by + 2, 3, 3); // Brillo de copa
     }
 
     function drawPortal(portal) {
         const pt = toIso(portal.x, portal.y);
-        ctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
         ctx.beginPath(); ctx.ellipse(pt.isoX, pt.isoY + TILE_H/2, 18, 9, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#e9d5ff'; ctx.textAlign = 'center';
+        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.font = 'bold 9px monospace'; ctx.fillStyle = '#e9d5ff'; ctx.textAlign = 'center';
         ctx.fillText(`Portal`, pt.isoX, pt.isoY - 10);
     }
 
@@ -478,6 +531,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const currentMap = maps[p.map];
 
+        // Dibujar Suelo
         for (let x = 0; x < MAP_SIZE; x++) {
             for (let y = 0; y < MAP_SIZE; y++) {
                 drawTile3D(x, y, currentMap.tile1, currentMap.tile2);
@@ -485,9 +539,16 @@
         }
 
         drawPortal(currentMap.portal);
-        drawNPCs(currentMap.npcs);
-        drawEnemies(currentMap.enemies);
-        drawHero(p.x, p.y);
+
+        // Arboles
+        if (currentMap.trees) {
+            currentMap.trees.forEach(t => drawTreePixel(t.x, t.y));
+        }
+
+        // Entidades
+        currentMap.npcs.forEach(n => drawNPCPixel(n));
+        currentMap.enemies.forEach(e => drawEnemyPixel(e));
+        drawHeroPixel(p.x, p.y);
 
         requestAnimationFrame(render);
     }
