@@ -3,39 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Abrahancito 3D - Landscape Native</title>
+    <title>Abrahancito 3D - Mundo Poblando & Quests</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; color: white; }
 
-        /* Pantalla completa real sin rotaciones raras */
-        #game-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-        }
-
+        #game-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; }
         #canvas-container { width: 100%; height: 100%; }
 
-        /* Minimapa Superior Izquierdo */
+        /* Minimapa */
         #minimap-card {
             position: absolute; top: 12px; left: 12px;
-            width: 85px; height: 85px; border-radius: 8px;
+            width: 90px; height: 90px; border-radius: 8px;
             border: 2px solid rgba(255,255,255,0.6); background: rgba(0,0,0,0.6);
             overflow: hidden; z-index: 20;
         }
         #minimap { width: 100%; height: 100%; }
 
-        /* Panel Superior Central/Derecho */
+        /* HUD Superior */
         #top-hud {
-            position: absolute; top: 12px; left: 110px; right: 12px;
+            position: absolute; top: 12px; left: 115px; right: 12px;
             display: flex; justify-content: space-between; align-items: flex-start;
             pointer-events: none; z-index: 20;
         }
 
         #status-bar {
-            background: rgba(15, 23, 42, 0.8); padding: 5px 10px; border-radius: 6px;
+            background: rgba(15, 23, 42, 0.85); padding: 5px 10px; border-radius: 6px;
             border: 1px solid rgba(255,255,255,0.2); font-size: 10px; font-weight: bold;
         }
         .bar-wrap { width: 75px; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
@@ -43,13 +36,22 @@
         .mp-bar { width: 100%; height: 100%; background: #3b82f6; }
 
         #quest-hud {
-            background: rgba(0,0,0,0.75); padding: 5px 10px; border-radius: 12px;
-            border: 1px solid #f59e0b; font-size: 10px; text-align: right;
+            background: rgba(0,0,0,0.8); padding: 6px 12px; border-radius: 12px;
+            border: 1px solid #f59e0b; font-size: 10px; text-align: right; max-width: 200px;
         }
 
-        /* Hotbar de Armas Eleva para no Tapar la Pantalla */
+        /* Barra de Vida Boss (Centro Superior) */
+        #boss-bar-card {
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); padding: 4px 12px; border-radius: 6px;
+            border: 1px solid #ef4444; text-align: center; display: none; z-index: 20;
+        }
+        #boss-hp { width: 140px; height: 8px; background: #7f1d1d; border-radius: 4px; overflow: hidden; margin-top: 2px; }
+        #boss-hp-fill { width: 100%; height: 100%; background: #ef4444; }
+
+        /* Hotbar de Armas */
         #hotbar {
-            position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 5px; background: rgba(15, 23, 42, 0.85);
             padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); z-index: 30;
         }
@@ -62,16 +64,16 @@
         .slot.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.3); }
         .slot-ammo { position: absolute; bottom: 1px; right: 2px; font-size: 8px; font-weight: bold; color: #cbd5e1; }
 
-        /* D-Pad Movimiento Izquierda */
+        /* D-Pad Joystick */
         #dpad {
-            position: absolute; left: 15px; bottom: 18px; width: 105px; height: 105px;
+            position: absolute; left: 15px; bottom: 15px; width: 105px; height: 105px;
             display: grid; grid-template-columns: repeat(3, 35px); grid-template-rows: repeat(3, 35px);
             z-index: 30; gap: 1px;
         }
         .dp-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
         .dp-btn:active { background: rgba(255,255,255,0.5); }
 
-        /* Botones Acción Derecha Distribuidos Arriba del Borde Inferior */
+        /* Botones de Acción */
         #action-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 30; }
         .act-btn {
             position: absolute; pointer-events: auto; border-radius: 50%;
@@ -81,11 +83,19 @@
         }
         .act-btn:active { background: rgba(255,255,255,0.5); }
 
-        #btn-shoot { right: 20px; bottom: 25px; width: 58px; height: 58px; background: rgba(220, 38, 38, 0.5); border-color: #ef4444; }
-        #btn-aim { right: 88px; bottom: 20px; width: 40px; height: 40px; }
-        #btn-jump { right: 25px; bottom: 92px; width: 42px; height: 42px; }
-        #btn-mount { right: 78px; bottom: 70px; width: 38px; height: 38px; }
-        #btn-interact { right: 125px; bottom: 65px; width: 38px; height: 38px; background: rgba(14, 165, 233, 0.5); }
+        #btn-shoot { right: 20px; bottom: 20px; width: 58px; height: 58px; background: rgba(220, 38, 38, 0.5); border-color: #ef4444; }
+        #btn-aim { right: 88px; bottom: 15px; width: 40px; height: 40px; }
+        #btn-jump { right: 25px; bottom: 88px; width: 42px; height: 42px; }
+        #btn-mount { right: 78px; bottom: 65px; width: 38px; height: 38px; }
+        #btn-interact { right: 125px; bottom: 60px; width: 38px; height: 38px; background: rgba(14, 165, 233, 0.5); }
+
+        /* Caja de Diálogo */
+        #dialogue-box {
+            position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);
+            width: 80%; max-width: 450px; background: rgba(15, 23, 42, 0.95);
+            border: 2px solid #f59e0b; border-radius: 8px; padding: 10px 14px;
+            font-size: 12px; line-height: 1.4; display: none; z-index: 40;
+        }
 
         #crosshair {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -103,7 +113,13 @@
 
         <!-- Minimapa -->
         <div id="minimap-card">
-            <canvas id="minimap" width="85" height="85"></canvas>
+            <canvas id="minimap" width="90" height="90"></canvas>
+        </div>
+
+        <!-- Boss Bar -->
+        <div id="boss-bar-card">
+            <div style="font-size:10px; font-weight:bold; color:#ef4444;">👑 REY SOMBRA (BOSS)</div>
+            <div id="boss-hp"><div id="boss-hp-fill"></div></div>
         </div>
 
         <!-- HUD Superior -->
@@ -112,13 +128,20 @@
                 <div>LVL <span id="p-lvl" style="color:#f59e0b">1</span> (<span id="p-xp">0</span>/100 XP)</div>
                 <div style="margin-top:2px;">HP <div class="bar-wrap"><div id="hp-bar" class="hp-bar"></div></div></div>
                 <div style="margin-top:2px;">MP <div class="bar-wrap"><div id="mp-bar" class="mp-bar"></div></div></div>
+                <div style="margin-top:2px; color:#a3e635;">🪵 Madera: <span id="wood-count">0</span></div>
             </div>
             <div id="quest-hud">
                 <span id="quest-text" style="color:#fde047;">Misión: Habla con el Sabio (?)</span>
             </div>
         </div>
 
-        <!-- Selector de Armas (Hotbar) -->
+        <!-- Diálogos NPC -->
+        <div id="dialogue-box">
+            <div id="dialogue-speaker" style="color:#f59e0b; font-weight:bold; margin-bottom:3px;">NPC</div>
+            <div id="dialogue-text">...</div>
+        </div>
+
+        <!-- Selector de Armas -->
         <div id="hotbar">
             <div class="slot active" id="slot-0" onclick="selectSlot(0)">⚔️<span class="slot-ammo">∞</span></div>
             <div class="slot" id="slot-1" onclick="selectSlot(1)">🏹<span class="slot-ammo">15</span></div>
@@ -126,14 +149,13 @@
             <div class="slot" id="slot-3" onclick="selectSlot(3)">🪓<span class="slot-ammo">Tala</span></div>
         </div>
 
-        <!-- Joystick D-Pad Izquierdo -->
+        <!-- Controls -->
         <div id="dpad">
             <div></div><div class="dp-btn" id="btn-up">▲</div><div></div>
             <div class="dp-btn" id="btn-left">◀</div><div></div><div class="dp-btn" id="btn-right">▶</div>
             <div></div><div class="dp-btn" id="btn-down">▼</div><div></div>
         </div>
 
-        <!-- Botones de Acción Derechos -->
         <div id="action-layer">
             <div class="act-btn" id="btn-shoot">🎯</div>
             <div class="act-btn" id="btn-aim">🔍</div>
@@ -147,12 +169,11 @@
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0284c7);
-    scene.fog = new THREE.FogExp2(0x0284c7, 0.008);
+    scene.fog = new THREE.FogExp2(0x0284c7, 0.007);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
@@ -166,14 +187,11 @@
     sun.castShadow = true;
     scene.add(sun);
 
-    let p = { lvl: 1, xp: 0, hp: 100, mp: 80, speed: 0.18, activeSlot: 0, questState: 0 };
+    let p = { lvl: 1, xp: 0, hp: 100, mp: 80, wood: 0, speed: 0.18, activeSlot: 0, questState: 0 };
     const keys = { up: false, down: false, left: false, right: false };
 
     // Terreno
-    const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(250, 250),
-        new THREE.MeshStandardMaterial({ color: 0x15803d })
-    );
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshStandardMaterial({ color: 0x15803d }));
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
@@ -183,43 +201,95 @@
     const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.2, 0.5), new THREE.MeshStandardMaterial({ color: 0x2563eb }));
     body.position.y = 0.6;
     playerGroup.add(body);
-    
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshStandardMaterial({ color: 0xfde047 }));
     head.position.y = 1.4;
     playerGroup.add(head);
     scene.add(playerGroup);
 
-    // NPC
-    const npcGroup = new THREE.Group();
-    const npcBody = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4), new THREE.MeshStandardMaterial({ color: 0x0284c7 }));
-    npcBody.position.y = 0.7;
-    npcGroup.add(npcBody);
-    npcGroup.position.set(8, 0, 8);
-    scene.add(npcGroup);
-
-    // Enemigos
-    const enemies = [];
-    function spawnEnemy(x, z) {
-        const mesh = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.6, 8), new THREE.MeshStandardMaterial({ color: 0x4c1d95 }));
-        mesh.rotation.x = Math.PI;
-        mesh.position.set(x, 0.8, z);
-        scene.add(mesh);
-        enemies.push({ mesh, hp: 40 });
+    // --- POBLADO DE ÁRBOLES PARA TALAR ---
+    const trees = [];
+    function spawnTree(x, z) {
+        const tree = new THREE.Group();
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 2), new THREE.MeshStandardMaterial({ color: 0x78350f }));
+        trunk.position.y = 1;
+        const leaves = new THREE.Mesh(new THREE.ConeGeometry(1.2, 3, 6), new THREE.MeshStandardMaterial({ color: 0x166534 }));
+        leaves.position.y = 2.8;
+        tree.add(trunk); tree.add(leaves);
+        tree.position.set(x, 0, z);
+        scene.add(tree);
+        trees.push({ mesh: tree, hp: 3, x, z });
     }
-    spawnEnemy(-15, 15); spawnEnemy(15, -20);
+    for(let i=0; i<35; i++) {
+        let rx = (Math.random() - 0.5) * 200;
+        let rz = (Math.random() - 0.5) * 200;
+        if(Math.abs(rx) > 10 || Math.abs(rz) > 10) spawnTree(rx, rz);
+    }
+
+    // --- MÚLTIPLES NPCS ---
+    const npcs = [
+        { id: 'sabio', name: 'Sabio Erudito', pos: new THREE.Vector3(8, 0, 8), color: 0x0284c7, reqQuest: 0 },
+        { id: 'herrero', name: 'Herrero Vulcan', pos: new THREE.Vector3(-12, 0, 15), color: 0xd97706, reqQuest: 2 },
+        { id: 'guardian', name: 'Guardia del Castillo', pos: new THREE.Vector3(25, 0, -20), color: 0xdc2626, reqQuest: 4 }
+    ];
+
+    npcs.forEach(npc => {
+        const g = new THREE.Group();
+        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4), new THREE.MeshStandardMaterial({ color: npc.color }));
+        b.position.y = 0.7;
+        g.add(b);
+        g.position.copy(npc.pos);
+        scene.add(g);
+        npc.mesh = g;
+    });
+
+    // --- ENEMIGOS & BOSSES ---
+    const enemies = [];
+    function spawnEnemy(x, z, isBoss = false) {
+        const scale = isBoss ? 2.5 : 1;
+        const mesh = new THREE.Mesh(
+            new THREE.ConeGeometry(0.6 * scale, 1.6 * scale, 8),
+            new THREE.MeshStandardMaterial({ color: isBoss ? 0x991b1b : 0x4c1d95 })
+        );
+        mesh.rotation.x = Math.PI;
+        mesh.position.set(x, 0.8 * scale, z);
+        scene.add(mesh);
+        enemies.push({ mesh, hp: isBoss ? 250 : 40, maxHp: isBoss ? 250 : 40, isBoss });
+    }
+
+    // Esbirros
+    spawnEnemy(-15, 15); spawnEnemy(15, -20); spawnEnemy(-25, -15); spawnEnemy(30, 20);
+    // Boss
+    spawnEnemy(35, -35, true);
 
     const vfxList = [];
 
-    function selectSlot(index) {
-        p.activeSlot = index;
-        document.querySelectorAll('.slot').forEach((s, i) => s.classList.toggle('active', i === index));
+    // Lore / Narrativas Aleatorias
+    const randomLore = [
+        "Dicen que el Rey Sombra solía ser un caballero de honor antes de tocar la reliquia.",
+        "Si necesitas madera para comerciar, usa el hacha cerca del bosque del este.",
+        "Los hechizos de fuego consumen maná rápidamente, úsalos con prudencia.",
+        "Se rumorea que completar misiones en el minimapa otorga recompensas legendarias."
+    ];
+
+    function selectSlot(i) {
+        p.activeSlot = i;
+        document.querySelectorAll('.slot').forEach((s, idx) => s.classList.toggle('active', idx === i));
+    }
+
+    function showDialogue(speaker, text) {
+        const box = document.getElementById('dialogue-box');
+        document.getElementById('dialogue-speaker').textContent = speaker;
+        document.getElementById('dialogue-text').textContent = text;
+        box.style.display = 'block';
+        setTimeout(() => { box.style.display = 'none'; }, 4500);
     }
 
     function executeAttack() {
-        if(p.activeSlot === 0) {
+        // Ataque de Espada o Hacha
+        if(p.activeSlot === 0 || p.activeSlot === 3) {
             const slash = new THREE.Mesh(
                 new THREE.RingGeometry(0.5, 1.2, 8, 1, 0, Math.PI),
-                new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+                new THREE.MeshBasicMaterial({ color: p.activeSlot === 3 ? 0xf59e0b : 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
             );
             slash.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
             slash.rotation.copy(playerGroup.rotation);
@@ -227,14 +297,39 @@
             scene.add(slash);
             vfxList.push({ mesh: slash, life: 10 });
 
+            // Tala de Árboles
+            if(p.activeSlot === 3) {
+                trees.forEach((t, i) => {
+                    if(t.mesh.position.distanceTo(playerGroup.position) < 2.5) {
+                        t.hp--;
+                        if(t.hp <= 0) {
+                            scene.remove(t.mesh);
+                            trees.splice(i, 1);
+                            p.wood += 3;
+                            if(p.questState === 2 && p.wood >= 5) p.questState = 3; // Misión herrero cumplida
+                            updateHUD();
+                        }
+                    }
+                });
+            }
+
+            // Daño Enemigos
             enemies.forEach((enemy, i) => {
-                if(enemy.mesh.position.distanceTo(playerGroup.position) < 3) {
-                    enemy.hp -= 25;
+                if(enemy.mesh.position.distanceTo(playerGroup.position) < 3.5) {
+                    enemy.hp -= 20;
+                    if(enemy.isBoss) {
+                        document.getElementById('boss-bar-card').style.display = 'block';
+                        document.getElementById('boss-hp-fill').style.width = `${(enemy.hp / enemy.maxHp)*100}%`;
+                    }
                     if(enemy.hp <= 0) {
+                        if(enemy.isBoss) {
+                            document.getElementById('boss-bar-card').style.display = 'none';
+                            if(p.questState === 4) p.questState = 5;
+                        }
                         scene.remove(enemy.mesh);
                         enemies.splice(i, 1);
-                        p.xp += 40;
-                        if(p.questState === 1) p.questState = 2;
+                        p.xp += enemy.isBoss ? 200 : 40;
+                        if(p.questState === 1) p.questState = 2; // Misión sabio cumplida
                         updateHUD();
                     }
                 }
@@ -243,17 +338,26 @@
     }
 
     function interactNPC() {
-        if(playerGroup.position.distanceTo(npcGroup.position) < 4) {
-            if(p.questState === 0) {
-                p.questState = 1;
-                alert("Sabio: 'Derrota a las Sombras del Valle.'");
-            } else if(p.questState === 2) {
-                p.questState = 3;
-                p.xp += 100; p.lvl++;
-                alert("Sabio: '¡Excelente trabajo! Has subido de nivel.'");
+        npcs.forEach(npc => {
+            if(playerGroup.position.distanceTo(npc.pos) < 4) {
+                if(npc.id === 'sabio') {
+                    if(p.questState === 0) { p.questState = 1; showDialogue(npc.name, "Derrota a las Sombras del Valle para probar tu valor."); }
+                    else if(p.questState === 2) { p.questState = 2; p.xp += 60; showDialogue(npc.name, "¡Gran trabajo! Ve con el Herrero en el oeste."); }
+                    else showDialogue(npc.name, randomLore[Math.floor(Math.random()*randomLore.length)]);
+                }
+                else if(npc.id === 'herrero') {
+                    if(p.questState === 2) { p.questState = 2; showDialogue(npc.name, "Necesito 5 maderas. Usa tu hacha en los árboles."); }
+                    else if(p.questState === 3) { p.questState = 4; p.xp += 100; showDialogue(npc.name, "¡Excelente madera! Habla con el Guardia para enfrentarte al Rey Sombra."); }
+                    else showDialogue(npc.name, "Tengo la mejor forja de la región.");
+                }
+                else if(npc.id === 'guardian') {
+                    if(p.questState === 4) showDialogue(npc.name, "¡El Rey Sombra acecha en el este! Elimínalo.");
+                    else if(p.questState === 5) { p.questState = 6; p.xp += 300; p.lvl += 2; showDialogue(npc.name, "¡Has salvado el reino! Eres una leyenda."); }
+                    else showDialogue(npc.name, "Mantengo el valle a salvo.");
+                }
+                updateHUD();
             }
-            updateHUD();
-        }
+        });
     }
 
     function updateHUD() {
@@ -261,12 +365,16 @@
         document.getElementById('p-xp').textContent = p.xp;
         document.getElementById('hp-bar').style.width = `${p.hp}%`;
         document.getElementById('mp-bar').style.width = `${p.mp}%`;
+        document.getElementById('wood-count').textContent = p.wood;
 
         const qText = document.getElementById('quest-text');
         if(p.questState === 0) qText.textContent = "Misión: Habla con el Sabio (?)";
-        else if(p.questState === 1) qText.textContent = "Misión: Elimina a las Sombras";
-        else if(p.questState === 2) qText.textContent = "¡Misión Cumplida! Entrega al Sabio (!)";
-        else qText.textContent = "Misiones Completadas";
+        else if(p.questState === 1) qText.textContent = "Misión: Elimina a una Sombra";
+        else if(p.questState === 2) qText.textContent = "Misión: Lleva 5 maderas al Herrero (?)";
+        else if(p.questState === 3) qText.textContent = "¡Entrega la madera al Herrero (!)";
+        else if(p.questState === 4) qText.textContent = "Misión: Derrota al Rey Sombra (Boss)";
+        else if(p.questState === 5) qText.textContent = "¡Reporta la victoria al Guardia (!)";
+        else qText.textContent = "¡Todas las Misiones Completadas!";
     }
 
     function bind(id, fn) {
@@ -274,7 +382,6 @@
         el.addEventListener('touchstart', (e)=>{ e.preventDefault(); fn(); });
         el.addEventListener('click', fn);
     }
-
     bind('btn-shoot', executeAttack);
     bind('btn-interact', interactNPC);
 
@@ -287,24 +394,28 @@
     bindDir('btn-left','left'); bindDir('btn-right','right');
 
     function drawMinimap() {
-        minimapCtx.clearRect(0,0,85,85);
-        const cx = 42.5, cy = 42.5, scale = 0.5;
+        minimapCtx.clearRect(0,0,90,90);
+        const cx = 45, cy = 45, scale = 0.45;
 
         minimapCtx.fillStyle = '#064e3b';
-        minimapCtx.fillRect(0,0,85,85);
+        minimapCtx.fillRect(0,0,90,90);
 
-        let nx = (npcGroup.position.x - playerGroup.position.x) * scale;
-        let nz = (npcGroup.position.z - playerGroup.position.z) * scale;
-        
-        minimapCtx.font = 'bold 11px sans-serif';
-        if(p.questState === 0) {
-            minimapCtx.fillStyle = '#3b82f6';
-            minimapCtx.fillText('?', cx + nx - 3, cy + nz + 4);
-        } else if(p.questState === 2) {
-            minimapCtx.fillStyle = '#f59e0b';
-            minimapCtx.fillText('!', cx + nx - 3, cy + nz + 4);
-        }
+        // Render NPCs en minimapa
+        npcs.forEach(npc => {
+            let nx = (npc.pos.x - playerGroup.position.x) * scale;
+            let nz = (npc.pos.z - playerGroup.position.z) * scale;
+            
+            minimapCtx.font = 'bold 11px sans-serif';
+            if((p.questState === 0 && npc.id==='sabio') || (p.questState === 2 && npc.id==='herrero') || (p.questState === 4 && npc.id==='guardian')) {
+                minimapCtx.fillStyle = '#3b82f6';
+                minimapCtx.fillText('?', cx + nx - 3, cy + nz + 4);
+            } else if((p.questState === 3 && npc.id==='herrero') || (p.questState === 5 && npc.id==='guardian')) {
+                minimapCtx.fillStyle = '#f59e0b';
+                minimapCtx.fillText('!', cx + nx - 3, cy + nz + 4);
+            }
+        });
 
+        // Jugador
         minimapCtx.save();
         minimapCtx.translate(cx, cy);
         minimapCtx.rotate(-playerGroup.rotation.y);
@@ -314,15 +425,6 @@
         minimapCtx.closePath(); minimapCtx.fill();
         minimapCtx.restore();
     }
-
-    function resize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    window.addEventListener('resize', resize);
-    window.addEventListener('orientationchange', resize);
 
     function animate() {
         requestAnimationFrame(animate);
