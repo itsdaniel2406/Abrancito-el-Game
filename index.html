@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Abrahancito: La Leyenda</title>
+    <title>Abrahancito: La Leyenda - v1</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,9 +12,9 @@
         }
 
         body {
-            background-color: #0f172a;
+            background-color: #090d16;
             color: white;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -25,47 +25,49 @@
             overflow: hidden;
         }
 
-        /* UI Superior */
+        /* HUD Estadísticas */
         .hud {
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #1e293b;
-            padding: 8px 16px;
-            border-radius: 8px 8px 0 0;
-            border: 2px solid #334155;
+            background: #111827;
+            padding: 10px 16px;
+            border-radius: 10px 10px 0 0;
+            border: 2px solid #1f2937;
             border-bottom: none;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: bold;
         }
 
         .bar-container {
-            width: 100px;
-            height: 14px;
-            background: #475569;
-            border-radius: 7px;
+            width: 80px;
+            height: 12px;
+            background: #374151;
+            border-radius: 6px;
             overflow: hidden;
             display: inline-block;
             vertical-align: middle;
+            border: 1px solid #4b5563;
         }
 
         .hp-bar { width: 100%; height: 100%; background: #ef4444; transition: width 0.2s; }
-        .xp-bar { width: 0%; height: 100%; background: #3b82f6; transition: width 0.2s; }
+        .mp-bar { width: 100%; height: 100%; background: #3b82f6; transition: width 0.2s; }
 
         /* Contenedor del Juego */
         #game-wrapper {
             position: relative;
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
         }
 
         canvas {
             width: 100%;
             height: auto;
-            background-color: #2e7d32;
+            background-color: #15803d;
             display: block;
-            border: 2px solid #334155;
+            border: 2px solid #1f2937;
             image-rendering: pixelated;
         }
 
@@ -75,16 +77,73 @@
             bottom: 12px;
             left: 12px;
             right: 12px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 3px solid #fbbf24;
+            background: rgba(17, 24, 39, 0.95);
+            border: 2px solid #f59e0b;
             border-radius: 8px;
             padding: 12px;
             font-size: 14px;
             display: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
         }
 
-        /* Panel Superior de Guardado */
+        /* Controles Táctiles Móbiles */
+        #touch-controls {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding: 0 5px;
+        }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 44px);
+            grid-template-rows: repeat(3, 44px);
+            gap: 2px;
+        }
+
+        .dbtn {
+            background: #1f2937;
+            border: 2px solid #374151;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .dbtn:active { background: #4b5563; }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .abtn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        }
+
+        .btn-a { background: #dc2626; } /* Atacar */
+        .btn-b { background: #2563eb; } /* Interactuar */
+        .btn-m { background: #9333ea; } /* Magia */
+        .abtn:active { transform: scale(0.92); }
+
+        /* Footer y Menú */
         .btn-panel {
             margin-top: 8px;
             display: flex;
@@ -92,179 +151,131 @@
         }
 
         button.sys-btn {
-            background: #334155;
+            background: #1f2937;
             color: white;
-            border: 1px solid #475569;
+            border: 1px solid #374151;
             padding: 6px 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 11px;
+        }
+
+        .credits {
+            margin-top: 12px;
             font-size: 12px;
-        }
-        button.sys-btn:active { background: #475569; }
-
-        /* Controles Táctiles Móbiles */
-        #touch-controls {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-            padding: 0 10px;
-        }
-
-        .dpad {
-            display: grid;
-            grid-template-columns: repeat(3, 45px);
-            grid-template-rows: repeat(3, 45px);
-            gap: 3px;
-        }
-
-        .dbtn {
-            background: #334155;
-            border: 2px solid #475569;
-            border-radius: 6px;
-            color: white;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
-        }
-
-        .dbtn:active { background: #64748b; }
-
-        .action-btns {
-            display: flex;
-            gap: 12px;
-        }
-
-        .abtn {
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            border: 3px solid #fff;
-            color: white;
+            color: #9ca3af;
             font-weight: bold;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
         }
-
-        .btn-a { background: #ef4444; } /* Atacar */
-        .btn-b { background: #3b82f6; } /* Interactuar */
-        .abtn:active { transform: scale(0.92); }
     </style>
 </head>
 <body>
 
     <!-- HUD Estadísticas -->
     <div class="hud">
-        <div>
-            <b>HP:</b> <div class="bar-container"><div id="hp-bar" class="hp-bar"></div></div>
-        </div>
-        <div><b>NIVEL:</b> <span id="lvl-txt" style="color: #fbbf24;">1</span></div>
-        <div>
-            <b>XP:</b> <div class="bar-container"><div id="xp-bar" class="xp-bar"></div></div>
-        </div>
+        <div>HP: <div class="bar-container"><div id="hp-bar" class="hp-bar"></div></div></div>
+        <div>MP: <div class="bar-container"><div id="mp-bar" class="mp-bar"></div></div></div>
+        <div style="color: #f59e0b;">MAPA: <span id="map-txt">1</span></div>
+        <div style="color: #60a5fa;">ARMA: <span id="weapon-txt">Espada</span></div>
     </div>
 
     <!-- Canvas principal del juego -->
     <div id="game-wrapper">
         <canvas id="gameCanvas" width="600" height="400"></canvas>
         <div id="dialog-box">
-            <strong id="npc-name" style="color: #fbbf24;"></strong>
-            <p id="npc-text" style="margin: 6px 0 0 0; line-height: 1.4;"></p>
+            <strong id="npc-name" style="color: #f59e0b;"></strong>
+            <p id="npc-text" style="margin: 4px 0 0 0; line-height: 1.3;"></p>
         </div>
     </div>
 
-    <!-- Controles de pantalla táctil -->
+    <!-- Controles Táctiles -->
     <div id="touch-controls">
         <div class="dpad">
-            <div></div>
-            <div class="dbtn" id="btn-up">▲</div>
-            <div></div>
-            <div class="dbtn" id="btn-left">◀</div>
-            <div></div>
-            <div class="dbtn" id="btn-right">▶</div>
-            <div></div>
-            <div class="dbtn" id="btn-down">▼</div>
-            <div></div>
+            <div></div><div class="dbtn" id="btn-up">▲</div><div></div>
+            <div class="dbtn" id="btn-left">◀</div><div></div><div class="dbtn" id="btn-right">▶</div>
+            <div></div><div class="dbtn" id="btn-down">▼</div><div></div>
         </div>
         <div class="action-btns">
-            <div class="abtn btn-b" id="btn-action">B</div>
-            <div class="abtn btn-a" id="btn-attack">A</div>
+            <div class="abtn btn-b" id="btn-action">HABLAR</div>
+            <div class="abtn btn-m" id="btn-magic">PODER</div>
+            <div class="abtn btn-a" id="btn-attack">ATACAR</div>
         </div>
     </div>
 
-    <!-- Menú de guardado -->
+    <!-- Menú y Firma -->
     <div class="btn-panel">
-        <button class="sys-btn" onclick="saveGame()">Guardar Partida 💾</button>
+        <button class="sys-btn" onclick="saveGame()">Guardar 💾</button>
         <button class="sys-btn" onclick="resetGame()">Reiniciar 🔄</button>
     </div>
+
+    <div class="credits">Creado por Dani v1</div>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
     // --- ESTADO DEL JUEGO ---
+    let currentLevel = 1;
     let player = {
-        x: 80,
-        y: 80,
-        size: 28,
-        speed: 3,
-        direction: 'down',
-        hp: 100,
-        maxHp: 100,
-        level: 1,
-        xp: 0,
-        maxXp: 50,
-        weapon: 'Espada de Madera',
-        isAttacking: false,
-        attackTimer: 0
+        x: 80, y: 200, size: 26, speed: 3.2, direction: 'right',
+        hp: 100, maxHp: 100, mp: 50, maxMp: 50,
+        weapon: 'Espada Madera', weaponDamage: 25,
+        isAttacking: false, attackTimer: 0,
+        isCasting: false, magicTimer: 0,
+        invulnerableTimer: 0
     };
 
-    const npcs = [
-        {
-            name: "Anciano sabio",
-            x: 200, y: 100, size: 28, color: '#f59e0b',
-            dialogs: [
-                "¡Saludos, Abrahancito! Bienvenido al reino.",
-                "Usa tu Espada de Madera para romper los arbustos oscuros y ganar XP.",
-                "¡Al subir de nivel recuperarás toda tu salud!"
+    let magicProjectiles = [];
+
+    // Base de datos de niveles
+    const levelData = {
+        1: {
+            bg: '#15803d',
+            name: "El Bosque Sagrado",
+            npcs: [
+                { name: "Anciano sabio", x: 150, y: 120, color: '#f59e0b', dialogs: ["¡Abrahancito! Los monstruos han invadido el reino.", "Usa [ATACAR] o barra espaciadora para vencer a los Slimes.", "El botón [PODER] lanza una onda mágica si tienes maná."] },
+                { name: "Sacerdotisa", x: 450, y: 300, color: '#ec4899', dialogs: ["Puedo curar tus heridas.", "¡Recuperaste tu vida y maná completos!"] }
             ],
-            dialogIndex: 0
+            monsters: [
+                { x: 350, y: 100, type: 'slime', hp: 40, maxHp: 40, speed: 1.2, color: '#22c55e', damage: 10 },
+                { x: 400, y: 220, type: 'slime', hp: 40, maxHp: 40, speed: 1.2, color: '#22c55e', damage: 10 }
+            ],
+            chests: [{ x: 520, y: 80, opened: false, item: 'Espada de Hierro' }],
+            portal: { x: 550, y: 330, open: false }
         },
-        {
-            name: "Caballero Guardián",
-            x: 480, y: 220, size: 28, color: '#9333ea',
-            dialogs: [
-                "El cofre del norte contiene un gran poder.",
-                "Pero ten cuidado, ¡necesitarás nivel 2 para reclamar la victoria!"
+        2: {
+            bg: '#334155',
+            name: "Las Cavernas Oscuras",
+            npcs: [
+                { name: "Explorador Lost", x: 100, y: 100, color: '#3b82f6', dialogs: ["¡Cuidado! Los espectros de esta cueva son muy agresivos.", "Si encuentras el Báculo Mágico tu poder aumentará enormemente."] }
             ],
-            dialogIndex: 0
+            monsters: [
+                { x: 250, y: 150, type: 'spectre', hp: 70, maxHp: 70, speed: 1.8, color: '#a855f7', damage: 15 },
+                { x: 400, y: 280, type: 'spectre', hp: 70, maxHp: 70, speed: 1.8, color: '#a855f7', damage: 15 },
+                { x: 300, y: 80, type: 'slime', hp: 50, maxHp: 50, speed: 1.4, color: '#22c55e', damage: 12 }
+            ],
+            chests: [{ x: 500, y: 60, opened: false, item: 'Báculo Mágico' }],
+            portal: { x: 550, y: 330, open: false }
+        },
+        3: {
+            bg: '#450a0a',
+            name: "Guarida del Rey Demonio",
+            npcs: [
+                { name: "Caballero Caído", x: 80, y: 320, color: '#94a3b8', dialogs: ["Este es el fin del camino...", "¡Derrota al Rey Demonio para liberar el reino!"] }
+            ],
+            monsters: [
+                { x: 420, y: 180, type: 'boss', hp: 250, maxHp: 250, speed: 1.0, color: '#ef4444', damage: 22, size: 45 }
+            ],
+            chests: [],
+            portal: null
         }
-    ];
+    };
 
-    let bushes = [
-        { x: 300, y: 150, hp: 2, maxHp: 2 },
-        { x: 340, y: 150, hp: 2, maxHp: 2 },
-        { x: 300, y: 190, hp: 2, maxHp: 2 },
-        { x: 420, y: 80, hp: 2, maxHp: 2 },
-        { x: 120, y: 280, hp: 2, maxHp: 2 }
-    ];
-
-    let chest = { x: 500, y: 60, opened: false };
-    let activeDialogNPC = null;
-
-    // Controles teclado y táctil
+    let activeNPC = null;
     const keys = { up: false, down: false, left: false, right: false };
 
-    // Escuchar Teclado
+    // Teclado
     window.addEventListener('keydown', e => {
         const k = e.key.toLowerCase();
         if (k === 'w' || k === 'arrowup') keys.up = true;
@@ -273,6 +284,7 @@
         if (k === 'd' || k === 'arrowright') keys.right = true;
         if (k === 'e') interact();
         if (k === ' ') attack();
+        if (k === 'm') castMagic();
     });
 
     window.addEventListener('keyup', e => {
@@ -283,7 +295,7 @@
         if (k === 'd' || k === 'arrowright') keys.right = false;
     });
 
-    // Asignar Controles Táctiles
+    // Controles Táctiles
     function bindTouch(id, keyName) {
         const el = document.getElementById(id);
         el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
@@ -292,91 +304,177 @@
         el.addEventListener('mouseup', () => { keys[keyName] = false; });
     }
 
-    bindTouch('btn-up', 'up');
-    bindTouch('btn-down', 'down');
-    bindTouch('btn-left', 'left');
-    bindTouch('btn-right', 'right');
+    bindTouch('btn-up', 'up'); bindTouch('btn-down', 'down');
+    bindTouch('btn-left', 'left'); bindTouch('btn-right', 'right');
 
     document.getElementById('btn-attack').addEventListener('click', attack);
     document.getElementById('btn-action').addEventListener('click', interact);
+    document.getElementById('btn-magic').addEventListener('click', castMagic);
 
-    // --- LÓGICA DE MOVIMIENTO Y ATAQUE ---
-    function updatePlayer() {
-        let dx = 0; let dy = 0;
+    // --- LÓGICA DE JUEGO ---
+    function update() {
+        let level = levelData[currentLevel];
+
+        // Mover Jugador
+        let dx = 0, dy = 0;
         if (keys.up) { dy -= player.speed; player.direction = 'up'; }
         if (keys.down) { dy += player.speed; player.direction = 'down'; }
         if (keys.left) { dx -= player.speed; player.direction = 'left'; }
         if (keys.right) { dx += player.speed; player.direction = 'right'; }
 
-        // Mover con límites de mapa
         player.x = Math.max(10, Math.min(canvas.width - player.size - 10, player.x + dx));
         player.y = Math.max(10, Math.min(canvas.height - player.size - 10, player.y + dy));
 
+        // Timers Jugador
         if (player.isAttacking) {
             player.attackTimer--;
             if (player.attackTimer <= 0) player.isAttacking = false;
         }
+        if (player.invulnerableTimer > 0) player.invulnerableTimer--;
+
+        // Recuperar Maná paulatinamente
+        if (player.mp < player.maxMp) player.mp += 0.05;
+
+        // Proyectiles Mágicos
+        magicProjectiles.forEach((proj, index) => {
+            proj.x += proj.vx;
+            proj.y += proj.vy;
+            proj.life--;
+
+            // Impacto con monstruos
+            level.monsters.forEach(m => {
+                if (checkCollision({x: proj.x, y: proj.y, w: 12, h: 12}, {x: m.x, y: m.y, w: m.size || 28, h: m.size || 28})) {
+                    m.hp -= 40;
+                    proj.life = 0;
+                }
+            });
+
+            if (proj.life <= 0) magicProjectiles.splice(index, 1);
+        });
+
+        // IA y Ataque de Monstruos
+        level.monsters.forEach((m, i) => {
+            let mSize = m.size || 28;
+            // Perseguir al jugador
+            let angle = Math.atan2(player.y - m.y, player.x - m.x);
+            m.x += Math.cos(angle) * m.speed;
+            m.y += Math.sin(angle) * m.speed;
+
+            // Daño al Jugador
+            if (checkCollision({x: player.x, y: player.y, w: player.size, h: player.size}, {x: m.x, y: m.y, w: mSize, h: mSize})) {
+                if (player.invulnerableTimer === 0) {
+                    player.hp -= m.damage;
+                    player.invulnerableTimer = 30; // Tiempo de inmunidad temporal
+                    if (player.hp <= 0) {
+                        alert("¡Has sido derrotado! Reiniciando el nivel...");
+                        player.hp = player.maxHp;
+                        player.x = 80; player.y = 200;
+                    }
+                }
+            }
+
+            // Muerte de Monstruo
+            if (m.hp <= 0) {
+                level.monsters.splice(i, 1);
+            }
+        });
+
+        // Abrir portal si no quedan enemigos
+        if (level.monsters.length === 0 && level.portal) {
+            level.portal.open = true;
+        }
+
+        // Entrar en Portal
+        if (level.portal && level.portal.open) {
+            if (checkCollision({x: player.x, y: player.y, w: player.size, h: player.size}, {x: level.portal.x, y: level.portal.y, w: 30, h: 30})) {
+                currentLevel++;
+                player.x = 50; player.y = 200;
+                alert(`¡Entraste al Nivel ${currentLevel}: ${levelData[currentLevel].name}!`);
+            }
+        }
+
+        updateUI();
     }
 
     function attack() {
         if (player.isAttacking) return;
         player.isAttacking = true;
-        player.attackTimer = 12; // Duración de animación del golpe
+        player.attackTimer = 10;
 
-        // Área de impacto según dirección
-        let hitBox = { x: player.x, y: player.y, w: 25, h: 25 };
-        if (player.direction === 'up') hitBox.y -= 25;
-        if (player.direction === 'down') hitBox.y += 28;
-        if (player.direction === 'left') hitBox.x -= 25;
-        if (player.direction === 'right') hitBox.x += 28;
+        let level = levelData[currentLevel];
+        let range = player.weapon === 'Espada de Hierro' ? 36 : 26;
+        let hitBox = { x: player.x, y: player.y, w: range, h: range };
 
-        // Romper arbustos
-        bushes.forEach((bush, i) => {
-            if (checkCollision(hitBox, { x: bush.x, y: bush.y, w: 30, h: 30 })) {
-                bush.hp--;
-                if (bush.hp <= 0) {
-                    bushes.splice(i, 1);
-                    gainXP(20);
-                }
+        if (player.direction === 'up') hitBox.y -= range;
+        if (player.direction === 'down') hitBox.y += player.size;
+        if (player.direction === 'left') hitBox.x -= range;
+        if (player.direction === 'right') hitBox.x += player.size;
+
+        level.monsters.forEach(m => {
+            let mSize = m.size || 28;
+            if (checkCollision(hitBox, { x: m.x, y: m.y, w: mSize, h: mSize })) {
+                m.hp -= player.weaponDamage;
             }
         });
     }
 
+    function castMagic() {
+        if (player.mp < 20) return;
+        player.mp -= 20;
+
+        let speed = 7;
+        let vx = 0, vy = 0;
+        if (player.direction === 'right') vx = speed;
+        if (player.direction === 'left') vx = -speed;
+        if (player.direction === 'up') vy = -speed;
+        if (player.direction === 'down') vy = speed;
+
+        magicProjectiles.push({
+            x: player.x + player.size/2,
+            y: player.y + player.size/2,
+            vx: vx, vy: vy, life: 40
+        });
+    }
+
     function interact() {
-        // Cerrar diálogo si está abierto y no hay más texto
-        if (activeDialogNPC) {
-            activeDialogNPC.dialogIndex++;
-            if (activeDialogNPC.dialogIndex >= activeDialogNPC.dialogs.length) {
-                document.getElementById('dialog-box').style.display = 'none';
-                activeDialogNPC.dialogIndex = 0;
-                activeDialogNPC = null;
-                return;
-            } else {
-                showDialog(activeDialogNPC.name, activeDialogNPC.dialogs[activeDialogNPC.dialogIndex]);
-                return;
-            }
+        let level = levelData[currentLevel];
+
+        // Cerrar o avanzar diálogo
+        if (activeNPC) {
+            document.getElementById('dialog-box').style.display = 'none';
+            activeNPC = null;
+            return;
         }
 
-        // Interacción con NPCs
-        npcs.forEach(npc => {
+        // Hablar con NPCs
+        level.npcs.forEach(npc => {
             let dist = Math.hypot((player.x - npc.x), (player.y - npc.y));
             if (dist < 45) {
-                activeDialogNPC = npc;
-                showDialog(npc.name, npc.dialogs[npc.dialogIndex]);
+                activeNPC = npc;
+                showDialog(npc.name, npc.dialogs[0]);
+                if (npc.name === "Sacerdotisa") {
+                    player.hp = player.maxHp;
+                    player.mp = player.maxMp;
+                }
             }
         });
 
-        // Interacción con Cofre
-        let chestDist = Math.hypot((player.x - chest.x), (player.y - chest.y));
-        if (chestDist < 45 && !chest.opened) {
-            if (player.level >= 2) {
+        // Abrir Cofres
+        level.chests.forEach(chest => {
+            let dist = Math.hypot((player.x - chest.x), (player.y - chest.y));
+            if (dist < 45 && !chest.opened) {
                 chest.opened = true;
-                showDialog("Cofre del Tesoro", "¡Encontraste la Espada Dorada! ¡Has completado la demo del juego!");
-                player.weapon = "Espada Dorada";
-            } else {
-                showDialog("Cofre Sellado", "El cofre está bloqueado por magia. Necesitas subir a Nivel 2.");
+                if (chest.item === 'Espada de Hierro') {
+                    player.weapon = 'Espada Hierro';
+                    player.weaponDamage = 45;
+                    showDialog("Cofre del Tesoro", "¡Obtuviste la Espada de Hierro! Aumenta tu daño a 45.");
+                } else if (chest.item === 'Báculo Mágico') {
+                    player.weapon = 'Báculo Mágico';
+                    player.weaponDamage = 65;
+                    showDialog("Cofre del Tesoro", "¡Obtuviste el Báculo Mágico! Un arma legendaria.");
+                }
             }
-        }
+        });
     }
 
     function showDialog(title, text) {
@@ -385,145 +483,143 @@
         document.getElementById('dialog-box').style.display = 'block';
     }
 
-    function gainXP(amount) {
-        player.xp += amount;
-        if (player.xp >= player.maxXp) {
-            player.level++;
-            player.xp -= player.maxXp;
-            player.maxXp += 25;
-            player.hp = player.maxHp;
-            alert(`¡SUBISTE DE NIVEL! Ahora eres Nivel ${player.level}`);
-        }
-        updateUI();
-    }
-
-    function updateUI() {
-        document.getElementById('hp-bar').style.width = `${(player.hp / player.maxHp) * 100}%`;
-        document.getElementById('xp-bar').style.width = `${(player.xp / player.maxXp) * 100}%`;
-        document.getElementById('lvl-txt').textContent = player.level;
-    }
-
     function checkCollision(r1, r2) {
         return !(r1.x > r2.x + r2.w || r1.x + r1.w < r2.x || r1.y > r2.y + r2.h || r1.y + r1.h < r2.y);
     }
 
-    // --- DIBUJADO GRÁFICO (PIXEL ART CANVAS) ---
-    function drawMap() {
-        // Fondo / Grass Texture
-        ctx.fillStyle = '#16a34a';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Decoración de pasto
-        ctx.fillStyle = '#15803d';
-        for(let i=20; i<canvas.width; i+=60) {
-            for(let j=20; j<canvas.height; j+=60) {
-                ctx.fillRect(i, j, 4, 4);
-                ctx.fillRect(i+4, j+4, 4, 4);
-            }
-        }
+    function updateUI() {
+        document.getElementById('hp-bar').style.width = `${(player.hp / player.maxHp) * 100}%`;
+        document.getElementById('mp-bar').style.width = `${(player.mp / player.maxMp) * 100}%`;
+        document.getElementById('map-txt').textContent = currentLevel;
+        document.getElementById('weapon-txt').textContent = player.weapon;
     }
 
-    function drawEntities() {
-        // Dibujar Cofre
-        ctx.fillStyle = chest.opened ? '#9a3412' : '#ca8a04';
-        ctx.fillRect(chest.x, chest.y, 28, 22);
-        ctx.fillStyle = '#fef08a';
-        ctx.fillRect(chest.x + 10, chest.y + 8, 8, 6);
+    // --- DIBUJADO DE GRÁFICOS ---
+    function draw() {
+        let level = levelData[currentLevel];
 
-        // Dibujar Arbustos Mágicos
-        bushes.forEach(b => {
-            ctx.fillStyle = b.hp === 2 ? '#064e3b' : '#047857';
+        // Fondo
+        ctx.fillStyle = level.bg;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Portal de salida de nivel
+        if (level.portal) {
+            ctx.fillStyle = level.portal.open ? '#3b82f6' : '#4b5563';
             ctx.beginPath();
-            ctx.arc(b.x + 15, b.y + 15, 15, 0, Math.PI * 2);
+            ctx.arc(level.portal.x + 15, level.portal.y + 15, 16, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = '#a7f3d0';
-            ctx.fillRect(b.x + 10, b.y + 10, 4, 4);
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px sans-serif';
+            ctx.fillText(level.portal.open ? "PORTAL" : "CERRADO", level.portal.x - 5, level.portal.y - 5);
+        }
+
+        // Cofres
+        level.chests.forEach(c => {
+            ctx.fillStyle = c.opened ? '#78350f' : '#f59e0b';
+            ctx.fillRect(c.x, c.y, 26, 20);
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(c.x + 9, c.y + 6, 8, 6);
         });
 
-        // Dibujar NPCs
-        npcs.forEach(npc => {
-            // Cuerpo NPC
+        // NPCs
+        level.npcs.forEach(npc => {
             ctx.fillStyle = npc.color;
-            ctx.fillRect(npc.x, npc.y, npc.size, npc.size);
+            ctx.fillRect(npc.x, npc.y, 26, 26);
+            // Detalles cara NPC
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(npc.x + 4, npc.y + 5, 5, 5);
+            ctx.fillRect(npc.x + 15, npc.y + 5, 5, 5);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(npc.x + 6, npc.y + 7, 2, 2);
+            ctx.fillRect(npc.x + 17, npc.y + 7, 2, 2);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillText(npc.name, npc.x - 5, npc.y - 5);
+        });
+
+        // Monstruos
+        level.monsters.forEach(m => {
+            let mSize = m.size || 28;
+            ctx.fillStyle = m.color;
+            ctx.fillRect(m.x, m.y, mSize, mSize);
+
+            // Ojos de monstruo
+            ctx.fillStyle = '#000';
+            ctx.fillRect(m.x + 4, m.y + 6, 4, 4);
+            ctx.fillRect(m.x + mSize - 8, m.y + 6, 4, 4);
+
+            // Barra de vida de monstruo
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(m.x, m.y - 8, (m.hp / m.maxHp) * mSize, 4);
+        });
+
+        // Proyectiles Mágicos
+        ctx.fillStyle = '#60a5fa';
+        magicProjectiles.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // Jugador (Abrahancito)
+        if (player.invulnerableTimer % 4 < 2) { // Parpadeo al recibir daño
+            ctx.fillStyle = '#2563eb'; // Túnica Azul
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+
+            // Gorrito
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(player.x + 3, player.y - 4, player.size - 6, 5);
+
             // Ojos
             ctx.fillStyle = '#fff';
-            ctx.fillRect(npc.x + 4, npc.y + 6, 6, 6);
-            ctx.fillRect(npc.x + 18, npc.y + 6, 6, 6);
-            ctx.fillStyle = '#000';
-            ctx.fillRect(npc.x + 6, npc.y + 8, 3, 3);
-            ctx.fillRect(npc.x + 20, npc.y + 8, 3, 3);
-            // Nombre
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 11px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(npc.name, npc.x + npc.size/2, npc.y - 6);
-        });
+            let ox = player.direction === 'left' ? 2 : player.direction === 'right' ? 12 : 6;
+            ctx.fillRect(player.x + ox, player.y + 6, 4, 5);
+            ctx.fillRect(player.x + ox + 6, player.y + 6, 4, 5);
+        }
 
-        // Dibujar a Abrahancito
-        ctx.fillStyle = '#2563eb'; // Túnica azul
-        ctx.fillRect(player.x, player.y, player.size, player.size);
-        
-        // Gorrito Verde Heroico
-        ctx.fillStyle = '#facc15';
-        ctx.fillRect(player.x + 4, player.y - 4, player.size - 8, 6);
-
-        // Ojos de Abrahancito
-        ctx.fillStyle = '#fff';
-        let ox = player.direction === 'left' ? 2 : player.direction === 'right' ? 14 : 6;
-        ctx.fillRect(player.x + ox, player.y + 6, 5, 5);
-        ctx.fillRect(player.x + ox + 8, player.y + 6, 5, 5);
-
-        // Animación de Ataque (Espada)
+        // Ataque Espada / Báculo
         if (player.isAttacking) {
-            ctx.fillStyle = player.weapon === "Espada Dorada" ? '#facc15' : '#e2e8f0';
-            let sx = player.x, sy = player.y, sw = 6, sh = 24;
-
-            if (player.direction === 'right') { sx += 28; sy += 4; sw = 24; sh = 6; }
-            else if (player.direction === 'left') { sx -= 24; sy += 4; sw = 24; sh = 6; }
-            else if (player.direction === 'up') { sy -= 24; }
-            else if (player.direction === 'down') { sy += 28; }
-
+            ctx.fillStyle = player.weapon === 'Báculo Mágico' ? '#a855f7' : player.weapon === 'Espada Hierro' ? '#e2e8f0' : '#d97706';
+            let sx = player.x, sy = player.y, sw = 6, sh = 26;
+            if (player.direction === 'right') { sx += 26; sy += 2; sw = 26; sh = 6; }
+            else if (player.direction === 'left') { sx -= 26; sy += 2; sw = 26; sh = 6; }
+            else if (player.direction === 'up') { sy -= 26; }
+            else if (player.direction === 'down') { sy += 26; }
             ctx.fillRect(sx, sy, sw, sh);
         }
     }
 
-    // --- BUCLE PRINCIPAL ---
     function loop() {
-        updatePlayer();
-        drawMap();
-        drawEntities();
+        update();
+        draw();
         requestAnimationFrame(loop);
     }
 
-    // --- GUARDADO / CARGA ---
+    // --- GUARDADO ---
     function saveGame() {
-        const data = {
-            player: player,
-            chestOpened: chest.opened
-        };
-        localStorage.setItem('abrahancito_sav', JSON.stringify(data));
-        alert('¡Progreso guardado correctamente!');
+        const sav = { level: currentLevel, player: player };
+        localStorage.setItem('abrahancito_v1_save', JSON.stringify(sav));
+        alert('¡Partida guardada correctamente!');
     }
 
     function loadGame() {
-        const sav = localStorage.getItem('abrahancito_sav');
+        const sav = localStorage.getItem('abrahancito_v1_save');
         if (sav) {
             const data = JSON.parse(sav);
+            currentLevel = data.level;
             player = { ...player, ...data.player };
-            chest.opened = data.chestOpened;
-            updateUI();
         }
     }
 
     function resetGame() {
-        localStorage.removeItem('abrahancito_sav');
+        localStorage.removeItem('abrahancito_v1_save');
         location.reload();
     }
 
     loadGame();
-    updateUI();
     loop();
 </script>
 
 </body>
-</html> 
+</html>
