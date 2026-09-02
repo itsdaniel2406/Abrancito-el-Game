@@ -3,118 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Wakfu RPG 3D - Dofus Style</title>
+    <title>Abrancito el Game</title>
     <style>
-        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
-        html, body { width: 100%; height: 100%; overflow: hidden; background-color: #0b0f19; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; }
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        html, body { width: 100vw; height: 100vh; overflow: hidden; background-color: #0284c7; color: white; }
 
         #game-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; }
-        #canvas-container { width: 100%; height: 100%; }
+        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
 
-        #minimap-card {
-            position: absolute; top: 12px; left: 12px;
-            width: 100px; height: 100px; border-radius: 12px;
-            border: 2px solid #38bdf8; background: rgba(15, 23, 42, 0.85);
-            overflow: hidden; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        }
-        #minimap { width: 100%; height: 100%; }
-
+        /* HUD SUPERIOR RESPONSIVO */
         #top-hud {
-            position: absolute; top: 12px; left: 125px; right: 12px;
+            position: absolute; top: 8px; left: 8px; right: 8px;
             display: flex; justify-content: space-between; align-items: flex-start;
             pointer-events: none; z-index: 20;
         }
 
-        #status-bar {
-            background: rgba(15, 23, 42, 0.9); padding: 8px 12px; border-radius: 10px;
-            border: 1px solid #3b82f6; font-size: 11px; font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        .hud-card {
+            background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(4px);
+            border: 1.5px solid #38bdf8; border-radius: 10px; padding: 6px 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4); pointer-events: auto;
         }
-        .bar-wrap { width: 90px; height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; display: inline-block; vertical-align: middle; border: 1px solid #334155; }
+
+        #minimap-card { width: 75px; height: 75px; padding: 0; overflow: hidden; border-color: #38bdf8; }
+        #minimap { width: 100%; height: 100%; display: block; }
+
+        #status-card { font-size: 10px; font-weight: bold; min-width: 140px; }
+        .bar-wrap { width: 80px; height: 6px; background: #0f172a; border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; border: 1px solid #334155; }
         .hp-bar { width: 100%; height: 100%; background: #22c55e; transition: width 0.2s; }
         .mp-bar { width: 100%; height: 100%; background: #3b82f6; transition: width 0.2s; }
 
-        #quest-hud {
-            background: rgba(15, 23, 42, 0.9); padding: 8px 14px; border-radius: 10px;
-            border: 1px solid #f59e0b; font-size: 11px; text-align: right; max-width: 220px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-        }
+        #quest-card { border-color: #f59e0b; max-width: 200px; text-align: right; font-size: 10px; color: #fde047; }
 
         #boss-bar-card {
-            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.95); padding: 6px 16px; border-radius: 8px;
+            position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9); padding: 4px 12px; border-radius: 8px;
             border: 2px solid #ef4444; text-align: center; display: none; z-index: 20;
         }
-        #boss-hp { width: 180px; height: 10px; background: #450a0a; border-radius: 5px; overflow: hidden; margin-top: 4px; border: 1px solid #7f1d1d; }
+        #boss-hp { width: 140px; height: 8px; background: #450a0a; border-radius: 4px; overflow: hidden; margin-top: 3px; border: 1px solid #7f1d1d; }
         #boss-hp-fill { width: 100%; height: 100%; background: #ef4444; }
 
+        /* HOTBAR ADAPTATIVA */
         #hotbar {
-            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 6px; background: rgba(15, 23, 42, 0.9);
-            padding: 6px; border-radius: 10px; border: 1px solid #475569; z-index: 30;
+            position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 4px; background: rgba(15, 23, 42, 0.85);
+            padding: 4px; border-radius: 10px; border: 1px solid #475569; z-index: 30;
         }
         .slot {
-            width: 44px; height: 44px; background: rgba(255,255,255,0.05);
-            border: 2px solid #475569; border-radius: 8px; display: flex;
-            align-items: center; justify-content: center; font-size: 20px;
-            cursor: pointer; position: relative; transition: all 0.15s;
+            width: clamp(36px, 8vw, 44px); height: clamp(36px, 8vw, 44px);
+            background: rgba(255,255,255,0.08); border: 2px solid #475569;
+            border-radius: 8px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-size: 16px;
+            cursor: pointer; transition: all 0.15s;
         }
-        .slot.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.25); transform: scale(1.05); }
-        .slot-name { position: absolute; bottom: 2px; font-size: 8px; font-weight: bold; color: #cbd5e1; }
+        .slot.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.3); transform: scale(1.05); }
+        .slot-name { font-size: 7px; font-weight: bold; color: #cbd5e1; margin-top: -2px; }
 
+        /* CONTROLES TÁCTILES SIN SUPERPOSICIÓN */
+        #dpad {
+            position: absolute; left: 10px; bottom: 10px;
+            width: clamp(90px, 22vw, 110px); height: clamp(90px, 22vw, 110px);
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+            z-index: 30; gap: 3px;
+        }
+        .dp-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; touch-action: manipulation; }
+        .dp-btn:active { background: rgba(255,255,255,0.5); }
+
+        #action-buttons {
+            position: absolute; right: 10px; bottom: 10px;
+            display: flex; gap: 8px; align-items: flex-end; z-index: 30;
+        }
+        .act-btn {
+            width: clamp(40px, 10vw, 52px); height: clamp(40px, 10vw, 52px);
+            border-radius: 50%; background: rgba(15, 23, 42, 0.7);
+            border: 2px solid rgba(255,255,255,0.6); display: flex;
+            align-items: center; justify-content: center; font-size: 18px;
+            touch-action: manipulation; backdrop-filter: blur(4px);
+        }
+        .act-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.4); }
+        #btn-shoot { width: clamp(50px, 12vw, 62px); height: clamp(50px, 12vw, 62px); background: rgba(220, 38, 38, 0.7); border-color: #ef4444; }
+
+        /* INVENTARIO */
         #inventory-modal {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 320px; background: rgba(15, 23, 42, 0.98); border: 2px solid #38bdf8;
-            border-radius: 12px; padding: 14px; display: none; z-index: 50;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            width: 280px; max-width: 90vw; background: rgba(15, 23, 42, 0.95);
+            border: 2px solid #38bdf8; border-radius: 12px; padding: 12px;
+            display: none; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
-        .inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        .inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
         .inv-item {
-            width: 60px; height: 60px; background: #1e293b; border: 1px solid #475569;
-            border-radius: 8px; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; font-size: 22px; cursor: pointer; position: relative;
+            height: 50px; background: #1e293b; border: 1px solid #475569;
+            border-radius: 6px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-size: 18px; cursor: pointer;
         }
-        .inv-item:hover { border-color: #f59e0b; }
-        .inv-item-stat { font-size: 8px; color: #f59e0b; font-weight: bold; }
+        .inv-item-stat { font-size: 7px; color: #f59e0b; font-weight: bold; }
 
-        #dpad {
-            position: absolute; left: 15px; bottom: 15px; width: 105px; height: 105px;
-            display: grid; grid-template-columns: repeat(3, 35px); grid-template-rows: repeat(3, 35px);
-            z-index: 30; gap: 2px;
-        }
-        .dp-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-        .dp-btn:active { background: rgba(255,255,255,0.4); }
-
-        #action-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 30; }
-        .act-btn {
-            position: absolute; pointer-events: auto; border-radius: 50%;
-            background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.5);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; touch-action: manipulation; backdrop-filter: blur(4px);
-        }
-        .act-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.95); }
-
-        #btn-shoot { right: 20px; bottom: 20px; width: 62px; height: 62px; background: rgba(220, 38, 38, 0.6); border-color: #ef4444; }
-        #btn-inv { right: 90px; bottom: 20px; width: 44px; height: 44px; background: rgba(168, 85, 247, 0.5); border-color: #c084fc; }
-        #btn-mount { right: 80px; bottom: 72px; width: 42px; height: 42px; background: rgba(234, 179, 8, 0.5); border-color: #fde047; }
-        #btn-interact { right: 25px; bottom: 90px; width: 44px; height: 44px; background: rgba(14, 165, 233, 0.6); border-color: #38bdf8; }
-
+        /* DIÁLOGOS Y OVERLAY INICIAL */
         #dialogue-box {
-            position: absolute; bottom: 75px; left: 50%; transform: translateX(-50%);
-            width: 85%; max-width: 480px; background: rgba(15, 23, 42, 0.95);
-            border: 2px solid #f59e0b; border-radius: 10px; padding: 12px 16px;
-            font-size: 13px; line-height: 1.4; display: none; z-index: 40; box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%);
+            width: 80%; max-width: 400px; background: rgba(15, 23, 42, 0.95);
+            border: 2px solid #f59e0b; border-radius: 8px; padding: 8px 12px;
+            font-size: 11px; display: none; z-index: 40; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
         }
 
         #fullscreen-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #0b0f19; z-index: 100; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center; color: white; padding: 20px;
+            background: #0f172a; z-index: 100; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; padding: 20px;
         }
         #start-btn {
-            margin-top: 20px; padding: 12px 32px; background: #0284c7; color: white;
-            border: none; border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;
-            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5);
+            margin-top: 15px; padding: 10px 28px; background: #0284c7; color: white;
+            border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.5);
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -122,48 +121,48 @@
 <body>
 
     <div id="fullscreen-overlay">
-        <h1 style="color:#38bdf8; font-size:28px;">🗡️ WAKFU STYLE 3D RPG</h1>
-        <p style="margin-top: 10px; font-size: 14px; color: #94a3b8;">Mundo habitado con vegetación, drops de botín, inventario y batallas RPG.</p>
-        <button id="start-btn">ENTRAR AL MUNDO</button>
+        <h1 style="color:#38bdf8; font-size:24px;">⚔️ ABRANCITO EL GAME</h1>
+        <p style="margin-top: 8px; font-size: 12px; color: #94a3b8;">Gira tu pantalla a Horizontal para la mejor experiencia RPG.</p>
+        <button id="start-btn">JUGAR AHORA</button>
     </div>
 
     <div id="game-container">
         <div id="canvas-container"></div>
 
-        <div id="minimap-card">
-            <canvas id="minimap" width="100" height="100"></canvas>
+        <div id="top-hud">
+            <div style="display:flex; gap:6px;">
+                <div class="hud-card" id="minimap-card">
+                    <canvas id="minimap" width="75" height="75"></canvas>
+                </div>
+                <div class="hud-card" id="status-card">
+                    <div>LVL <span id="p-lvl" style="color:#f59e0b">1</span> (<span id="p-xp">0</span>/100 XP)</div>
+                    <div style="margin-top:2px;">HP <div class="bar-wrap"><div id="hp-bar" class="hp-bar"></div></div></div>
+                    <div style="margin-top:2px;">MP <div class="bar-wrap"><div id="mp-bar" class="mp-bar"></div></div></div>
+                    <div style="margin-top:2px; color:#38bdf8;">⚔️ Atq: <span id="p-atk">15</span> | 🪵 Madera: <span id="wood-count">0</span></div>
+                </div>
+            </div>
+
+            <div class="hud-card" id="quest-card">
+                <span id="quest-text">Misión: Habla con el Sabio Orestes (?)</span>
+            </div>
         </div>
 
         <div id="boss-bar-card">
-            <div style="font-size:11px; font-weight:bold; color:#ef4444;">👑 REY JALATÓ (BOSS)</div>
+            <div style="font-size:10px; font-weight:bold; color:#ef4444;">👑 REY JALATÓ (BOSS)</div>
             <div id="boss-hp"><div id="boss-hp-fill"></div></div>
         </div>
 
-        <div id="top-hud">
-            <div id="status-bar">
-                <div>LVL <span id="p-lvl" style="color:#f59e0b">1</span> (<span id="p-xp">0</span>/100 XP)</div>
-                <div style="margin-top:3px;">HP <div class="bar-wrap"><div id="hp-bar" class="hp-bar"></div></div></div>
-                <div style="margin-top:3px;">MP <div class="bar-wrap"><div id="mp-bar" class="mp-bar"></div></div></div>
-                <div style="margin-top:3px; color:#38bdf8;">⚔️ Atq: <span id="p-atk">15</span> | 🪵 Madera: <span id="wood-count">0</span></div>
-            </div>
-            <div id="quest-hud">
-                <span id="quest-text" style="color:#fde047;">Misión: Habla con el Sabio Orestes (?)</span>
-            </div>
-        </div>
-
         <div id="dialogue-box">
-            <div id="dialogue-speaker" style="color:#f59e0b; font-weight:bold; margin-bottom:4px;">NPC</div>
+            <div id="dialogue-speaker" style="color:#f59e0b; font-weight:bold;">NPC</div>
             <div id="dialogue-text">...</div>
         </div>
 
         <div id="inventory-modal">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="color:#38bdf8; font-size:16px;">🎒 Inventario & Botín</h3>
+                <h3 style="color:#38bdf8; font-size:14px;">🎒 Inventario</h3>
                 <span style="cursor:pointer; font-weight:bold; color:#ef4444;" onclick="toggleInventory()">✖</span>
             </div>
-            <div class="inv-grid" id="inv-grid">
-                <!-- Se llena dinámicamente con los drops -->
-            </div>
+            <div class="inv-grid" id="inv-grid"></div>
         </div>
 
         <div id="hotbar">
@@ -179,65 +178,73 @@
             <div></div><div class="dp-btn" id="btn-down">▼</div><div></div>
         </div>
 
-        <div id="action-layer">
+        <div id="action-buttons">
+            <div class="act-btn" id="btn-inv" style="border-color:#c084fc;">🎒</div>
+            <div class="act-btn" id="btn-mount" style="border-color:#fde047;">🐎</div>
+            <div class="act-btn" id="btn-interact" style="border-color:#38bdf8;">💬</div>
             <div class="act-btn" id="btn-shoot">⚔️</div>
-            <div class="act-btn" id="btn-inv">🎒</div>
-            <div class="act-btn" id="btn-mount">🐎</div>
-            <div class="act-btn" id="btn-interact">💬</div>
         </div>
     </div>
 
 <script>
+    // FORZAR PANTALLA HORIZONTAL Y PANTALLA COMPLETA
     document.getElementById('start-btn').addEventListener('click', async () => {
         try {
-            if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-        } catch (e) {}
+            if (document.documentElement.requestFullscreen) {
+                await document.documentElement.requestFullscreen();
+            }
+            if (screen.orientation && screen.orientation.lock) {
+                await screen.orientation.lock('landscape');
+            }
+        } catch (e) {
+            console.log('Orientation/Fullscreen error:', e);
+        }
         document.getElementById('fullscreen-overlay').style.display = 'none';
         resize();
     });
 
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0284c7);
-    scene.fog = new THREE.FogExp2(0x0284c7, 0.007);
+    scene.background = new THREE.Color(0x38bdf8);
+    scene.fog = new THREE.FogExp2(0x38bdf8, 0.008);
 
-    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
     const minimapCtx = document.getElementById('minimap').getContext('2d');
 
-    // Iluminación Vistosa estilo Dofus/Wakfu
-    const ambientLight = new THREE.AmbientLight(0xe0f2fe, 0.85);
+    // LUCES LUMINOSAS ESTILO WAKFU
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xfffbe1, 1.3);
-    sun.position.set(50, 80, 40);
+    const sun = new THREE.DirectionalLight(0xfffbe1, 1.2);
+    sun.position.set(40, 60, 30);
     sun.castShadow = true;
-    sun.shadow.mapSize.width = 2048;
-    sun.shadow.mapSize.height = 2048;
+    sun.shadow.mapSize.width = 1024;
+    sun.shadow.mapSize.height = 1024;
     scene.add(sun);
 
-    // Estado del Jugador
+    // ESTADO JUGADOR
     let p = { 
         lvl: 1, xp: 0, hp: 100, maxHp: 100, mp: 80, maxMp: 80, 
-        baseAtk: 15, bonusAtk: 0, wood: 0, speed: 0.2, 
+        baseAtk: 15, bonusAtk: 0, wood: 0, speed: 0.22, 
         activeSlot: 0, questState: 0, mounted: false,
         inventory: []
     };
     const keys = { up: false, down: false, left: false, right: false };
 
-    // --- TERRENO CON TEXTURA DE CÉSPED Y MONTAÑAS FANTASÍA ---
-    const floorGeo = new THREE.PlaneGeometry(350, 350, 32, 32);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x4dd0e1, roughness: 0.8, flatShading: true });
+    // TERRENO CON COLOR VIVO Y RELIEVE
+    const floorGeo = new THREE.PlaneGeometry(300, 300, 32, 32);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.8, flatShading: true });
     
-    // Crear desnivel suave de islas
     const posArr = floorGeo.attributes.position.array;
-    for(let i=0; i<posArr.length; i+=3) {
-        posArr[i+2] = Math.sin(posArr[i]*0.05) * Math.cos(posArr[i+1]*0.05) * 1.5;
+    for(let i = 0; i < posArr.length; i += 3) {
+        posArr[i+2] = Math.sin(posArr[i]*0.04) * Math.cos(posArr[i+1]*0.04) * 1.2;
     }
     floorGeo.computeVertexNormals();
 
@@ -246,82 +253,57 @@
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // --- GENERADORES PROCEDIMENTALES DOFUS/WAKFU ---
-    // Generador de Árboles Vibrantes
-    function createStylizedTree(x, z) {
+    // GENERACIÓN DE ÁRBOLES LOW-POLY ESTILO DOFUS
+    function createTree(x, z) {
         const group = new THREE.Group();
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3d2e, roughness: 0.9 });
-        const foliageMat = new THREE.MeshStandardMaterial({ color: 0x10b981, flatShading: true, roughness: 0.6 });
-        const foliageTopMat = new THREE.MeshStandardMaterial({ color: 0x34d399, flatShading: true });
-
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 3, 6), trunkMat);
-        trunk.position.y = 1.5;
+        const trunk = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.5, 2.5, 6),
+            new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 })
+        );
+        trunk.position.y = 1.25;
         trunk.castShadow = true;
         group.add(trunk);
 
-        const crown1 = new THREE.Mesh(new THREE.DodecahedronGeometry(1.8, 1), foliageMat);
-        crown1.position.y = 3.5;
-        crown1.castShadow = true;
-        group.add(crown1);
-
-        const crown2 = new THREE.Mesh(new THREE.DodecahedronGeometry(1.2, 1), foliageTopMat);
-        crown2.position.y = 4.8;
-        crown2.castShadow = true;
-        group.add(crown2);
+        const crown = new THREE.Mesh(
+            new THREE.DodecahedronGeometry(1.6, 1),
+            new THREE.MeshStandardMaterial({ color: 0x15803d, flatShading: true })
+        );
+        crown.position.y = 3.2;
+        crown.castShadow = true;
+        group.add(crown);
 
         group.position.set(x, 0, z);
         scene.add(group);
         return { mesh: group, hp: 3, x, z };
     }
 
-    // Generador de Montañas y Rocas Fantasía
-    function createStylizedMountain(x, z, scale = 1) {
-        const rockMat = new THREE.MeshStandardMaterial({ color: 0x64748b, flatShading: true, roughness: 0.8 });
-        const crystalMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.6, flatShading: true });
-        
-        const group = new THREE.Group();
-        const mainPeak = new THREE.Mesh(new THREE.ConeGeometry(6 * scale, 12 * scale, 5), rockMat);
-        mainPeak.position.y = (6 * scale) / 2;
-        mainPeak.castShadow = true;
-        mainPeak.receiveShadow = true;
-        group.add(mainPeak);
-
-        // Cristales Wakfu incrustados
-        for(let i=0; i<3; i++) {
-            const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1 * scale), crystalMat);
-            crystal.position.set((Math.random()-0.5)*3*scale, 2*scale, (Math.random()-0.5)*3*scale);
-            group.add(crystal);
-        }
-
-        group.position.set(x, 0, z);
-        scene.add(group);
-    }
-
-    // Poblado denso de Árboles y Rocas
     const trees = [];
-    for(let i = 0; i < 75; i++) {
-        let rx = (Math.random() - 0.5) * 220;
-        let rz = (Math.random() - 0.5) * 220;
-        if(Math.abs(rx) > 10 || Math.abs(rz) > 10) {
-            trees.push(createStylizedTree(rx, rz));
+    for(let i = 0; i < 60; i++) {
+        let rx = (Math.random() - 0.5) * 200;
+        let rz = (Math.random() - 0.5) * 200;
+        if(Math.abs(rx) > 12 || Math.abs(rz) > 12) {
+            trees.push(createTree(rx, rz));
         }
     }
 
-    // Montañas bordeando el mapa
-    for(let i = 0; i < 30; i++) {
-        const angle = (i / 30) * Math.PI * 2;
-        const dist = 120 + Math.random() * 15;
-        createStylizedMountain(Math.cos(angle)*dist, Math.sin(angle)*dist, 1.8 + Math.random()*0.8);
+    // MONTAÑAS BORDES DEL MAPA
+    for(let i = 0; i < 24; i++) {
+        const angle = (i / 24) * Math.PI * 2;
+        const dist = 110;
+        const mountain = new THREE.Mesh(
+            new THREE.ConeGeometry(8, 14, 5),
+            new THREE.MeshStandardMaterial({ color: 0x475569, flatShading: true })
+        );
+        mountain.position.set(Math.cos(angle)*dist, 7, Math.sin(angle)*dist);
+        mountain.castShadow = true;
+        scene.add(mountain);
     }
 
-    // --- CREACIÓN DEL JUGADOR Y MONTURA ---
+    // PERSONAJE MODELO (ZORRO FANTASÍA)
     const playerGroup = new THREE.Group();
     scene.add(playerGroup);
 
-    // Modelo de Personaje estilo Zorro/Héroe Wakfu
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf97316, flatShading: true });
-    const bellyMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    
     const pBody = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.4, 6), bodyMat);
     pBody.position.y = 0.7;
     pBody.castShadow = true;
@@ -332,59 +314,57 @@
     pHead.castShadow = true;
     playerGroup.add(pHead);
 
-    const pEars = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.4, 4), bodyMat);
-    pEars.position.set(0.2, 1.9, 0);
-    playerGroup.add(pEars);
-    const pEars2 = pEars.clone();
-    pEars2.position.x = -0.2;
-    playerGroup.add(pEars2);
+    const pEar1 = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.4, 4), bodyMat);
+    pEar1.position.set(0.2, 1.9, 0);
+    playerGroup.add(pEar1);
+    const pEar2 = pEar1.clone();
+    pEar2.position.x = -0.2;
+    playerGroup.add(pEar2);
 
-    // Montura
+    // MONTURA
     const mountGroup = new THREE.Group();
-    const mountMat = new THREE.MeshStandardMaterial({ color: 0xd97706, flatShading: true });
-    const mountBody = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1.8), mountMat);
-    mountBody.position.y = 0.8;
-    mountGroup.add(mountBody);
+    const mountMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 0.9, 1.6),
+        new THREE.MeshStandardMaterial({ color: 0xd97706, flatShading: true })
+    );
+    mountMesh.position.y = 0.6;
+    mountGroup.add(mountMesh);
 
     function toggleMount() {
         p.mounted = !p.mounted;
         if(p.mounted) {
             playerGroup.add(mountGroup);
-            pBody.position.y = 1.6;
-            pHead.position.y = 2.4;
-            pEars.position.y = 2.8;
-            pEars2.position.y = 2.8;
-            p.speed = 0.35;
-            showDialogue("Sistema", "¡Has subido a tu Jalató de Montura! (+Velocidad)");
+            pBody.position.y = 1.4;
+            pHead.position.y = 2.2;
+            pEar1.position.y = 2.6; pEar2.position.y = 2.6;
+            p.speed = 0.38;
+            showDialogue("Abrancito", "¡Montado en Jalató! (+Velocidad)");
         } else {
             playerGroup.remove(mountGroup);
             pBody.position.y = 0.7;
             pHead.position.y = 1.5;
-            pEars.position.y = 1.9;
-            pEars2.position.y = 1.9;
-            p.speed = 0.2;
-            showDialogue("Sistema", "Has desmontado.");
+            pEar1.position.y = 1.9; pEar2.position.y = 1.9;
+            p.speed = 0.22;
+            showDialogue("Abrancito", "Has desmontado.");
         }
     }
 
-    // --- SISTEMA DE DROPS Y DROPPED ITEMS ---
+    // DROPS Y DROPPED ITEMS
     const droppedItems = [];
     const ITEM_TYPES = [
         { name: 'Espada de Viento', icon: '⚔️', bonus: 10, type: 'atk' },
-        { name: 'Escudo de Roble', icon: '🛡️', bonus: 30, type: 'hp' },
-        { name: 'Anillo de Jalató', icon: '💍', bonus: 15, type: 'atk' },
-        { name: 'Botas de Velocidad', icon: '🥾', bonus: 5, type: 'spd' }
+        { name: 'Escudo Robusto', icon: '🛡️', bonus: 25, type: 'hp' },
+        { name: 'Anillo Mágico', icon: '💍', bonus: 12, type: 'atk' }
     ];
 
     function spawnLootDrop(x, z) {
         const itemData = ITEM_TYPES[Math.floor(Math.random() * ITEM_TYPES.length)];
         const lootMesh = new THREE.Mesh(
             new THREE.OctahedronGeometry(0.4),
-            new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.8 })
+            new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706 })
         );
         lootMesh.position.set(x, 0.6, z);
         scene.add(lootMesh);
-
         droppedItems.push({ mesh: lootMesh, data: itemData, x, z });
     }
 
@@ -409,37 +389,34 @@
     function updateInventoryUI() {
         const grid = document.getElementById('inv-grid');
         grid.innerHTML = '';
-
         p.inventory.forEach((item, index) => {
             const div = document.createElement('div');
             div.className = 'inv-item';
             div.innerHTML = `<div>${item.icon}</div><div class="inv-item-stat">+${item.bonus} ${item.type.toUpperCase()}</div>`;
-            div.onclick = () => equipItem(index);
+            div.onclick = () => {
+                if(item.type === 'atk') p.bonusAtk += item.bonus;
+                if(item.type === 'hp') { p.maxHp += item.bonus; p.hp += item.bonus; }
+                showDialogue("Equipo", `Has equipado ${item.name}.`);
+                p.inventory.splice(index, 1);
+                updateInventoryUI();
+                updateHUD();
+            };
             grid.appendChild(div);
         });
     }
 
-    function equipItem(index) {
-        const item = p.inventory[index];
-        if(item.type === 'atk') p.bonusAtk += item.bonus;
-        if(item.type === 'hp') { p.maxHp += item.bonus; p.hp += item.bonus; }
-        showDialogue("Equipo", `Has equipado ${item.name}. ¡Tus stats aumentaron!`);
-        p.inventory.splice(index, 1);
-        updateInventoryUI();
-        updateHUD();
-    }
-
-    // --- ENEMY CREATION & IA ---
+    // ENEMIGOS
     const enemies = [];
     function spawnMonster(type, x, z) {
         const group = new THREE.Group();
-        let maxHp = 40;
         let isBoss = type === 'boss';
         let color = isBoss ? 0xef4444 : (type === 'jalato' ? 0xf8fafc : 0xa855f7);
 
-        const mat = new THREE.MeshStandardMaterial({ color, flatShading: true });
-        const body = new THREE.Mesh(new THREE.DodecahedronGeometry(isBoss ? 1.8 : 0.8), mat);
-        body.position.y = isBoss ? 1.8 : 0.8;
+        const body = new THREE.Mesh(
+            new THREE.DodecahedronGeometry(isBoss ? 1.6 : 0.75),
+            new THREE.MeshStandardMaterial({ color, flatShading: true })
+        );
+        body.position.y = isBoss ? 1.6 : 0.75;
         body.castShadow = true;
         group.add(body);
 
@@ -447,97 +424,77 @@
         scene.add(group);
 
         enemies.push({
-            mesh: group, hp: isBoss ? 250 : maxHp, maxHp: isBoss ? 250 : maxHp,
-            isBoss, isAggressive: type !== 'jalato', type, attackCooldown: 0
+            mesh: group, hp: isBoss ? 200 : 40, maxHp: isBoss ? 200 : 40,
+            isBoss, isAggressive: type !== 'jalato', attackCooldown: 0
         });
     }
 
-    spawnMonster('jalato', -10, 12);
-    spawnMonster('jalato', 12, 15);
-    spawnMonster('mush', -20, -15);
-    spawnMonster('mush', 22, -20);
-    spawnMonster('boss', 35, -35);
+    spawnMonster('jalato', -8, 10);
+    spawnMonster('jalato', 10, 12);
+    spawnMonster('mush', -18, -12);
+    spawnMonster('boss', 30, -30);
 
-    // --- NPCs ---
+    // NPCs
     const npcs = [
-        { id: 'sabio', name: 'Sabio Orestes', pos: new THREE.Vector3(6, 0, 6), color: 0x38bdf8 },
-        { id: 'herrero', name: 'Herrero Yuba', pos: new THREE.Vector3(-15, 0, 18), color: 0xf59e0b }
+        { id: 'sabio', name: 'Sabio Orestes', pos: new THREE.Vector3(5, 0, 5), color: 0x38bdf8 },
+        { id: 'herrero', name: 'Herrero Yuba', pos: new THREE.Vector3(-12, 0, 15), color: 0xf59e0b }
     ];
 
     npcs.forEach(npc => {
         const group = new THREE.Group();
-        const mat = new THREE.MeshStandardMaterial({ color: npc.color, flatShading: true });
-        const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.6, 8), mat);
-        mesh.position.y = 0.8;
+        const mesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.4, 0.4, 1.5, 8),
+            new THREE.MeshStandardMaterial({ color: npc.color, flatShading: true })
+        );
+        mesh.position.y = 0.75;
         group.add(mesh);
         group.position.copy(npc.pos);
         scene.add(group);
-        npc.mesh = group;
     });
 
-    // --- SISTEMA DE COMBATE & PARTICULAS ---
-    const particles = [];
-    function spawnParticles(pos, colorHex, count = 10) {
-        for(let i = 0; i < count; i++) {
-            const pMesh = new THREE.Mesh(
-                new THREE.SphereGeometry(0.08, 4, 4),
-                new THREE.MeshBasicMaterial({ color: colorHex })
-            );
-            pMesh.position.copy(pos);
-            scene.add(pMesh);
-            particles.push({
-                mesh: pMesh,
-                vel: new THREE.Vector3((Math.random()-0.5)*0.2, Math.random()*0.15, (Math.random()-0.5)*0.2),
-                life: 20
-            });
-        }
-    }
-
+    // SISTEMA DE COMBATE Y PROYECTILES
     const projectiles = [];
     function executeAttack() {
         const totalAtk = p.baseAtk + p.bonusAtk;
 
-        if(p.activeSlot === 2) { // Magia Fuego
-            if(p.mp >= 15) {
-                p.mp -= 15;
-                updateHUD();
-                const orb = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.4, 8, 8),
-                    new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xb91c1c })
-                );
-                const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
-                orb.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1.2, 0));
-                scene.add(orb);
-                projectiles.push({ mesh: orb, dir, speed: 0.6, life: 50, damage: totalAtk + 15 });
-            }
+        if(p.activeSlot === 2 && p.mp >= 15) { // Fuego
+            p.mp -= 15;
+            updateHUD();
+            const orb = new THREE.Mesh(
+                new THREE.SphereGeometry(0.35, 8, 8),
+                new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xb91c1c })
+            );
+            const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
+            orb.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
+            scene.add(orb);
+            projectiles.push({ mesh: orb, dir, speed: 0.55, life: 45, damage: totalAtk + 15 });
             return;
         }
 
         if(p.activeSlot === 3) { // Arco
             const arrow = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.05, 0.05, 0.6),
+                new THREE.CylinderGeometry(0.04, 0.04, 0.5),
                 new THREE.MeshBasicMaterial({ color: 0xfde047 })
             );
             arrow.rotation.x = Math.PI / 2;
             const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
-            arrow.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
+            arrow.position.copy(playerGroup.position).add(new THREE.Vector3(0, 0.9, 0));
             scene.add(arrow);
-            projectiles.push({ mesh: arrow, dir, speed: 0.8, life: 40, damage: totalAtk + 5 });
+            projectiles.push({ mesh: arrow, dir, speed: 0.75, life: 35, damage: totalAtk + 5 });
             return;
         }
 
-        // Melee (Espada / Hacha)
+        // Ataque Melee
         enemies.forEach((enemy, i) => {
-            if(enemy.mesh.position.distanceTo(playerGroup.position) < 3.5) {
+            if(enemy.mesh.position.distanceTo(playerGroup.position) < 3.2) {
                 damageEnemy(enemy, i, totalAtk);
             }
         });
 
         if(p.activeSlot === 1) { // Cortar Árboles
             trees.forEach((t, i) => {
-                if(t.mesh.position.distanceTo(playerGroup.position) < 3.0) {
+                if(t.mesh.position.distanceTo(playerGroup.position) < 2.8) {
                     t.hp--;
-                    spawnParticles(t.mesh.position.clone().add(new THREE.Vector3(0,1,0)), 0x5c3d2e, 8);
                     if(t.hp <= 0) {
                         scene.remove(t.mesh);
                         trees.splice(i, 1);
@@ -553,7 +510,6 @@
     function damageEnemy(enemy, index, amount) {
         enemy.hp -= amount;
         enemy.isAggressive = true;
-        spawnParticles(enemy.mesh.position.clone().add(new THREE.Vector3(0,1,0)), 0xef4444, 12);
 
         if(enemy.isBoss) {
             document.getElementById('boss-bar-card').style.display = 'block';
@@ -568,7 +524,7 @@
             spawnLootDrop(enemy.mesh.position.x, enemy.mesh.position.z);
             scene.remove(enemy.mesh);
             enemies.splice(index, 1);
-            p.xp += enemy.isBoss ? 200 : 40;
+            p.xp += enemy.isBoss ? 150 : 35;
             if(p.questState === 1) p.questState = 2;
             updateHUD();
         }
@@ -576,15 +532,15 @@
 
     function interactNPC() {
         npcs.forEach(npc => {
-            if(playerGroup.position.distanceTo(npc.pos) < 4) {
+            if(playerGroup.position.distanceTo(npc.pos) < 3.8) {
                 if(npc.id === 'sabio') {
-                    if(p.questState === 0) { p.questState = 1; showDialogue(npc.name, "¡Bienvenido a Astrub! Derrota a las criaturas para limpiar los campos."); }
-                    else if(p.questState === 2) showDialogue(npc.name, "¡Buen trabajo! Habla con el Herrero Yuba al oeste.");
-                    else showDialogue(npc.name, "Explora los campos y junta botín para volverte más fuerte.");
+                    if(p.questState === 0) { p.questState = 1; showDialogue(npc.name, "¡Hola Abrancito! Derrota un monstruo para proteger la villa."); }
+                    else if(p.questState === 2) showDialogue(npc.name, "¡Genial! Ve con el Herrero Yuba al oeste.");
+                    else showDialogue(npc.name, "¡Sigue explorando y fortaleciendo tu personaje!");
                 } else if(npc.id === 'herrero') {
-                    if(p.questState === 2) showDialogue(npc.name, "Necesito 5 Maderas para forjar tu nuevo equipo.");
-                    else if(p.questState === 3) { p.questState = 4; p.xp += 100; showDialogue(npc.name, "¡Maderas recibidas! Ahora enfréntate al Rey Jalató."); }
-                    else showDialogue(npc.name, "¡Equipa el botín que recojas desde tu inventario [🎒]!");
+                    if(p.questState === 2) showDialogue(npc.name, "Consigue 5 Maderas cortando árboles con el Hacha.");
+                    else if(p.questState === 3) { p.questState = 4; p.xp += 80; showDialogue(npc.name, "¡Gracias! Ahora enfréntate al Rey Jalató."); }
+                    else showDialogue(npc.name, "Abre tu inventario [🎒] para equiparte el botín.");
                 }
                 updateHUD();
             }
@@ -601,7 +557,7 @@
         document.getElementById('dialogue-speaker').textContent = speaker;
         document.getElementById('dialogue-text').textContent = text;
         box.style.display = 'block';
-        setTimeout(() => { box.style.display = 'none'; }, 4000);
+        setTimeout(() => { box.style.display = 'none'; }, 3500);
     }
 
     function updateHUD() {
@@ -614,27 +570,23 @@
 
         const qText = document.getElementById('quest-text');
         if(p.questState === 0) qText.textContent = "Misión: Habla con el Sabio Orestes (?)";
-        else if(p.questState === 1) qText.textContent = "Misión: Elimina a un monstruo";
-        else if(p.questState === 2) qText.textContent = "Misión: Junta 5 maderas cortando árboles";
+        else if(p.questState === 1) qText.textContent = "Misión: Derrota a un monstruo";
+        else if(p.questState === 2) qText.textContent = "Misión: Corta 5 de madera";
         else if(p.questState === 3) qText.textContent = "¡Lleva la madera al Herrero Yuba (!)";
-        else if(p.questState === 4) qText.textContent = "Misión: Vence al Rey Jalató (Boss)";
+        else if(p.questState === 4) qText.textContent = "Misión: Vence al Rey Jalató";
         else qText.textContent = "¡Todas las Misiones Completadas!";
     }
 
-    // Controls Binds
-    function bind(id, fn) {
+    // BINDINGS DE BOTONES
+    function bindTouch(id, fn) {
         const el = document.getElementById(id);
         el.addEventListener('touchstart', (e)=>{ e.preventDefault(); fn(); });
         el.addEventListener('click', fn);
     }
-    bind('btn-shoot', executeAttack);
-    bind('btn-interact', interactNPC);
-    bind('btn-mount', toggleMount);
-    bind('btn-inv', toggleInventory);
-
-    window.addEventListener('keydown', (e) => {
-        if(e.key === 'i' || e.key === 'I') toggleInventory();
-    });
+    bindTouch('btn-shoot', executeAttack);
+    bindTouch('btn-interact', interactNPC);
+    bindTouch('btn-mount', toggleMount);
+    bindTouch('btn-inv', toggleInventory);
 
     function bindDir(id, k) {
         const el = document.getElementById(id);
@@ -645,26 +597,25 @@
     bindDir('btn-left','left'); bindDir('btn-right','right');
 
     function drawMinimap() {
-        minimapCtx.clearRect(0,0,100,100);
-        const cx = 50, cy = 50, scale = 0.45;
-
+        minimapCtx.clearRect(0,0,75,75);
+        const cx = 37.5, cy = 37.5, scale = 0.4;
         minimapCtx.fillStyle = '#0f172a';
-        minimapCtx.fillRect(0,0,100,100);
+        minimapCtx.fillRect(0,0,75,75);
 
         enemies.forEach(enemy => {
             let ex = (enemy.mesh.position.x - playerGroup.position.x) * scale;
             let ez = (enemy.mesh.position.z - playerGroup.position.z) * scale;
-            if(Math.abs(ex) < 45 && Math.abs(ez) < 45) {
+            if(Math.abs(ex) < 35 && Math.abs(ez) < 35) {
                 minimapCtx.fillStyle = enemy.isBoss ? '#f59e0b' : '#ef4444';
                 minimapCtx.beginPath();
-                minimapCtx.arc(cx + ex, cy + ez, enemy.isBoss ? 4 : 2.5, 0, Math.PI * 2);
+                minimapCtx.arc(cx + ex, cy + ez, enemy.isBoss ? 3.5 : 2, 0, Math.PI * 2);
                 minimapCtx.fill();
             }
         });
 
         minimapCtx.fillStyle = '#ffffff';
         minimapCtx.beginPath();
-        minimapCtx.arc(cx, cy, 3, 0, Math.PI * 2);
+        minimapCtx.arc(cx, cy, 2.5, 0, Math.PI * 2);
         minimapCtx.fill();
     }
 
@@ -675,7 +626,7 @@
     }
     window.addEventListener('resize', resize);
 
-    // Loop del Juego
+    // LOOP PRINCIPAL
     function animate() {
         requestAnimationFrame(animate);
 
@@ -684,26 +635,23 @@
         if (keys.up) playerGroup.translateZ(-p.speed);
         if (keys.down) playerGroup.translateZ(p.speed);
 
-        if(p.mp < p.maxMp) { p.mp += 0.05; updateHUD(); }
+        if(p.mp < p.maxMp) { p.mp += 0.04; updateHUD(); }
 
         checkLootPickup();
 
-        // Animación flotante de botines
-        droppedItems.forEach(drop => {
-            drop.mesh.rotation.y += 0.03;
-        });
+        // Rotación animada de los drops
+        droppedItems.forEach(drop => drop.mesh.rotation.y += 0.03);
 
         // IA Enemigos
         enemies.forEach((enemy) => {
             const dist = enemy.mesh.position.distanceTo(playerGroup.position);
-            if (enemy.isAggressive && dist < 16) {
+            if (enemy.isAggressive && dist < 14) {
                 enemy.mesh.lookAt(playerGroup.position.x, enemy.mesh.position.y, playerGroup.position.z);
-                enemy.mesh.translateZ(0.05);
+                enemy.mesh.translateZ(0.04);
 
-                if (dist < 1.8 && enemy.attackCooldown <= 0) {
-                    p.hp -= 12;
-                    enemy.attackCooldown = 50;
-                    spawnParticles(playerGroup.position.clone().add(new THREE.Vector3(0,1,0)), 0xef4444, 8);
+                if (dist < 1.6 && enemy.attackCooldown <= 0) {
+                    p.hp -= 10;
+                    enemy.attackCooldown = 45;
                     updateHUD();
                     if (p.hp <= 0) {
                         p.hp = p.maxHp;
@@ -715,19 +663,13 @@
             if (enemy.attackCooldown > 0) enemy.attackCooldown--;
         });
 
-        // Partículas & Proyectiles
-        particles.forEach((pt, i) => {
-            pt.mesh.position.add(pt.vel);
-            pt.life--;
-            if(pt.life <= 0) { scene.remove(pt.mesh); particles.splice(i, 1); }
-        });
-
+        // Proyectiles
         projectiles.forEach((proj, prIndex) => {
             proj.mesh.position.addScaledVector(proj.dir, proj.speed);
             proj.life--;
 
             enemies.forEach((enemy, eIndex) => {
-                if(proj.mesh.position.distanceTo(enemy.mesh.position) < 2.0) {
+                if(proj.mesh.position.distanceTo(enemy.mesh.position) < 1.8) {
                     damageEnemy(enemy, eIndex, proj.damage);
                     proj.life = 0;
                 }
@@ -736,10 +678,10 @@
             if(proj.life <= 0) { scene.remove(proj.mesh); projectiles.splice(prIndex, 1); }
         });
 
-        // Cámara Isométrica Estilo Dofus/Wakfu
-        const offset = new THREE.Vector3(0, 8, 10).applyMatrix4(playerGroup.matrixWorld);
+        // CÁMARA ISOMÉTRICA FANTASÍA
+        const offset = new THREE.Vector3(0, 7, 9).applyMatrix4(playerGroup.matrixWorld);
         camera.position.lerp(offset, 0.1);
-        camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
+        camera.lookAt(playerGroup.position.x, playerGroup.position.y + 0.8, playerGroup.position.z);
 
         drawMinimap();
         renderer.render(scene, camera);
