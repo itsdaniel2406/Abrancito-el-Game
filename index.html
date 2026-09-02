@@ -5,106 +5,228 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Abrancito - El Game</title>
     <style>
-        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        html, body { width: 100vw; height: 100vh; overflow: hidden; background: #000; color: white; }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
 
-        /* CONTENEDOR PRINCIPAL QUE GIRA EN PORTRAIT */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+        }
+
         #game-stage {
-            position: absolute;
+            position: relative;
             width: 100vw;
             height: 100vh;
+            background: #080d1a;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* CAPA DE UI Y CONTROLES SOBRE EL CANVAS */
+        .ui-layer {
+            position: absolute;
             top: 0;
             left: 0;
-            overflow: hidden;
-            background: #080d1a;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
         }
 
-        @media screen and (orientation: portrait) {
-            #game-stage {
-                width: 100vh;
-                height: 100vw;
-                transform: rotate(90deg);
-                transform-origin: top left;
-                top: 0;
-                left: 100vw;
-            }
+        .interactive {
+            pointer-events: auto;
         }
 
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-
-        /* HUD SUPERIOR TRANSPARENTE */
+        /* HUD SUPERIOR RESPONSIVO */
         #hud-top {
-            position: absolute; top: 12px; left: 12px; right: 12px;
-            display: flex; justify-content: space-between; align-items: flex-start;
-            z-index: 10; pointer-events: none;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
         }
 
         .hud-card {
-            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px);
-            border: 1px solid rgba(99, 102, 241, 0.5); border-radius: 8px; padding: 8px 14px;
-            pointer-events: auto; font-size: 11px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 11px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        .bar-container { width: 120px; background: #020617; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 4px; border: 1px solid #334155; }
-        .bar-fill { height: 100%; background: #22c55e; width: 100%; transition: width 0.2s; }
+        .bar-container {
+            width: 100px;
+            background: #020617;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 3px;
+            border: 1px solid #334155;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: #22c55e;
+            width: 100%;
+            transition: width 0.2s;
+        }
 
         #btn-menu {
-            position: absolute; top: 12px; right: 12px; z-index: 20;
-            background: #6366f1; border: 1px solid #818cf8; border-radius: 8px;
-            color: white; padding: 8px 14px; font-size: 12px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            background: #6366f1;
+            border: 1px solid #818cf8;
+            border-radius: 8px;
+            color: white;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
         }
 
-        /* DRAWER LATERAL SLIDE-IN (MENU & CHAT) */
+        /* CONTROLES MÓVILES - UBICACIÓN EXACTA */
+        #controls-bottom {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        /* CRUCETA IZQUIERDA */
+        #dpad {
+            width: 120px;
+            height: 120px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .dp {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+            cursor: pointer;
+        }
+        .dp:active { background: rgba(99, 102, 241, 0.6); }
+
+        /* BOTONES DE ACCIÓN DERECHA */
+        #action-btns {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+        }
+
+        .btn-act {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #1e293b;
+            border: 2px solid #6366f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        }
+        .btn-act:active { transform: scale(0.92); }
+
+        /* DRAWER LATERAL Y MODALES */
         #side-drawer {
-            position: absolute; top: 0; right: -320px; width: 300px; height: 100%;
-            background: rgba(15, 23, 42, 0.96); border-left: 2px solid #6366f1;
-            z-index: 30; padding: 15px; display: flex; flex-direction: column; gap: 10px;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.96);
+            border-left: 2px solid #6366f1;
+            z-index: 30;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: right 0.25s ease;
             backdrop-filter: blur(8px);
         }
 
         #side-drawer.open { right: 0; }
 
         #chat-log {
-            flex: 1; background: #020617; border: 1px solid #1e293b; border-radius: 6px;
-            padding: 8px; font-size: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
-        }
-        .msg { font-family: monospace; }
-        .speaker { color: #f59e0b; font-weight: bold; }
-
-        /* CONTROLES MÓVILES PERFECTAMENTE POSICIONADOS */
-        #controls {
-            position: absolute; bottom: 15px; left: 15px; right: 15px;
-            display: flex; justify-content: space-between; align-items: flex-end;
-            z-index: 10; pointer-events: none;
+            flex: 1;
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 10px;
+            overflow-y: auto;
+            font-family: monospace;
         }
 
-        #dpad {
-            width: 130px; height: 130px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 4px;
-            pointer-events: auto; background: rgba(15, 23, 42, 0.4); padding: 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
-        }
-        .dp { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; cursor: pointer; }
-        .dp:active { background: rgba(99, 102, 241, 0.6); }
-
-        #action-btns { display: flex; gap: 12px; pointer-events: auto; }
-        .btn-act {
-            width: 58px; height: 58px; border-radius: 50%; background: #1e293b; border: 2px solid #6366f1;
-            display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-        }
-        .btn-act:active { transform: scale(0.92); }
-
-        /* MODAL INVENTARIO ESTILIZADO */
         #inventory-modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 360px; background: rgba(15, 23, 42, 0.98); border: 2px solid #f59e0b; border-radius: 12px;
-            padding: 16px; display: none; z-index: 50; box-shadow: 0 0 50px rgba(0,0,0,0.9); backdrop-filter: blur(8px);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            background: rgba(15, 23, 42, 0.98);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 14px;
+            display: none;
+            z-index: 50;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
 
-        .inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-        .slot { width: 70px; height: 70px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-        .slot:hover { border-color: #f59e0b; background: #334155; }
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .slot {
+            height: 60px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 10px;
+        }
     </style>
 </head>
 <body>
@@ -112,54 +234,54 @@
     <div id="game-stage">
         <canvas id="gameCanvas"></canvas>
 
-        <button id="btn-menu" onclick="toggleDrawer()">📜 Menú / Misiones</button>
+        <div class="ui-layer">
+            <!-- HUD SUPERIOR -->
+            <div id="hud-top">
+                <div class="hud-card interactive">
+                    <div style="font-weight:bold; color:#38bdf8;" id="hero-title">Abrancito (Nvl. 1)</div>
+                    <div class="bar-container"><div id="hp-bar" class="bar-fill"></div></div>
+                    <div id="hp-text" style="font-size:9px; text-align:right; margin-top:1px;">100/100</div>
+                </div>
 
-        <!-- HUD SUPERIOR -->
-        <div id="hud-top">
-            <div class="hud-card">
-                <div style="font-weight:bold; color:#38bdf8;" id="hero-title">Abrancito (Guerrero Nvl. 1)</div>
-                <div class="bar-container"><div id="hp-bar" class="bar-fill"></div></div>
-                <div id="hp-text" style="font-size:10px; text-align:right; margin-top:2px;">100/100</div>
+                <div class="hud-card interactive" style="flex: 1; max-width: 180px;">
+                    <div style="color:#f59e0b; font-weight:bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="map-info">Pradera Principal</div>
+                    <div id="quest-info" style="color:#cbd5e1; font-size:9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Habla con Sabio Orestes</div>
+                </div>
+
+                <button id="btn-menu" class="interactive" onclick="toggleDrawer()">📜 Menú</button>
             </div>
-            <div class="hud-card" style="margin-right: 140px;">
-                <div style="color:#f59e0b; font-weight:bold;" id="map-info">Pradera Principal</div>
-                <div id="quest-info" style="color:#cbd5e1; font-size:10px; margin-top:2px;">Habla con el Sabio Orestes</div>
+
+            <!-- CONTROLES MÓVILES EN PANTALLA -->
+            <div id="controls-bottom">
+                <div id="dpad" class="interactive">
+                    <div></div><div class="dp" onclick="move(0,-1)">▲</div><div></div>
+                    <div class="dp" onclick="move(-1,0)">◀</div><div></div><div class="dp" onclick="move(1,0)">▶</div>
+                    <div></div><div class="dp" onclick="move(0,1)">▼</div><div></div>
+                </div>
+
+                <div id="action-btns" class="interactive">
+                    <div class="btn-act" style="background:#dc2626;" onclick="attack()" title="Atacar">⚔️</div>
+                    <div class="btn-act" style="background:#0284c7;" onclick="interact()" title="Hablar">💬</div>
+                    <div class="btn-act" style="background:#7c3aed;" onclick="toggleInventory()" title="Inventario">🎒</div>
+                </div>
             </div>
         </div>
 
-        <!-- MENU LATERAL Y CHAT -->
-        <div id="side-drawer">
-            <h3 style="color:#38bdf8; font-size:15px; letter-spacing:1px;">ABRANCITO - EL GAME</h3>
-            <div style="font-size:11px; color:#94a3b8;">Sistema de Juego / MMORPG Base</div>
+        <!-- MENU LATERAL -->
+        <div id="side-drawer" class="interactive">
+            <h3 style="color:#38bdf8; font-size:14px;">ABRANCITO - EL GAME</h3>
+            <div style="font-size:10px; color:#94a3b8;">Misiones y Registro</div>
             <hr style="border-color:#334155;">
-            
-            <div style="font-size:12px; color:#f59e0b; font-weight:bold;">📜 Registro de Conversación & Combate:</div>
             <div id="chat-log">
-                <div class="msg"><span class="speaker">Sistema:</span> Bienvenido a Abrancito - El Game.</div>
+                <div><span style="color:#f59e0b;">Sistema:</span> Juego cargado en orientación nativa.</div>
             </div>
-
-            <button onclick="toggleDrawer()" style="padding:10px; background:#ef4444; border:none; color:white; font-weight:bold; border-radius:6px; cursor:pointer;">Cerrar Panel</button>
-        </div>
-
-        <!-- CONTROLES -->
-        <div id="controls">
-            <div id="dpad">
-                <div></div><div class="dp" onclick="move(0,-1)">▲</div><div></div>
-                <div class="dp" onclick="move(-1,0)">◀</div><div></div><div class="dp" onclick="move(1,0)">▶</div>
-                <div></div><div class="dp" onclick="move(0,1)">▼</div><div></div>
-            </div>
-
-            <div id="action-btns">
-                <div class="btn-act" style="background:#dc2626;" onclick="attack()" title="Atacar">⚔️</div>
-                <div class="btn-act" style="background:#0284c7;" onclick="interact()" title="Interactuar">💬</div>
-                <div class="btn-act" style="background:#7c3aed;" onclick="toggleInventory()" title="Inventario">🎒</div>
-            </div>
+            <button onclick="toggleDrawer()" style="padding:8px; background:#ef4444; border:none; color:white; font-weight:bold; border-radius:6px; cursor:pointer;">Cerrar</button>
         </div>
 
         <!-- MODAL INVENTARIO -->
-        <div id="inventory-modal">
+        <div id="inventory-modal" class="interactive">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="color:#f59e0b; font-size:14px;">🎒 Equipamiento e Inventario</h3>
+                <h3 style="color:#f59e0b; font-size:13px;">🎒 Inventario</h3>
                 <span style="cursor:pointer;" onclick="toggleInventory()">✖</span>
             </div>
             <div class="inv-grid" id="inv-container"></div>
@@ -171,73 +293,67 @@
     const ctx = canvas.getContext('2d');
 
     function resizeCanvas() {
-        const stage = document.getElementById('game-stage');
-        canvas.width = stage.clientWidth;
-        canvas.height = stage.clientHeight;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     }
     window.addEventListener('resize', resizeCanvas);
-    setTimeout(resizeCanvas, 100);
+    resizeCanvas();
 
-    const TILE_W = 64;
-    const TILE_H = 32;
+    const TILE_W = 56;
+    const TILE_H = 28;
     const MAP_SIZE = 12;
 
-    // DATOS DE JUGADOR COMPLETO
     let p = {
         x: 5, y: 5,
-        name: "Abrancito", heroClass: "Guerrero",
-        lvl: 1, hp: 100, maxHp: 100, atk: 20,
+        name: "Abrancito",
+        hp: 100, maxHp: 100, atk: 20,
         map: "Pradera Principal",
         inventory: [
             { name: "Espada Rúnica", atk: 15, icon: "🗡️" },
-            { name: "Hacha de Fuego", atk: 25, icon: "🪓" }
+            { name: "Hacha Fuego", atk: 25, icon: "🪓" }
         ],
         equipped: null
     };
 
-    // MUNDOS, NPCS Y MONSTRUOS CON PROFUNDIDAD COMPLETA
     const maps = {
         "Pradera Principal": {
             tile1: "#2d5a27", tile2: "#24491f",
             npcs: [
-                { x: 2, y: 2, name: "Sabio Orestes", icon: "🧙‍♂️", quest: "Derrota al Orco Voraz en la pradera." },
-                { x: 9, y: 2, name: "Mercader Kael", icon: "👨‍🌾", quest: "Explora el portal hacia el Bosque Sombrío." }
+                { x: 2, y: 2, name: "Sabio Orestes", icon: "🧙‍♂️", quest: "Derrota al Orco Voraz." },
+                { x: 9, y: 2, name: "Mercader Kael", icon: "👨‍🌾", quest: "Cruza el portal al Bosque." }
             ],
             enemies: [
-                { id: 1, x: 8, y: 4, name: "Orco Voraz", hp: 60, maxHp: 60, atk: 10, alive: true, type: "orc" },
-                { id: 2, x: 4, y: 8, name: "Caballero Oscuro", hp: 90, maxHp: 90, atk: 15, alive: true, type: "knight" }
+                { id: 1, x: 8, y: 4, name: "Orco Voraz", hp: 60, maxHp: 60, alive: true, type: "orc" },
+                { id: 2, x: 4, y: 8, name: "Caballero Oscuro", hp: 90, maxHp: 90, alive: true, type: "knight" }
             ],
             portal: { x: 10, y: 10, target: "Bosque Sombrío" }
         },
         "Bosque Sombrío": {
             tile1: "#1f2937", tile2: "#111827",
             npcs: [
-                { x: 3, y: 3, name: "Guardiana Vanya", icon: "🧝‍♀️", quest: "Elimina a las criaturas oscuras." }
+                { x: 3, y: 3, name: "Guardiana Vanya", icon: "🧝‍♀️", quest: "Limpia la zona." }
             ],
             enemies: [
-                { id: 3, x: 7, y: 7, name: "Demonio Sombrío", hp: 120, maxHp: 120, atk: 20, alive: true, type: "demon" },
-                { id: 4, x: 3, y: 8, name: "Golem de Piedra", hp: 160, maxHp: 160, atk: 18, alive: true, type: "golem" }
+                { id: 3, x: 7, y: 7, name: "Demonio", hp: 120, maxHp: 120, alive: true, type: "demon" }
             ],
             portal: { x: 1, y: 1, target: "Pradera Principal" }
         }
     };
 
     function toIso(x, y) {
+        // Centrar dinámicamente en cualquier resolución de pantalla
         const originX = canvas.width / 2;
-        const originY = 110;
+        const originY = Math.max(80, canvas.height * 0.2);
         return {
             isoX: originX + (x - y) * (TILE_W / 2),
             isoY: originY + (x + y) * (TILE_H / 2)
         };
     }
 
-    // --- RENDERIZADO 2.5D VOLUMÉTRICO CON SOMBRAS ---
-
     function drawTile3D(x, y, color1, color2) {
         const pt = toIso(x, y);
-        const h = 8; // Elevación del terreno
+        const h = 6;
 
-        // Cara Lateral Izquierda
         ctx.beginPath();
         ctx.moveTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2);
         ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
@@ -245,7 +361,6 @@
         ctx.lineTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2 + h);
         ctx.fillStyle = "#0f172a"; ctx.fill();
 
-        // Cara Lateral Derecha
         ctx.beginPath();
         ctx.moveTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2);
         ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
@@ -253,7 +368,6 @@
         ctx.lineTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2 + h);
         ctx.fillStyle = "#1e293b"; ctx.fill();
 
-        // Top Tile
         ctx.beginPath();
         ctx.moveTo(pt.isoX, pt.isoY);
         ctx.lineTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2);
@@ -262,90 +376,65 @@
         ctx.closePath();
         ctx.fillStyle = (x + y) % 2 === 0 ? color1 : color2;
         ctx.fill();
-        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
         ctx.stroke();
     }
 
     function drawShadow(pt, rx, ry) {
         ctx.beginPath();
         ctx.ellipse(pt.isoX, pt.isoY + TILE_H / 2, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.fill();
     }
 
-    function drawHero3D(x, y) {
+    function drawHero(x, y) {
         const pt = toIso(x, y);
-        drawShadow(pt, 16, 8);
+        drawShadow(pt, 14, 6);
 
-        // Aura / Iluminación
-        const grad = ctx.createRadialGradient(pt.isoX, pt.isoY, 5, pt.isoX, pt.isoY, 35);
-        grad.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
-        grad.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.arc(pt.isoX, pt.isoY, 35, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#15803d'; ctx.fillRect(pt.isoX - 7, pt.isoY - 20, 14, 14);
+        ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(pt.isoX, pt.isoY - 25, 6, 0, Math.PI * 2); ctx.fill();
 
-        // Personaje
-        ctx.fillStyle = '#15803d'; ctx.fillRect(pt.isoX - 8, pt.isoY - 24, 16, 16);
-        ctx.fillStyle = '#475569'; ctx.fillRect(pt.isoX - 10, pt.isoY - 26, 4, 8); ctx.fillRect(pt.isoX + 6, pt.isoY - 26, 4, 8);
-        ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(pt.isoX, pt.isoY - 30, 7, 0, Math.PI * 2); ctx.fill();
-
-        // Nombre
-        ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = '#38bdf8'; ctx.textAlign = 'center';
-        ctx.fillText(p.name, pt.isoX, pt.isoY - 44);
+        ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = '#38bdf8'; ctx.textAlign = 'center';
+        ctx.fillText(p.name, pt.isoX, pt.isoY - 36);
     }
 
-    function drawEnemies3D(enemies) {
+    function drawEnemies(enemies) {
         enemies.forEach(e => {
             if (!e.alive) return;
             const pt = toIso(e.x, e.y);
-            drawShadow(pt, 16, 8);
+            drawShadow(pt, 14, 6);
 
-            if (e.type === 'orc') {
-                ctx.fillStyle = '#166534'; ctx.fillRect(pt.isoX - 8, pt.isoY - 24, 16, 16);
-            } else if (e.type === 'knight') {
-                ctx.fillStyle = '#020617'; ctx.fillRect(pt.isoX - 8, pt.isoY - 26, 16, 18);
-                ctx.fillStyle = '#ef4444'; ctx.fillRect(pt.isoX - 2, pt.isoY - 26, 4, 18);
-            } else if (e.type === 'demon') {
-                ctx.fillStyle = '#581c87'; ctx.fillRect(pt.isoX - 8, pt.isoY - 26, 16, 18);
-            } else if (e.type === 'golem') {
-                ctx.fillStyle = '#475569'; ctx.fillRect(pt.isoX - 12, pt.isoY - 30, 24, 22);
-            }
+            ctx.fillStyle = e.type === 'orc' ? '#166534' : (e.type === 'knight' ? '#020617' : '#581c87');
+            ctx.fillRect(pt.isoX - 7, pt.isoY - 20, 14, 14);
 
-            // Barra de vida
-            const hpPct = e.hp / e.maxHp;
-            ctx.fillStyle = '#000'; ctx.fillRect(pt.isoX - 15, pt.isoY - 40, 30, 4);
-            ctx.fillStyle = '#ef4444'; ctx.fillRect(pt.isoX - 15, pt.isoY - 40, 30 * hpPct, 4);
-            ctx.font = '10px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-            ctx.fillText(e.name, pt.isoX, pt.isoY - 45);
+            ctx.font = '9px sans-serif'; ctx.fillStyle = '#ef4444'; ctx.textAlign = 'center';
+            ctx.fillText(e.name, pt.isoX, pt.isoY - 28);
+        });
+    }
+
+    function drawNPCs(npcs) {
+        npcs.forEach(n => {
+            const pt = toIso(n.x, n.y);
+            drawShadow(pt, 10, 5);
+            ctx.font = '16px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(n.icon, pt.isoX, pt.isoY - 6);
+            ctx.font = '9px sans-serif'; ctx.fillStyle = '#f59e0b';
+            ctx.fillText(n.name, pt.isoX, pt.isoY - 26);
         });
     }
 
     function drawPortal(portal) {
         const pt = toIso(portal.x, portal.y);
         ctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
-        ctx.beginPath(); ctx.ellipse(pt.isoX, pt.isoY + TILE_H/2, 22, 11, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.stroke();
-        ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = '#e9d5ff'; ctx.textAlign = 'center';
-        ctx.fillText(`Portal a ${portal.target}`, pt.isoX, pt.isoY - 15);
+        ctx.beginPath(); ctx.ellipse(pt.isoX, pt.isoY + TILE_H/2, 18, 9, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#e9d5ff'; ctx.textAlign = 'center';
+        ctx.fillText(`Portal`, pt.isoX, pt.isoY - 10);
     }
 
-    function drawNPCs(npcs) {
-        npcs.forEach(n => {
-            const pt = toIso(n.x, n.y);
-            drawShadow(pt, 12, 6);
-            ctx.font = '20px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText(n.icon, pt.isoX, pt.isoY - 8);
-            ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = '#f59e0b';
-            ctx.fillText(n.name, pt.isoX, pt.isoY - 32);
-        });
-    }
-
-    // --- LOOP PRINCIPAL ---
     function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const currentMap = maps[p.map];
 
-        // Dibujar Terreno 2.5D
         for (let x = 0; x < MAP_SIZE; x++) {
             for (let y = 0; y < MAP_SIZE; y++) {
                 drawTile3D(x, y, currentMap.tile1, currentMap.tile2);
@@ -354,25 +443,23 @@
 
         drawPortal(currentMap.portal);
         drawNPCs(currentMap.npcs);
-        drawEnemies3D(currentMap.enemies);
-        drawHero3D(p.x, p.y);
+        drawEnemies(currentMap.enemies);
+        drawHero(p.x, p.y);
 
         requestAnimationFrame(render);
     }
 
-    // --- LÓGICA DE JUEGO ---
     function move(dx, dy) {
         const nx = p.x + dx;
         const ny = p.y + dy;
         if (nx >= 0 && nx < MAP_SIZE && ny >= 0 && ny < MAP_SIZE) {
             p.x = nx; p.y = ny;
 
-            // Transición por Portal
             const portal = maps[p.map].portal;
             if (p.x === portal.x && p.y === portal.y) {
                 p.map = portal.target;
                 p.x = 2; p.y = 2;
-                logChat(`Portal: Viajaste a ${p.map}`);
+                logChat(`Viajaste a: ${p.map}`);
                 document.getElementById('map-info').textContent = p.map;
             }
         }
@@ -385,13 +472,10 @@
         enemies.forEach(e => {
             if (e.alive && Math.abs(e.x - p.x) <= 1 && Math.abs(e.y - p.y) <= 1) {
                 e.hp -= totalAtk;
-                logChat(`Combate: Atacaste a ${e.name} (-${totalAtk} HP)`);
-
+                logChat(`Ataque a ${e.name} (-${totalAtk} HP)`);
                 if (e.hp <= 0) {
                     e.alive = false;
-                    logChat(`Victoria: Derrotaste a ${e.name}`);
-                    p.hp = Math.min(p.maxHp, p.hp + 25);
-                    updateHUD();
+                    logChat(`¡Derrotaste a ${e.name}!`);
                 }
             }
         });
@@ -419,10 +503,10 @@
         p.inventory.forEach((item) => {
             const div = document.createElement('div');
             div.className = 'slot';
-            div.innerHTML = `<div style="font-size:22px;">${item.icon}</div><div style="font-size:10px; color:#22c55e;">+${item.atk} ATK</div>`;
+            div.innerHTML = `<div style="font-size:18px;">${item.icon}</div><div>+${item.atk} ATK</div>`;
             div.onclick = () => {
                 p.equipped = item;
-                logChat(`Inventario: Equipaste ${item.name}`);
+                logChat(`Equipado: ${item.name}`);
                 toggleInventory();
             };
             container.appendChild(div);
@@ -433,21 +517,14 @@
         document.getElementById('side-drawer').classList.toggle('open');
     }
 
-    function updateHUD() {
-        document.getElementById('hp-bar').style.width = `${(p.hp / p.maxHp) * 100}%`;
-        document.getElementById('hp-text').textContent = `${p.hp}/${p.maxHp}`;
-    }
-
     function logChat(txt) {
         const log = document.getElementById('chat-log');
         const div = document.createElement('div');
-        div.className = 'msg';
-        div.innerHTML = `<span class="speaker">Info:</span> ${txt}`;
+        div.textContent = txt;
         log.appendChild(div);
         log.scrollTop = log.scrollHeight;
     }
 
-    // Controles por teclado
     window.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowUp' || e.key === 'w') move(0, -1);
         if (e.key === 'ArrowDown' || e.key === 's') move(0, 1);
@@ -455,7 +532,6 @@
         if (e.key === 'ArrowRight' || e.key === 'd') move(1, 0);
     });
 
-    resizeCanvas();
     render();
 </script>
 </body>
