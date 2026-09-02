@@ -2,129 +2,113 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Abrancito el Game - Dofus 2.5D Style</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dofus 2.5D Style - Motor Estable</title>
     <style>
-        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        html, body { width: 100vw; height: 100vh; overflow: hidden; background-color: #1a1a1a; color: white; }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; }
+        html, body { width: 100vw; height: 100vh; overflow: hidden; background-color: #0d1117; color: white; }
 
-        #game-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; }
-        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        #game-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
+        #canvas-container { width: 100%; height: 100%; position: absolute; }
 
-        /* UI STYLE DOFUS */
-        /* Chat Superior Izquierdo */
+        /* HUD - Chat & Misión */
         #dofus-chat {
-            position: absolute; top: 12px; left: 12px; width: 260px; max-height: 140px;
-            background: rgba(20, 20, 20, 0.75); border: 2px solid #6b7280; border-radius: 6px;
+            position: absolute; top: 12px; left: 12px; width: 280px; max-height: 150px;
+            background: rgba(15, 23, 42, 0.85); border: 2px solid #3b82f6; border-radius: 8px;
             padding: 8px; font-size: 11px; overflow-y: auto; pointer-events: auto; z-index: 20;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
         }
         .chat-msg { margin-bottom: 4px; color: #e2e8f0; }
         .chat-speaker { color: #f59e0b; font-weight: bold; }
 
-        /* Misión Top Right */
         #quest-banner {
             position: absolute; top: 12px; right: 12px;
-            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
-            border: 2px solid #93c5fd; border-radius: 8px; padding: 6px 14px;
-            font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-            z-index: 20; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%);
+            border: 2px solid #60a5fa; border-radius: 8px; padding: 8px 16px;
+            font-size: 12px; font-weight: bold; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
 
-        /* Panel de Inventario Lateral Derecho (Fiel a la foto de Dofus) */
-        #dofus-inventory-panel {
-            position: absolute; top: 50px; right: 12px; width: 220px;
-            background: #262626; border: 3px solid #525252; border-radius: 8px;
-            padding: 8px; display: none; z-index: 30; box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+        /* Panel de Equipamiento e Inventario */
+        #inventory-window {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 380px; background: #1e293b; border: 3px solid #3b82f6; border-radius: 12px;
+            padding: 12px; display: none; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
-        .inv-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #404040; padding-bottom: 6px; margin-bottom: 8px; }
-        .inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-        .inv-slot {
-            width: 46px; height: 46px; background: #171717; border: 1px solid #404040;
-            border-radius: 4px; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; font-size: 20px; cursor: pointer; position: relative;
-        }
-        .inv-slot:hover { border-color: #f59e0b; background: #262626; }
-        .inv-stat { position: absolute; bottom: 2px; right: 2px; font-size: 8px; color: #f59e0b; font-weight: bold; }
+        .inv-title { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #475569; padding-bottom: 8px; margin-bottom: 12px; }
+        .equipment-slots { display: flex; justify-content: space-around; background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 12px; }
+        .eq-slot { width: 50px; height: 50px; background: #1e293b; border: 2px dashed #475569; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; position: relative; }
+        .eq-slot.equipped { border: 2px solid #22c55e; background: rgba(34, 197, 94, 0.1); }
+        .inv-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-height: 160px; overflow-y: auto; }
+        .inv-cell { width: 52px; height: 52px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; position: relative; }
+        .inv-cell:hover { border-color: #f59e0b; }
 
-        /* Barra Inferior de Acciones */
-        #dofus-bar {
-            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 6px; background: rgba(38, 38, 38, 0.9);
-            border: 2px solid #525252; border-radius: 10px; padding: 6px 12px; z-index: 20;
-            align-items: center;
+        /* Barra Inferior de Control */
+        #action-bar {
+            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 8px; background: rgba(15, 23, 42, 0.9); border: 2px solid #3b82f6;
+            border-radius: 10px; padding: 8px 16px; z-index: 20; align-items: center;
         }
-        .bar-btn {
-            width: 42px; height: 42px; background: #171717; border: 1px solid #525252;
-            border-radius: 6px; display: flex; align-items: center; justify-content: center;
-            font-size: 20px; cursor: pointer; transition: all 0.15s;
-        }
-        .bar-btn.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); }
-        .bar-btn:active { transform: scale(0.95); }
+        .act-btn { width: 44px; height: 44px; background: #1e293b; border: 1px solid #475569; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
+        .act-btn:active { transform: scale(0.92); }
 
-        /* Controles Tactiles */
-        #dpad {
-            position: absolute; left: 15px; bottom: 15px; width: 100px; height: 100px;
-            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-            z-index: 25; gap: 2px;
-        }
-        .dp-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; touch-action: manipulation; }
-        .dp-btn:active { background: rgba(255,255,255,0.5); }
+        /* D-PAD táctil */
+        #dpad { position: absolute; left: 15px; bottom: 15px; width: 110px; height: 110px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); z-index: 25; gap: 2px; }
+        .dp-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 
-        /* Overlay de inicio */
-        #fullscreen-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #0f172a; z-index: 100; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center; padding: 20px;
-        }
-        #start-btn {
-            margin-top: 20px; padding: 12px 32px; background: #2563eb; color: white;
-            border: none; border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.5);
+        /* Diálogo Flotante NPC */
+        #npc-dialog-box {
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+            width: 320px; background: #0f172a; border: 2px solid #f59e0b; border-radius: 8px;
+            padding: 12px; display: none; z-index: 40; text-align: center; font-size: 13px;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div id="fullscreen-overlay">
-        <h1 style="color:#fde047; font-size:28px;">⚔️ ABRANCITO EL GAME</h1>
-        <p style="margin-top: 10px; font-size: 14px; color: #94a3b8;">Estilo Gráfico 2.5D Ilustrado Dofus / Wakfu</p>
-        <button id="start-btn">ENTRAR AL MUNDO</button>
-    </div>
-
     <div id="game-container">
         <div id="canvas-container"></div>
 
         <div id="dofus-chat">
-            <div class="chat-msg"><span class="chat-speaker">Sistema:</span> Bienvenido a las praderas de Astrub.</div>
+            <div class="chat-msg"><span class="chat-speaker">Sistema:</span> Motor Dofus 2.5D Cargado.</div>
             <div id="dynamic-chat"></div>
         </div>
 
         <div id="quest-banner">
-            <span id="quest-text">Misión: Habla con el Sabio Orestes (?)</span>
+            <span id="quest-text">Misión: Habla con el Sabio Orestes</span>
         </div>
 
-        <!-- Inventario Fiel a Dofus -->
-        <div id="dofus-inventory-panel">
-            <div class="inv-header">
-                <span style="color:#fde047; font-weight:bold; font-size:13px;">🎒 Inventario</span>
+        <!-- Diálogo NPC -->
+        <div id="npc-dialog-box">
+            <div style="color:#f59e0b; font-weight:bold; margin-bottom:4px;" id="npc-name">Sabio Orestes</div>
+            <div id="npc-text" style="margin-bottom:8px;">¡Hola Aventurero!</div>
+            <button onclick="closeNpcDialog()" style="padding:4px 12px; background:#2563eb; color:white; border:none; border-radius:4px; cursor:pointer;">Continuar</button>
+        </div>
+
+        <!-- Panel de Inventario y Equipamiento -->
+        <div id="inventory-window">
+            <div class="inv-title">
+                <span style="color:#f59e0b; font-weight:bold;">🎒 Equipo y Objetos</span>
                 <span style="cursor:pointer; color:#ef4444; font-weight:bold;" onclick="toggleInventory()">✖</span>
             </div>
+
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">EQUIPAMIENTO ACTUAL:</div>
+            <div class="equipment-slots">
+                <div class="eq-slot" id="eq-weapon" onclick="unequipSlot('weapon')" title="Arma">🗡️</div>
+                <div class="eq-slot" id="eq-shield" onclick="unequipSlot('shield')" title="Escudo">🛡️</div>
+                <div class="eq-slot" id="eq-boots" onclick="unequipSlot('boots')" title="Zapatos">👢</div>
+                <div class="eq-slot" id="eq-ring" onclick="unequipSlot('ring')" title="Anillo">💍</div>
+            </div>
+
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">INVENTARIO:</div>
             <div class="inv-grid" id="inv-grid"></div>
         </div>
 
-        <!-- Hotbar Inferior -->
-        <div id="dofus-bar">
-            <div class="bar-btn active" id="slot-0" onclick="selectSlot(0)">🗡️</div>
-            <div class="bar-btn" id="slot-1" onclick="selectSlot(1)">🪓</div>
-            <div class="bar-btn" id="slot-2" onclick="selectSlot(2)">🔮</div>
-            <div class="bar-btn" id="slot-3" onclick="selectSlot(3)">🏹</div>
-            <div style="width:2px; height:30px; background:#525252; margin:0 4px;"></div>
-            <div class="bar-btn" onclick="executeAttack()" style="background:#dc2626; border-color:#ef4444;">⚔️</div>
-            <div class="bar-btn" onclick="toggleInventory()" style="background:#7c3aed; border-color:#a78bfa;">🎒</div>
-            <div class="bar-btn" onclick="toggleMount()" style="background:#d97706; border-color:#fbbf24;">🐎</div>
-            <div class="bar-btn" onclick="interactNPC()" style="background:#0284c7; border-color:#38bdf8;">💬</div>
+        <!-- Barra Inferior -->
+        <div id="action-bar">
+            <div class="act-btn" onclick="executeAttack()" style="background:#dc2626; border-color:#ef4444;">⚔️</div>
+            <div class="act-btn" onclick="interactNPC()" style="background:#0284c7; border-color:#38bdf8;">💬</div>
+            <div class="act-btn" onclick="toggleInventory()" style="background:#7c3aed; border-color:#a78bfa;">🎒</div>
         </div>
 
         <div id="dpad">
@@ -135,295 +119,286 @@
     </div>
 
 <script>
-    document.getElementById('start-btn').addEventListener('click', async () => {
-        try {
-            if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-            if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
-        } catch (e) {}
-        document.getElementById('fullscreen-overlay').style.display = 'none';
-        resize();
-    });
+    // ESTADO DEL JUGADOR (GUARDADO AUTOMÁTICO EN LOCALSTORAGE)
+    let p = JSON.parse(localStorage.getItem('dofus_save')) || {
+        lvl: 1, xp: 0, hp: 100, maxHp: 100, wood: 0, gold: 0,
+        baseAtk: 15, questState: 0,
+        equipment: { weapon: null, shield: null, boots: null, ring: null },
+        inventory: [
+            { id: 1, name: 'Hacha de Tala', icon: '🪓', type: 'weapon', bonus: 5 },
+            { id: 2, name: 'Botas de Cuero', icon: '👢', type: 'boots', bonus: 10 }
+        ]
+    };
 
-    // ESCENA Y CÁMARA ISOMÉTRICA FIELES A DOFUS
-    const container = document.getElementById('canvas-container');
+    function saveProgress() {
+        localStorage.setItem('dofus_save', JSON.stringify(p));
+    }
+
+    // MAPA Y CÁMARA
+    const MAP_LIMIT = 28; // LÍMITE DEL MAPA PARA EVITAR SALIRSE
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xa3e635); // Verde pradera claro
+    scene.background = new THREE.Color(0x87cf3a);
 
     const aspect = window.innerWidth / window.innerHeight;
-    const d = 14;
+    const d = 16;
     const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
-    
-    // Ángulo Isométrico Clásico Dofus (45 grados)
     camera.position.set(20, 20, 20);
     camera.lookAt(0, 0, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    // ILUMINACIÓN SUAVE Y VIBRANTE DE ILUSTRACIÓN
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xfffbe1, 0.6);
-    sun.position.set(15, 30, 10);
-    sun.castShadow = true;
-    sun.shadow.mapSize.width = 2048;
-    sun.shadow.mapSize.height = 2048;
-    scene.add(sun);
+    const dirLight = new THREE.DirectionalLight(0xfffaed, 0.5);
+    dirLight.position.set(20, 40, 10);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
 
-    // TEXTURA DE SUELO ESTILO DOFUS GENERADA EN CANVAS DENTRO DEL CÓDIGO
-    function generateDofusGrassTexture() {
+    // TEXTURA DE SUELO ILUSTRADA
+    function createGroundTexture() {
         const canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 512;
         const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#65a30d'; ctx.fillRect(0, 0, 512, 512);
 
-        // Base de hierba estilo ilustración
-        ctx.fillStyle = '#84cc16';
-        ctx.fillRect(0, 0, 512, 512);
-
-        // Detalles de camino de piedras y flores blancas
-        ctx.fillStyle = '#a3e635';
-        for(let i=0; i<300; i++) {
+        // Caminos de piedra
+        ctx.fillStyle = '#d97706';
+        for(let i=0; i<120; i++) {
             ctx.beginPath();
-            ctx.arc(Math.random()*512, Math.random()*512, 3 + Math.random()*5, 0, Math.PI*2);
+            ctx.ellipse(256 + Math.sin(i)*100, i*4.2, 14, 8, 0, 0, Math.PI*2);
             ctx.fill();
         }
-
-        // Caminito de adoquines/tierra
-        ctx.fillStyle = '#eab308';
-        for(let i=0; i<80; i++) {
-            ctx.beginPath();
-            ctx.ellipse(256 + (Math.random()-0.5)*180, Math.random()*512, 12, 8, Math.PI/4, 0, Math.PI*2);
-            ctx.fill();
-        }
-
-        // Flores pequeñas
+        // Flores y detalles
         ctx.fillStyle = '#ffffff';
-        for(let i=0; i<60; i++) {
-            let fx = Math.random()*512, fy = Math.random()*512;
-            ctx.beginPath(); ctx.arc(fx, fy, 2.5, 0, Math.PI*2); ctx.fill();
+        for(let i=0; i<80; i++) {
+            ctx.beginPath(); ctx.arc(Math.random()*512, Math.random()*512, 3, 0, Math.PI*2); ctx.fill();
         }
-
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(4, 4);
-        return texture;
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(3, 3);
+        return tex;
     }
 
-    const floorGeo = new THREE.PlaneGeometry(120, 120);
-    const floorMat = new THREE.MeshStandardMaterial({ map: generateDofusGrassTexture(), roughness: 1.0 });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
+    const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(60, 60),
+        new THREE.MeshStandardMaterial({ map: createGroundTexture() })
+    );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // GENERADOR DE SPRITES / ELEMENTOS 2.5D ILUSTRADOS
-    function create2DSpriteTexture(type, colorHex) {
+    // DIBUJAR SPRITES ILUSTRADOS 2.5D
+    function createIllustratedSprite(type) {
         const canvas = document.createElement('canvas');
         canvas.width = 128; canvas.height = 128;
         const ctx = canvas.getContext('2d');
 
-        if(type === 'tree_autumn') {
-            // Árbol Naranjo Otoñal Dofus
-            ctx.fillStyle = '#78350f'; ctx.fillRect(58, 70, 12, 50);
-            ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.arc(64, 50, 42, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#fb923c'; ctx.beginPath(); ctx.arc(54, 40, 28, 0, Math.PI*2); ctx.fill();
-        } else if(type === 'tree_green') {
-            // Árbol Verde
-            ctx.fillStyle = '#78350f'; ctx.fillRect(58, 70, 12, 50);
+        if(type === 'tree') {
+            // Tronco
+            ctx.fillStyle = '#451a03'; ctx.fillRect(56, 75, 16, 45);
+            // Copa orgànica
             ctx.fillStyle = '#15803d'; ctx.beginPath(); ctx.arc(64, 50, 40, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(54, 40, 25, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(52, 40, 25, 0, Math.PI*2); ctx.fill();
         } else if(type === 'jalato') {
-            // Monstruo Jalató (Oveja blanca esponjosa estilo Dofus)
-            ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.arc(64, 64, 38, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.arc(45, 55, 6, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(83, 55, 6, 0, Math.PI*2); ctx.fill();
+            // Jalató Dofus
+            ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.arc(64, 68, 35, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(48, 58, 5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(80, 58, 5, 0, Math.PI*2); ctx.fill();
             // Cuernos
-            ctx.fillStyle = '#ca8a04'; ctx.fillRect(25, 40, 10, 15); ctx.fillRect(93, 40, 10, 15);
+            ctx.fillStyle = '#eab308'; ctx.fillRect(25, 45, 12, 18); ctx.fillRect(91, 45, 12, 18);
         } else if(type === 'player') {
-            // Héroe Abrancito Ilustrado
-            ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.arc(64, 45, 22, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ea580c'; ctx.beginPath(); ctx.arc(64, 45, 22, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#1e293b'; ctx.fillRect(48, 67, 32, 45);
-            ctx.fillStyle = '#fb923c'; ctx.beginPath(); ctx.arc(64, 25, 12, 0, Math.PI*2); ctx.fill(); // Orejas Zorro
         } else if(type === 'npc') {
-            // Sabio Orestes con Sombrero
-            ctx.fillStyle = '#38bdf8'; ctx.fillRect(50, 60, 28, 50);
-            ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(64, 40, 25, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#0284c7'; ctx.fillRect(48, 60, 32, 50);
+            ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(64, 40, 22, 0, Math.PI*2); ctx.fill();
         }
 
-        return new THREE.CanvasTexture(canvas);
+        const tex = new THREE.CanvasTexture(canvas);
+        const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+        return new THREE.Sprite(mat);
     }
 
-    function create2DSpriteMesh(texture, scale = 3) {
-        const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-        const sprite = new THREE.Sprite(mat);
-        sprite.scale.set(scale, scale, 1);
-        return sprite;
-    }
-
-    // POBLAR ÁRBOLES Y VEGETACIÓN ILUSTRADA
-    const trees = [];
-    for(let i=0; i<45; i++) {
-        let rx = (Math.random() - 0.5) * 80;
-        let rz = (Math.random() - 0.5) * 80;
-        if(Math.abs(rx) > 6 || Math.abs(rz) > 6) {
-            const isAutumn = Math.random() > 0.5;
-            const tex = create2DSpriteTexture(isAutumn ? 'tree_autumn' : 'tree_green');
-            const sprite = create2DSpriteMesh(tex, 4.5);
-            sprite.position.set(rx, 2.25, rz);
-            scene.add(sprite);
-            trees.push({ mesh: sprite, hp: 3, x: rx, z: rz });
-        }
-    }
-
-    // JUGADOR
-    const playerTexture = create2DSpriteTexture('player');
-    const playerMesh = create2DSpriteMesh(playerTexture, 3.2);
+    // ENTIDADES
+    const playerMesh = createIllustratedSprite('player');
+    playerMesh.scale.set(3.2, 3.2, 1);
     playerMesh.position.set(0, 1.6, 0);
     scene.add(playerMesh);
 
-    // ENEMIGOS (JALATÓS)
-    const jalatoTexture = create2DSpriteTexture('jalato');
-    const enemies = [];
-
-    function spawnJalato(x, z, isBoss = false) {
-        const sprite = create2DSpriteMesh(jalatoTexture, isBoss ? 5.5 : 2.8);
-        sprite.position.set(x, isBoss ? 2.75 : 1.4, z);
-        scene.add(sprite);
-        enemies.push({
-            mesh: sprite, hp: isBoss ? 200 : 40, maxHp: isBoss ? 200 : 40,
-            isBoss, isAggressive: false, attackCooldown: 0
-        });
-    }
-
-    spawnJalato(-6, 8);
-    spawnJalato(8, 10);
-    spawnJalato(18, -18, true); // Boss
-
-    // NPCs
-    const npcTex = create2DSpriteTexture('npc');
-    const npcSprite = create2DSpriteMesh(npcTex, 3.2);
-    npcSprite.position.set(4, 1.6, 4);
+    const npcSprite = createIllustratedSprite('npc');
+    npcSprite.scale.set(3.2, 3.2, 1);
+    npcSprite.position.set(5, 1.6, 5);
     scene.add(npcSprite);
 
-    // ESTADO JUGADOR & MECÁNICAS
-    let p = { 
-        lvl: 1, xp: 0, hp: 100, maxHp: 100, mp: 80, maxMp: 80, 
-        baseAtk: 15, bonusAtk: 0, wood: 0, speed: 0.18, 
-        activeSlot: 0, questState: 0, mounted: false,
-        inventory: []
-    };
-    const keys = { up: false, down: false, left: false, right: false };
-
-    // DROPS
-    const droppedItems = [];
-    function spawnLootDrop(x, z) {
-        const itemCanvas = document.createElement('canvas');
-        itemCanvas.width = 64; itemCanvas.height = 64;
-        const ctx = itemCanvas.getContext('2d');
-        ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(32, 32, 20, 0, Math.PI*2); ctx.fill();
-        
-        const tex = new THREE.CanvasTexture(itemCanvas);
-        const sprite = create2DSpriteMesh(tex, 1.2);
-        sprite.position.set(x, 0.6, z);
+    // ENEMIGOS CON RESPAWN AUTOMÁTICO
+    const enemies = [];
+    function spawnEnemy(x, z) {
+        const sprite = createIllustratedSprite('jalato');
+        sprite.scale.set(3, 3, 1);
+        sprite.position.set(x, 1.5, z);
         scene.add(sprite);
-        droppedItems.push({ mesh: sprite, x, z, data: { name: 'Anillo de Jalató', icon: '💍', bonus: 12, type: 'atk' } });
+        enemies.push({ mesh: sprite, hp: 40, maxHp: 40, spawnX: x, spawnZ: z, alive: true });
     }
 
-    function checkLootPickup() {
-        droppedItems.forEach((drop, index) => {
-            if(playerMesh.position.distanceTo(drop.mesh.position) < 1.8) {
-                scene.remove(drop.mesh);
-                p.inventory.push(drop.data);
-                addChatMsg("Botín", `¡Has recogido ${drop.data.name}!`);
-                droppedItems.splice(index, 1);
-                updateInventoryUI();
-            }
-        });
+    spawnEnemy(-8, 8);
+    spawnEnemy(10, -6);
+    spawnEnemy(-12, -10);
+
+    // ÁRBOLES
+    const trees = [];
+    for(let i=0; i<25; i++) {
+        let rx = (Math.random() - 0.5) * 45;
+        let rz = (Math.random() - 0.5) * 45;
+        if(Math.abs(rx) > 6 || Math.abs(rz) > 6) {
+            const tree = createIllustratedSprite('tree');
+            tree.scale.set(4.5, 4.5, 1);
+            tree.position.set(rx, 2.25, rz);
+            scene.add(tree);
+            trees.push({ mesh: tree, hp: 3, x: rx, z: rz });
+        }
     }
 
-    function toggleInventory() {
-        const panel = document.getElementById('dofus-inventory-panel');
-        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-        updateInventoryUI();
-    }
-
-    function updateInventoryUI() {
-        const grid = document.getElementById('inv-grid');
-        grid.innerHTML = '';
-        p.inventory.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'inv-slot';
-            div.innerHTML = `<div>${item.icon}</div><div class="inv-stat">+${item.bonus}</div>`;
-            div.onclick = () => {
-                p.bonusAtk += item.bonus;
-                addChatMsg("Equipo", `Has equipado ${item.name}. ¡+${item.bonus} Ataque!`);
-                p.inventory.splice(index, 1);
-                updateInventoryUI();
-            };
-            grid.appendChild(div);
-        });
-    }
+    // SISTEMA DE COMBATE Y DROPS MULTI-SLOT
+    const droppedLoot = [];
+    const possibleLoot = [
+        { name: 'Espada de Cristal', icon: '🗡️', type: 'weapon', bonus: 20 },
+        { name: 'Escudo Real', icon: '🛡️', type: 'shield', bonus: 15 },
+        { name: 'Botas de Combate', icon: '👢', type: 'boots', bonus: 12 },
+        { name: 'Anillo de Jalató', icon: '💍', type: 'ring', bonus: 8 }
+    ];
 
     function executeAttack() {
-        const totalAtk = p.baseAtk + p.bonusAtk;
-        enemies.forEach((enemy, i) => {
-            if(playerMesh.position.distanceTo(enemy.mesh.position) < 3.0) {
-                enemy.hp -= totalAtk;
-                enemy.isAggressive = true;
-                addChatMsg("Combate", `Atacaste al Jalató causando ${totalAtk} de daño.`);
-                if(enemy.hp <= 0) {
-                    spawnLootDrop(enemy.mesh.position.x, enemy.mesh.position.z);
-                    scene.remove(enemy.mesh);
-                    enemies.splice(i, 1);
-                    p.xp += 40;
-                    if(p.questState === 1) p.questState = 2;
+        let totalDamage = p.baseAtk;
+        Object.values(p.equipment).forEach(item => { if(item) totalDamage += item.bonus; });
+
+        enemies.forEach(e => {
+            if(e.alive && playerMesh.position.distanceTo(e.mesh.position) < 3.2) {
+                e.hp -= totalDamage;
+                addChatMsg("Combate", `Atacaste con ${totalDamage} de daño.`);
+                if(e.hp <= 0) {
+                    e.alive = false;
+                    scene.remove(e.mesh);
+                    addChatMsg("Victoria", "¡Eliminaste un Jalató! (+30 XP)");
+                    p.xp += 30;
+
+                    // Tirar Drop
+                    const randomItem = possibleLoot[Math.floor(Math.random() * possibleLoot.length)];
+                    p.inventory.push(randomItem);
+                    addChatMsg("Botín", `Conseguiste: ${randomItem.name}`);
+
+                    saveProgress();
                     updateHUD();
+
+                    // RESPAWN EN 4 SEGUNDOS
+                    setTimeout(() => {
+                        e.hp = e.maxHp;
+                        e.alive = true;
+                        scene.add(e.mesh);
+                        addChatMsg("Sistema", "Un Jalató ha reaparecido en el mapa.");
+                    }, 4000);
                 }
             }
         });
 
-        if(p.activeSlot === 1) { // Hacha para cortar árboles
+        // Tala de madera con hacha
+        if(p.equipment.weapon && p.equipment.weapon.icon === '🪓') {
             trees.forEach((t, i) => {
-                if(playerMesh.position.distanceTo(t.mesh.position) < 2.5) {
+                if(playerMesh.position.distanceTo(t.mesh.position) < 3.0) {
                     t.hp--;
                     if(t.hp <= 0) {
                         scene.remove(t.mesh);
                         trees.splice(i, 1);
                         p.wood += 3;
-                        addChatMsg("Recolección", "¡Obtuviste +3 Maderas!");
-                        if(p.questState === 2 && p.wood >= 5) p.questState = 3;
-                        updateHUD();
+                        addChatMsg("Recolección", "¡+3 de Madera recolectada!");
+                        saveProgress();
                     }
                 }
             });
         }
     }
 
+    // INVENTARIO Y EQUIPAMIENTO
+    function toggleInventory() {
+        const inv = document.getElementById('inventory-window');
+        inv.style.display = inv.style.display === 'block' ? 'none' : 'block';
+        renderInventoryUI();
+    }
+
+    function renderInventoryUI() {
+        const grid = document.getElementById('inv-grid');
+        grid.innerHTML = '';
+
+        p.inventory.forEach((item, idx) => {
+            const cell = document.createElement('div');
+            cell.className = 'inv-cell';
+            cell.innerHTML = `<div>${item.icon}</div><div style="font-size:8px; color:#f59e0b;">+${item.bonus}</div>`;
+            cell.onclick = () => equipItem(idx);
+            grid.appendChild(cell);
+        });
+
+        // Renderizar slots de equipamiento
+        ['weapon', 'shield', 'boots', 'ring'].forEach(slot => {
+            const slotEl = document.getElementById(`eq-${slot}`);
+            const eqItem = p.equipment[slot];
+            if(eqItem) {
+                slotEl.innerHTML = eqItem.icon;
+                slotEl.classList.add('equipped');
+            } else {
+                const defaultIcons = { weapon:'🗡️', shield:'🛡️', boots:'👢', ring:'💍' };
+                slotEl.innerHTML = defaultIcons[slot];
+                slotEl.classList.remove('equipped');
+            }
+        });
+    }
+
+    function equipItem(index) {
+        const item = p.inventory[index];
+        if(!item) return;
+
+        // Si ya hay uno equipado en ese slot, devolverlo al inventario
+        if(p.equipment[item.type]) {
+            p.inventory.push(p.equipment[item.type]);
+        }
+
+        p.equipment[item.type] = item;
+        p.inventory.splice(index, 1);
+        addChatMsg("Equipo", `Te has equipado: ${item.name}`);
+        saveProgress();
+        renderInventoryUI();
+    }
+
+    function unequipSlot(type) {
+        if(p.equipment[type]) {
+            p.inventory.push(p.equipment[type]);
+            addChatMsg("Equipo", `Te has quitado: ${p.equipment[type].name}`);
+            p.equipment[type] = null;
+            saveProgress();
+            renderInventoryUI();
+        }
+    }
+
+    // DIÁLOGO Y NPC
     function interactNPC() {
-        if(playerMesh.position.distanceTo(npcSprite.position) < 3.5) {
-            if(p.questState === 0) { p.questState = 1; addChatMsg("Sabio Orestes", "¡Bienvenido Abrancito! Elimina un Jalató para proteger la villa."); }
-            else if(p.questState === 2) addChatMsg("Sabio Orestes", "Usa tu hacha para recolectar 5 maderas de los árboles.");
-            else if(p.questState === 3) { p.questState = 4; addChatMsg("Sabio Orestes", "¡Excelente! Ahora estás listo para el Boss."); }
+        if(playerMesh.position.distanceTo(npcSprite.position) < 3.8) {
+            const dlg = document.getElementById('npc-dialog-box');
+            dlg.style.display = 'block';
+            if(p.questState === 0) {
+                document.getElementById('npc-text').textContent = "¡Saludos! Derrota a un Jalató para demostrar tu fuerza.";
+                p.questState = 1;
+            } else {
+                document.getElementById('npc-text').textContent = "Sigue entrenando y equipando tus objetos mejores.";
+            }
+            saveProgress();
             updateHUD();
         }
     }
 
-    function toggleMount() {
-        p.mounted = !p.mounted;
-        p.speed = p.mounted ? 0.32 : 0.18;
-        addChatMsg("Sistema", p.mounted ? "¡Has subido a tu Jalató de montura!" : "Has desmontado.");
-    }
-
-    function selectSlot(i) {
-        p.activeSlot = i;
-        document.querySelectorAll('.bar-btn').forEach((b, idx) => {
-            if(idx < 4) b.classList.toggle('active', idx === i);
-        });
+    function closeNpcDialog() {
+        document.getElementById('npc-dialog-box').style.display = 'none';
     }
 
     function addChatMsg(speaker, text) {
@@ -437,54 +412,37 @@
 
     function updateHUD() {
         const qText = document.getElementById('quest-text');
-        if(p.questState === 0) qText.textContent = "Misión: Habla con el Sabio Orestes (?)";
-        else if(p.questState === 1) qText.textContent = "Misión: Derrota a un Jalató";
-        else if(p.questState === 2) qText.textContent = "Misión: Junta 5 de madera";
-        else if(p.questState === 3) qText.textContent = "Habla con el Sabio (!)";
-        else qText.textContent = "Misión: Derrota al Boss Jalató";
+        qText.textContent = p.questState === 0 ? "Misión: Habla con el Sabio Orestes" : "Misión: Elimina los Jalatós";
     }
 
-    // BINDINGS
-    function bindDir(id, k) {
+    // CONTROLES Y MOVIMIENTO CON PAREDES DE MAPA
+    const keys = { up: false, down: false, left: false, right: false };
+    function bindTouch(id, k) {
         const el = document.getElementById(id);
-        el.addEventListener('touchstart', (e)=>{e.preventDefault(); keys[k]=true;});
-        el.addEventListener('touchend', (e)=>{e.preventDefault(); keys[k]=false;});
+        el.addEventListener('touchstart', (e)=>{ e.preventDefault(); keys[k] = true; });
+        el.addEventListener('touchend', (e)=>{ e.preventDefault(); keys[k] = false; });
     }
-    bindDir('btn-up','up'); bindDir('btn-down','down');
-    bindDir('btn-left','left'); bindDir('btn-right','right');
+    bindTouch('btn-up','up'); bindTouch('btn-down','down');
+    bindTouch('btn-left','left'); bindTouch('btn-right','right');
 
-    function resize() {
-        const aspect = window.innerWidth / window.innerHeight;
-        camera.left = -d * aspect;
-        camera.right = d * aspect;
-        camera.top = d;
-        camera.bottom = -d;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-    window.addEventListener('resize', resize);
-
-    // LOOP PRINCIPAL (CÁMARA DOFUS SEGUIMIENTO)
+    const speed = 0.20;
     function animate() {
         requestAnimationFrame(animate);
 
-        // Movimiento Isométrico
-        if (keys.up) { playerMesh.position.z -= p.speed; playerMesh.position.x -= p.speed; }
-        if (keys.down) { playerMesh.position.z += p.speed; playerMesh.position.x += p.speed; }
-        if (keys.left) { playerMesh.position.x -= p.speed; playerMesh.position.z += p.speed; }
-        if (keys.right) { playerMesh.position.x += p.speed; playerMesh.position.z -= p.speed; }
+        // MOVIMIENTO CON BORDES DE MAPA
+        let nextX = playerMesh.position.x;
+        let nextZ = playerMesh.position.z;
 
-        checkLootPickup();
+        if (keys.up) { nextZ -= speed; nextX -= speed; }
+        if (keys.down) { nextZ += speed; nextX += speed; }
+        if (keys.left) { nextX -= speed; nextZ += speed; }
+        if (keys.right) { nextX += speed; nextZ -= speed; }
 
-        // IA Jalató
-        enemies.forEach(enemy => {
-            if(enemy.isAggressive) {
-                enemy.mesh.position.x += Math.sign(playerMesh.position.x - enemy.mesh.position.x) * 0.03;
-                enemy.mesh.position.z += Math.sign(playerMesh.position.z - enemy.mesh.position.z) * 0.03;
-            }
-        });
+        // MANTENER DENTRO DEL LÍMITE INFRANQUEABLE
+        if(Math.abs(nextX) < MAP_LIMIT) playerMesh.position.x = nextX;
+        if(Math.abs(nextZ) < MAP_LIMIT) playerMesh.position.z = nextZ;
 
-        // La cámara isométrica sigue suavemente al jugador
+        // CÁMARA SEGUIMIENTO
         camera.position.x = playerMesh.position.x + 20;
         camera.position.z = playerMesh.position.z + 20;
         camera.lookAt(playerMesh.position.x, playerMesh.position.y, playerMesh.position.z);
