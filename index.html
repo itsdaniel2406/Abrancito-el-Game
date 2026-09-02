@@ -3,481 +3,440 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Abrancito - El Game en Dofus</title>
+    <title>Abrancito - El Game</title>
     <style>
-        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Trebuchet MS', sans-serif; }
-        html, body { width: 100vw; height: 100vh; overflow: hidden; background: #070a12; color: white; }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        html, body { width: 100vw; height: 100vh; overflow: hidden; background: #050811; color: white; }
 
-        /* FORZAR PANTALLA HORIZONTAL MÓVIL */
-        #game-wrapper {
-            position: absolute; width: 100vw; height: 100vh; top: 0; left: 0;
-            display: flex; justify-content: center; align-items: center; background: #0b0f19;
+        #app-container {
+            display: flex; width: 100vw; height: 100vh; background: #080d1a;
         }
 
-        @media screen and (orientation: portrait) {
-            #game-wrapper {
-                width: 100vh; height: 100vw;
-                transform: rotate(90deg); transform-origin: top left;
-                top: 0; left: 100vw;
-            }
+        /* CANVAS A PANTALLA COMPLETA */
+        #viewport {
+            flex: 1; height: 100%; position: relative; background: #0f172a; overflow: hidden;
         }
 
-        canvas { background: #111827; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+        canvas { display: block; width: 100%; height: 100%; }
 
-        /* INTERFAZ HUD */
-        #hud-top {
-            position: absolute; top: 10px; left: 10px; right: 10px;
-            display: flex; justify-content: space-between; pointer-events: none; z-index: 20;
+        /* PANEL LATERAL INTEGRADO PARA INTERFAZ */
+        #side-panel {
+            width: 320px; height: 100%; background: rgba(15, 23, 42, 0.95);
+            border-left: 2px solid #1e293b; display: flex; flex-direction: column;
+            padding: 12px; gap: 10px; z-index: 10; box-shadow: -5px 0 25px rgba(0,0,0,0.8);
         }
 
-        #chat-box {
-            width: 280px; height: 120px; background: rgba(15, 23, 42, 0.9);
-            border: 2px solid #3b82f6; border-radius: 8px; padding: 8px;
-            font-size: 11px; overflow-y: auto; pointer-events: auto;
+        .panel-block {
+            background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 10px;
         }
-        .msg { margin-bottom: 4px; }
+
+        .hero-card {
+            display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f172a);
+            border: 1px solid #6366f1; border-radius: 8px; padding: 10px;
+        }
+
+        .bar-container { width: 100%; background: #020617; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 4px; }
+        .bar-fill { height: 100%; background: #22c55e; width: 100%; transition: width 0.3s; }
+
+        #chat-log {
+            flex: 1; background: #020617; border: 1px solid #1e293b; border-radius: 6px;
+            padding: 8px; font-size: 11px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+        }
+        .msg { font-family: monospace; }
         .speaker { color: #f59e0b; font-weight: bold; }
 
-        #quest-box {
-            background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%);
-            border: 2px solid #60a5fa; border-radius: 8px; padding: 8px 16px;
-            font-size: 13px; font-weight: bold; text-shadow: 1px 1px 2px #000;
-        }
-
-        /* INVENTARIO CON DROPS Y ARMAS */
+        /* MODAL INVENTARIO ESTILIZADO */
         #inventory-modal {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 440px; background: #0f172a; border: 3px solid #f59e0b; border-radius: 12px;
-            padding: 16px; display: none; z-index: 50; box-shadow: 0 10px 40px rgba(0,0,0,0.95);
+            width: 400px; background: #0f172a; border: 2px solid #eab308; border-radius: 12px;
+            padding: 16px; display: none; z-index: 50; box-shadow: 0 0 50px rgba(0,0,0,0.9);
         }
-        .inv-title { display: flex; justify-content: space-between; border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 12px; }
-        .eq-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: #1e293b; padding: 10px; border-radius: 8px; margin-bottom: 12px; }
-        .eq-slot { width: 60px; height: 60px; background: #0f172a; border: 2px dashed #475569; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; }
-        .eq-slot.active { border: 2px solid #22c55e; background: rgba(34, 197, 94, 0.2); }
-        .inv-items { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-height: 160px; overflow-y: auto; }
-        .inv-cell { width: 60px; height: 60px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; }
-        .inv-cell:hover { border-color: #f59e0b; }
-        .item-stat { font-size: 10px; color: #22c55e; font-weight: bold; }
 
-        /* BARRA DE ACCIÓN */
+        .inv-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
+        .slot { width: 60px; height: 60px; background: #1e293b; border: 1px solid #334155; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .slot:hover { border-color: #f59e0b; background: #334155; }
+
+        /* BARRA DE ACCIÓN EN PANTALLA */
         #action-bar {
-            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 10px; background: rgba(15, 23, 42, 0.95); border: 2px solid #3b82f6;
-            border-radius: 10px; padding: 8px 16px; z-index: 20;
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 12px; background: rgba(15, 23, 42, 0.9); padding: 8px 16px;
+            border-radius: 30px; border: 1px solid #3b82f6; backdrop-filter: blur(4px);
         }
-        .btn-act { width: 48px; height: 48px; background: #1e293b; border: 1px solid #475569; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; }
-        .btn-act:active { transform: scale(0.92); }
 
-        /* CONTROLES MÓVILES D-PAD */
-        #dpad { position: absolute; left: 20px; bottom: 20px; width: 110px; height: 110px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); z-index: 25; gap: 2px; }
-        .dp-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: white; }
+        .btn-act {
+            width: 50px; height: 50px; border-radius: 50%; background: #1e293b; border: 2px solid #3b82f6;
+            display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .btn-act:active { transform: scale(0.9); }
+
+        /* CONTROLES MÓVILES */
+        #dpad { position: absolute; left: 20px; bottom: 20px; width: 120px; height: 120px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 4px; }
+        .dp { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="game-wrapper">
-        <canvas id="canvas" width="960" height="540"></canvas>
+    <div id="app-container">
+        <!-- ÁREA DEL JUEGO -->
+        <div id="viewport">
+            <canvas id="gameCanvas"></canvas>
 
-        <div id="hud-top">
-            <div id="chat-box">
-                <div class="msg"><span class="speaker">Sistema:</span> Cargado "Abrancito - El Game en Dofus".</div>
-                <div id="chat-content"></div>
+            <!-- Barra de Acciones -->
+            <div id="action-bar">
+                <div class="btn-act" style="background:#dc2626;" onclick="attack()" title="Atacar">⚔️</div>
+                <div class="btn-act" style="background:#0284c7;" onclick="interact()" title="Interactuar">💬</div>
+                <div class="btn-act" style="background:#7c3aed;" onclick="toggleInventory()" title="Inventario">🎒</div>
             </div>
-            <div id="quest-box">
-                <span id="quest-text">Misión: Habla con el Sabio Orestes</span>
+
+            <!-- D-Pad -->
+            <div id="dpad">
+                <div></div><div class="dp" onclick="move(0,-1)">▲</div><div></div>
+                <div class="dp" onclick="move(-1,0)">◀</div><div></div><div class="dp" onclick="move(1,0)">▶</div>
+                <div></div><div class="dp" onclick="move(0,1)">▼</div><div></div>
+            </div>
+
+            <!-- Inventario Modal -->
+            <div id="inventory-modal">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="color:#f59e0b;">🎒 Inventario de Equipamiento</h3>
+                    <span style="cursor:pointer;" onclick="toggleInventory()">✖</span>
+                </div>
+                <div class="inv-grid" id="inv-container"></div>
             </div>
         </div>
 
-        <!-- Inventario -->
-        <div id="inventory-modal">
-            <div class="inv-title">
-                <span style="color:#f59e0b; font-weight:bold;">🎒 Inventario de Abrancito</span>
-                <span style="cursor:pointer; color:#ef4444; font-weight:bold;" onclick="toggleInventory()">✖</span>
+        <!-- PANEL LATERAL INFORMATIVO -->
+        <div id="side-panel">
+            <h2 style="font-size:16px; color:#38bdf8; text-align:center; letter-spacing:1px;">ABRANCITO - EL GAME</h2>
+            
+            <div class="hero-card">
+                <div>
+                    <div id="hero-name" style="font-weight:bold; color:#f8fafc;">Abrancito</div>
+                    <div id="hero-class" style="font-size:12px; color:#94a3b8;">Clase: Guerrero</div>
+                </div>
+                <div style="text-align:right;">
+                    <div id="hero-lvl" style="font-size:14px; color:#f59e0b; font-weight:bold;">Nvl. 1</div>
+                </div>
             </div>
-            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">EQUIPAMIENTO ACTIVO:</div>
-            <div class="eq-grid">
-                <div class="eq-slot" id="eq-weapon" onclick="unequip('weapon')">🗡️<span style="font-size:9px; color:#aaa;">Arma</span></div>
-                <div class="eq-slot" id="eq-shield" onclick="unequip('shield')">🛡️<span style="font-size:9px; color:#aaa;">Escudo</span></div>
-                <div class="eq-slot" id="eq-armor" onclick="unequip('armor')">🛡️<span style="font-size:9px; color:#aaa;">Armadura</span></div>
-                <div class="eq-slot" id="eq-ring" onclick="unequip('ring')">💍<span style="font-size:9px; color:#aaa;">Anillo</span></div>
+
+            <div class="panel-block">
+                <div style="font-size:12px; color:#94a3b8;">Vida del Héroe</div>
+                <div class="bar-container"><div id="hp-bar" class="bar-fill"></div></div>
+                <div style="font-size:11px; text-align:right; margin-top:2px;" id="hp-text">100/100</div>
             </div>
-            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">DROPS Y OBJETOS OBTENIDOS:</div>
-            <div class="inv-items" id="inv-grid"></div>
-        </div>
 
-        <!-- Barra de Acciones -->
-        <div id="action-bar">
-            <div class="btn-act" onclick="attack()" style="background:#dc2626;" title="Atacar">⚔️</div>
-            <div class="btn-act" onclick="talkNPC()" style="background:#0284c7;" title="Hablar">💬</div>
-            <div class="btn-act" onclick="toggleInventory()" style="background:#7c3aed;" title="Inventario">🎒</div>
-        </div>
+            <div class="panel-block">
+                <div style="font-size:12px; color:#f59e0b; font-weight:bold;">📜 Misión Activa</div>
+                <div id="quest-info" style="font-size:12px; color:#cbd5e1; margin-top:4px;">Habla con el Sabio Orestes para iniciar la aventura.</div>
+            </div>
 
-        <!-- D-Pad -->
-        <div id="dpad">
-            <div></div><div class="dp-btn" id="btn-u">▲</div><div></div>
-            <div class="dp-btn" id="btn-l">◀</div><div></div><div class="dp-btn" id="btn-r">▶</div>
-            <div></div><div class="dp-btn" id="btn-d">▼</div><div></div>
+            <div class="panel-block">
+                <div style="font-size:12px; color:#38bdf8; font-weight:bold;">🗺️ Ubicación Actual</div>
+                <div id="map-info" style="font-size:12px; color:#cbd5e1; margin-top:4px;">Pradera Principal</div>
+            </div>
+
+            <div id="chat-log">
+                <div class="msg"><span class="speaker">Sistema:</span> Bienvenido a Abrancito - El Game.</div>
+            </div>
         </div>
     </div>
 
 <script>
-    const canvas = document.getElementById('canvas');
+    const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    const MAP_SIZE = 12;
-    const TILE_W = 72;
-    const TILE_H = 36;
-    const ORIGIN_X = canvas.width / 2;
-    const ORIGIN_Y = 90;
+    function resizeCanvas() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-    // --- ESTADO DEL JUGADOR (PRESERVANDO MECÁNICAS) ---
-    let p = JSON.parse(localStorage.getItem('abrancito_save')) || {
+    // CONFIGURACIÓN DE MAPA E ISOMETRÍA VOLUMÉTRICA
+    const TILE_W = 64;
+    const TILE_H = 32;
+    const MAP_SIZE = 12;
+
+    // JUGADOR CON ESTRUCTURA PARA EXPANDIR A RPG/MMO
+    let p = {
         x: 5, y: 5,
-        lvl: 1, xp: 0, hp: 100, maxHp: 100,
-        baseAtk: 15, questState: 0,
-        equipment: { weapon: null, shield: null, armor: null, ring: null },
+        name: "Abrancito",
+        heroClass: "Guerrero",
+        lvl: 1, hp: 100, maxHp: 100,
+        atk: 20, map: "Pradera Principal",
         inventory: [
-            { id: 1, name: 'Magical Sword', icon: '🗡️', type: 'weapon', atk: 25, imgType: 'magical_sword' },
-            { id: 2, name: 'Glow Axe', icon: '🪓', type: 'weapon', atk: 18, imgType: 'glow_axe' }
-        ]
+            { name: "Magical Sword", atk: 15, icon: "🗡️" },
+            { name: "Glow Axe", atk: 12, icon: "🪓" }
+        ],
+        equipped: null
     };
 
-    function save() {
-        localStorage.setItem('abrancito_save', JSON.stringify(p));
-    }
+    // MUNDOS Y MAPAS
+    const maps = {
+        "Pradera Principal": {
+            bg: "#1e3a1e",
+            tile1: "#2d5a27", tile2: "#24491f",
+            npcs: [
+                { x: 2, y: 2, name: "Sabio Orestes", icon: "🧙‍♂️", quest: "Derrota al Orco en la pradera." },
+                { x: 9, y: 2, name: "Mercader Kael", icon: "👨‍🌾", quest: "Vendo pociones y armas." }
+            ],
+            enemies: [
+                { id: 1, x: 8, y: 4, name: "Orco Voraz", hp: 50, maxHp: 50, atk: 8, alive: true, type: "orc" },
+                { id: 2, x: 4, y: 8, name: "Caballero Oscuro", hp: 80, maxHp: 80, atk: 14, alive: true, type: "knight" }
+            ],
+            portal: { x: 10, y: 10, target: "Bosque Sombrío" }
+        },
+        "Bosque Sombrío": {
+            bg: "#111827",
+            tile1: "#1f2937", tile2: "#111827",
+            npcs: [
+                { x: 3, y: 3, name: "Guardiana Vanya", icon: "🧝‍♀️", quest: "Limpia el bosque de demonios." }
+            ],
+            enemies: [
+                { id: 3, x: 7, y: 7, name: "Demonio de Sombras", hp: 110, maxHp: 110, atk: 22, alive: true, type: "demon" },
+                { id: 4, x: 3, y: 8, name: "Golem de Piedra", hp: 150, maxHp: 150, atk: 18, alive: true, type: "golem" }
+            ],
+            portal: { x: 1, y: 1, target: "Pradera Principal" }
+        }
+    };
 
     function toIso(x, y) {
+        const originX = canvas.width / 2;
+        const originY = 120;
         return {
-            isoX: ORIGIN_X + (x - y) * (TILE_W / 2),
-            isoY: ORIGIN_Y + (x + y) * (TILE_H / 2)
+            isoX: originX + (x - y) * (TILE_W / 2),
+            isoY: originY + (x + y) * (TILE_H / 2)
         };
     }
 
-    // ENTIDADES
-    const npc = { x: 2, y: 2, name: "Sabio Orestes" };
+    // --- RENDERIZADO CON PROFUNDIDAD Y SOMBRAS (NO PLANO) ---
 
-    const enemies = [
-        { id: 1, x: 8, y: 3, name: "Orco con Maza", hp: 60, maxHp: 60, type: 'orc', alive: true, atk: 10 },
-        { id: 2, x: 4, y: 8, name: "Caballero Negro", hp: 90, maxHp: 90, type: 'knight', alive: true, atk: 15 },
-        { id: 3, x: 9, y: 9, name: "Demonio Cornudo", hp: 120, maxHp: 120, type: 'demon', alive: true, atk: 20 }
-    ];
-
-    const trees = [
-        { x: 1, y: 5, type: 'oak' }, { x: 6, y: 1, type: 'pine' },
-        { x: 8, y: 4, type: 'autumn_pine' }, { x: 10, y: 7, type: 'birch' }
-    ];
-
-    // DROPS EXACTOS DE TU FOTO DE ARMAS
-    const weaponDrops = [
-        { name: 'Magical Sword', icon: '🗡️', type: 'weapon', atk: 30, imgType: 'magical_sword' },
-        { name: 'Aura Staff', icon: '🪄', type: 'weapon', atk: 28, imgType: 'aura_staff' },
-        { name: 'Glow Axe', icon: '🪓', type: 'weapon', atk: 22, imgType: 'glow_axe' },
-        { name: 'Chainblade', icon: '⚔️', type: 'weapon', atk: 35, imgType: 'chainblade' },
-        { name: 'Clockwork Pistol', icon: '🔫', type: 'weapon', atk: 20, imgType: 'pistol' }
-    ];
-
-    // --- DIBUJO DE SPRITES DETALLADOS BASADOS EN TUS FOTOS ---
-
-    // DIBUJAR PISO ISOMÉTRICO
-    function drawTile(x, y, color, stroke) {
+    function drawTile3D(x, y, color1, color2) {
         const pt = toIso(x, y);
+        const h = 8; // Altura 3D del bloque
+
+        // Cara Lateral Izquierda (Sombra)
+        ctx.beginPath();
+        ctx.moveTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2);
+        ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
+        ctx.lineTo(pt.isoX, pt.isoY + TILE_H + h);
+        ctx.lineTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2 + h);
+        ctx.fillStyle = "#111827"; ctx.fill();
+
+        // Cara Lateral Derecha (Sombra)
+        ctx.beginPath();
+        ctx.moveTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2);
+        ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
+        ctx.lineTo(pt.isoX, pt.isoY + TILE_H + h);
+        ctx.lineTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2 + h);
+        ctx.fillStyle = "#1f2937"; ctx.fill();
+
+        // Cara Superior
         ctx.beginPath();
         ctx.moveTo(pt.isoX, pt.isoY);
         ctx.lineTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2);
         ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
         ctx.lineTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2);
         ctx.closePath();
-        ctx.fillStyle = color;
+        ctx.fillStyle = (x + y) % 2 === 0 ? color1 : color2;
         ctx.fill();
-        ctx.strokeStyle = stroke || '#2d5a1e';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
         ctx.stroke();
     }
 
-    function drawShadow(x, y, rx, ry) {
-        const pt = toIso(x, y);
+    function drawShadow(pt, rx, ry) {
         ctx.beginPath();
         ctx.ellipse(pt.isoX, pt.isoY + TILE_H / 2, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
         ctx.fill();
     }
 
-    // DIBUJAR ÁRBOLES EXACTOS (OAK, PINE, AUTUMN PINE, BIRCH) DE TU FOTO 3
-    function drawTree(tree) {
-        drawShadow(tree.x, tree.y, 20, 10);
-        const pt = toIso(tree.x, tree.y);
-        const px = pt.isoX;
-        const py = pt.isoY + 10;
-
-        if (tree.type === 'oak') { // Roble de copa verde curva
-            ctx.fillStyle = '#5c3a21';
-            ctx.fillRect(px - 5, py - 35, 10, 35);
-            ctx.fillStyle = '#22c55e';
-            ctx.beginPath(); ctx.arc(px, py - 50, 24, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#15803d';
-            ctx.beginPath(); ctx.arc(px - 8, py - 45, 16, 0, Math.PI * 2); ctx.fill();
-        } else if (tree.type === 'pine') { // Pino verde en punta
-            ctx.fillStyle = '#4a2c11';
-            ctx.fillRect(px - 4, py - 25, 8, 25);
-            ctx.fillStyle = '#166534';
-            ctx.beginPath();
-            ctx.moveTo(px, py - 70); ctx.lineTo(px + 22, py - 25); ctx.lineTo(px - 22, py - 25);
-            ctx.closePath(); ctx.fill();
-        } else if (tree.type === 'autumn_pine') { // Pino de Otoño Naranja/Amarillo
-            ctx.fillStyle = '#4a2c11';
-            ctx.fillRect(px - 4, py - 25, 8, 25);
-            ctx.fillStyle = '#f97316';
-            ctx.beginPath();
-            ctx.moveTo(px, py - 75); ctx.lineTo(px + 24, py - 25); ctx.lineTo(px - 24, py - 25);
-            ctx.closePath(); ctx.fill();
-            ctx.fillStyle = '#eab308';
-            ctx.beginPath();
-            ctx.moveTo(px, py - 75); ctx.lineTo(px + 14, py - 45); ctx.lineTo(px - 14, py - 45);
-            ctx.closePath(); ctx.fill();
-        } else if (tree.type === 'birch') { // Abedul de tronco blanco
-            ctx.fillStyle = '#e2e8f0';
-            ctx.fillRect(px - 3, py - 35, 6, 35);
-            ctx.fillStyle = '#a3e635';
-            ctx.beginPath(); ctx.arc(px, py - 48, 18, 0, Math.PI * 2); ctx.fill();
-        }
-    }
-
-    // DIBUJAR HÉROE DE TU FOTO 1 (GUERRERO CON ARMADURA VERDE Y ESPADA RUNICA EN ESPALDA)
-    function drawHero(x, y) {
-        drawShadow(x, y, 16, 8);
+    function drawHero3D(x, y) {
         const pt = toIso(x, y);
-        const px = pt.isoX;
-        const py = pt.isoY;
+        drawShadow(pt, 16, 8);
 
-        // Espada Gigante en Espalda con Runas Azules
-        ctx.strokeStyle = '#94a3b8';
-        ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.moveTo(px - 12, py - 45); ctx.lineTo(px + 10, py - 10); ctx.stroke();
-        ctx.strokeStyle = '#38bdf8'; // Glow Runas
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(px - 8, py - 38); ctx.lineTo(px + 4, py - 16); ctx.stroke();
+        // Luz propia de héroe
+        const grad = ctx.createRadialGradient(pt.isoX, pt.isoY, 5, pt.isoX, pt.isoY, 35);
+        grad.addColorStop(0, 'rgba(56, 189, 248, 0.3)');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(pt.isoX, pt.isoY, 35, 0, Math.PI * 2); ctx.fill();
 
-        // Cuerpo / Armadura Verde y Marrón
-        ctx.fillStyle = '#15803d'; // Verde
-        ctx.fillRect(px - 8, py - 24, 16, 16);
-        ctx.fillStyle = '#78350f'; // Cinturón Marrón
-        ctx.fillRect(px - 9, py - 14, 18, 4);
+        // Espada Rúnica a la Espalda
+        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(pt.isoX - 10, pt.isoY - 40); ctx.lineTo(pt.isoX + 8, pt.isoY - 10); ctx.stroke();
 
-        // Hombreras de Metal
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(px - 12, py - 25, 5, 6);
-        ctx.fillRect(px + 7, py - 25, 5, 6);
+        // Cuerpo / Armadura
+        ctx.fillStyle = '#15803d'; ctx.fillRect(pt.isoX - 8, pt.isoY - 24, 16, 16);
+        ctx.fillStyle = '#475569'; ctx.fillRect(pt.isoX - 10, pt.isoY - 26, 4, 8); ctx.fillRect(pt.isoX + 6, pt.isoY - 26, 4, 8);
+        ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(pt.isoX, pt.isoY - 30, 7, 0, Math.PI * 2); ctx.fill();
 
-        // Cabeza y Pelo Marrón
-        ctx.fillStyle = '#ffdbac';
-        ctx.beginPath(); ctx.arc(px, py - 30, 7, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#78350f'; // Pelo pico
-        ctx.beginPath(); ctx.arc(px, py - 34, 7, Math.PI, Math.PI * 2); ctx.fill();
-
-        // Etiqueta
-        ctx.font = 'bold 10px sans-serif';
-        ctx.fillStyle = '#38bdf8';
-        ctx.textAlign = 'center';
-        ctx.fillText('Abrancito (Héroe)', px, py - 48);
+        // Nombre
+        ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = '#38bdf8'; ctx.textAlign = 'center';
+        ctx.fillText(p.name, pt.isoX, pt.isoY - 45);
     }
 
-    // DIBUJAR VILLANOS DE TU FOTO 2 (ORCO CON MAZA, CABALLERO NEGRO Y DEMONIO CORNUDO)
-    function drawEnemy(e) {
-        if (!e.alive) return;
-        drawShadow(e.x, e.y, 18, 9);
-        const pt = toIso(e.x, e.y);
-        const px = pt.isoX;
-        const py = pt.isoY;
+    function drawEnemies3D(enemies) {
+        enemies.forEach(e => {
+            if (!e.alive) return;
+            const pt = toIso(e.x, e.y);
+            drawShadow(pt, 16, 8);
 
-        if (e.type === 'orc') { // Orco Verde con Maza de Picos
-            ctx.fillStyle = '#166534'; // Piel Verde Oscura
-            ctx.fillRect(px - 10, py - 26, 20, 18);
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(px - 8, py - 34, 16, 10); // Cabeza
-            // Maza
-            ctx.fillStyle = '#334155';
-            ctx.beginPath(); ctx.arc(px - 14, py - 15, 8, 0, Math.PI * 2); ctx.fill();
-        } else if (e.type === 'knight') { // Caballero Oscuro Rojo/Negro con Escudo Calavera
-            ctx.fillStyle = '#0f172a'; // Armadura Negra
-            ctx.fillRect(px - 9, py - 28, 18, 20);
-            ctx.fillStyle = '#dc2626'; // Detalle Rojo
-            ctx.fillRect(px - 3, py - 28, 6, 20);
-            // Casco con Cuernos
-            ctx.fillStyle = '#020617';
-            ctx.fillRect(px - 7, py - 38, 14, 10);
-            ctx.fillStyle = '#ef4444'; // Ojos Rojos Brillantes
-            ctx.fillRect(px - 4, py - 34, 3, 2); ctx.fillRect(px + 1, py - 34, 3, 2);
-        } else if (e.type === 'demon') { // Demonio Azul Cornudo con Báculo
-            ctx.fillStyle = '#1e1b4b'; // Azul Oscuro
-            ctx.fillRect(px - 9, py - 28, 18, 20);
-            // Cuernos Grandes
-            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.moveTo(px - 6, py - 36); ctx.lineTo(px - 14, py - 46); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(px + 6, py - 36); ctx.lineTo(px + 14, py - 46); ctx.stroke();
-            // Báculo Morado
-            ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.moveTo(px + 12, py - 42); ctx.lineTo(px + 12, py); ctx.stroke();
-        }
+            if (e.type === 'orc') {
+                ctx.fillStyle = '#166534'; ctx.fillRect(pt.isoX - 8, pt.isoY - 24, 16, 16);
+                ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(pt.isoX - 12, pt.isoY - 12, 6, 0, Math.PI * 2); ctx.fill();
+            } else if (e.type === 'knight') {
+                ctx.fillStyle = '#020617'; ctx.fillRect(pt.isoX - 8, pt.isoY - 26, 16, 18);
+                ctx.fillStyle = '#ef4444'; ctx.fillRect(pt.isoX - 2, pt.isoY - 26, 4, 18);
+            } else if (e.type === 'demon') {
+                ctx.fillStyle = '#31104b'; ctx.fillRect(pt.isoX - 8, pt.isoY - 26, 16, 18);
+                ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(pt.isoX - 6, pt.isoY - 30); ctx.lineTo(pt.isoX - 12, pt.isoY - 40); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(pt.isoX + 6, pt.isoY - 30); ctx.lineTo(pt.isoX + 12, pt.isoY - 40); ctx.stroke();
+            } else if (e.type === 'golem') {
+                ctx.fillStyle = '#475569'; ctx.fillRect(pt.isoX - 12, pt.isoY - 32, 24, 24);
+            }
 
-        // Barra de Vida
-        const hpPct = e.hp / e.maxHp;
-        ctx.fillStyle = '#ef4444'; ctx.fillRect(px - 16, px - 16, py - 48, 32, 4);
-        ctx.fillStyle = '#ef4444'; ctx.fillRect(px - 16, py - 44, 32, 4);
-        ctx.fillStyle = '#22c55e'; ctx.fillRect(px - 16, py - 44, 32 * hpPct, 4);
-
-        ctx.font = 'bold 10px sans-serif';
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        ctx.fillText(e.name, px, py - 50);
+            // Vida
+            const hpPct = e.hp / e.maxHp;
+            ctx.fillStyle = '#000'; ctx.fillRect(pt.isoX - 15, pt.isoY - 42, 30, 4);
+            ctx.fillStyle = '#ef4444'; ctx.fillRect(pt.isoX - 15, pt.isoY - 42, 30 * hpPct, 4);
+            ctx.font = '10px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+            ctx.fillText(e.name, pt.isoX, pt.isoY - 46);
+        });
     }
 
-    function drawNPC() {
-        drawShadow(npc.x, npc.y, 14, 7);
-        const pt = toIso(npc.x, npc.y);
-        ctx.fillStyle = '#0284c7'; ctx.fillRect(pt.isoX - 7, pt.isoY - 22, 14, 16);
-        ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(pt.isoX, pt.isoY - 26, 6, 0, Math.PI*2); ctx.fill();
-        ctx.font = '14px sans-serif'; ctx.fillText('🧙‍♂️', pt.isoX - 7, pt.isoY - 30);
-        ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = '#f59e0b'; ctx.textAlign = 'center';
-        ctx.fillText(npc.name, pt.isoX, pt.isoY - 42);
+    function drawPortal(portal) {
+        const pt = toIso(portal.x, portal.y);
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
+        ctx.beginPath(); ctx.ellipse(pt.isoX, pt.isoY + TILE_H/2, 20, 10, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.font = '10px sans-serif'; ctx.fillStyle = '#e9d5ff'; ctx.textAlign = 'center';
+        ctx.fillText(`Portal a ${portal.target}`, pt.isoX, pt.isoY - 15);
     }
 
-    // --- RENDER LOOP ---
+    function drawNPCs(npcs) {
+        npcs.forEach(n => {
+            const pt = toIso(n.x, n.y);
+            drawShadow(pt, 12, 6);
+            ctx.font = '18px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(n.icon, pt.isoX, pt.isoY - 10);
+            ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = '#f59e0b';
+            ctx.fillText(n.name, pt.isoX, pt.isoY - 32);
+        });
+    }
+
+    // --- LOOP PRINCIPAL DE RENDERIZADO ---
     function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const currentMap = maps[p.map];
 
-        // Terreno Isométrico Dofus
+        // Dibujar Terreno 3D
         for (let x = 0; x < MAP_SIZE; x++) {
             for (let y = 0; y < MAP_SIZE; y++) {
-                const isBorder = x === 0 || y === 0 || x === MAP_SIZE - 1 || y === MAP_SIZE - 1;
-                const tileColor = isBorder ? '#1e293b' : ((x + y) % 2 === 0 ? '#38761d' : '#2e6318');
-                drawTile(x, y, tileColor, isBorder ? '#0f172a' : '#234e12');
+                drawTile3D(x, y, currentMap.tile1, currentMap.tile2);
             }
         }
 
-        trees.forEach(t => drawTree(t));
-        drawNPC();
-        enemies.forEach(e => drawEnemy(e));
-        drawHero(p.x, p.y);
+        drawPortal(currentMap.portal);
+        drawNPCs(currentMap.npcs);
+        drawEnemies3D(currentMap.enemies);
+        drawHero3D(p.x, p.y);
 
         requestAnimationFrame(render);
     }
 
-    // --- CONTROLES Y MECÁNICAS DE JUEGO ---
+    // --- MECÁNICAS DE JUEGO Y ACCIONES ---
     function move(dx, dy) {
         const nx = p.x + dx;
         const ny = p.y + dy;
-        if (nx >= 1 && nx < MAP_SIZE - 1 && ny >= 1 && ny < MAP_SIZE - 1) {
+        if (nx >= 0 && nx < MAP_SIZE && ny >= 0 && ny < MAP_SIZE) {
             p.x = nx; p.y = ny;
-            save();
-        } else {
-            addMsg("Sistema", "Límite del mapa alcanzado.");
+
+            // Verificar Portal
+            const portal = maps[p.map].portal;
+            if (p.x === portal.x && p.y === portal.y) {
+                p.map = portal.target;
+                p.x = 2; p.y = 2;
+                logMsg("Portal", `Viajaste a: ${p.map}`);
+                document.getElementById('map-info').textContent = p.map;
+            }
         }
     }
 
     function attack() {
-        let totalAtk = p.baseAtk;
-        if (p.equipment.weapon) totalAtk += p.equipment.weapon.atk;
+        let dmg = p.atk + (p.equipped ? p.equipped.atk : 0);
+        const enemies = maps[p.map].enemies;
 
         enemies.forEach(e => {
             if (e.alive && Math.abs(e.x - p.x) <= 1 && Math.abs(e.y - p.y) <= 1) {
-                e.hp -= totalAtk;
-                addMsg("Combate", `Atacaste a ${e.name} por ${totalAtk} de daño.`);
+                e.hp -= dmg;
+                logMsg("Combate", `Atacaste a ${e.name} haciéndole ${dmg} de daño.`);
 
                 if (e.hp <= 0) {
                     e.alive = false;
-                    addMsg("Victoria", `¡Eliminaste a ${e.name}!`);
-
-                    // Dropear armas reales de tu foto
-                    const drop = weaponDrops[Math.floor(Math.random() * weaponDrops.length)];
-                    p.inventory.push(drop);
-                    addMsg("Drop", `¡Obtuviste arma: ${drop.name} (+${drop.atk} Atk)!`);
-                    save();
-
-                    // Respawn
-                    setTimeout(() => {
-                        e.hp = e.maxHp; e.alive = true;
-                        addMsg("Sistema", `${e.name} reapareció.`);
-                    }, 5000);
+                    logMsg("Victoria", `¡Derrotaste a ${e.name}!`);
+                    p.hp = Math.min(p.maxHp, p.hp + 20);
+                    updateHUD();
                 }
             }
         });
     }
 
-    function talkNPC() {
-        if (Math.abs(npc.x - p.x) <= 1 && Math.abs(npc.y - p.y) <= 1) {
-            addMsg("Sabio Orestes", "¡Hola Abrancito! Derrota al Caballero Negro y al Demonio para liberar la zona.");
-            document.getElementById('quest-text').textContent = "Misión: Derrota a los Villanos";
-        }
+    function interact() {
+        const npcs = maps[p.map].npcs;
+        npcs.forEach(n => {
+            if (Math.abs(n.x - p.x) <= 1 && Math.abs(n.y - p.y) <= 1) {
+                logMsg(n.name, n.quest);
+                document.getElementById('quest-info').textContent = n.quest;
+            }
+        });
     }
 
     function toggleInventory() {
-        const inv = document.getElementById('inventory-modal');
-        inv.style.display = inv.style.display === 'block' ? 'none' : 'block';
-        renderInvUI();
+        const modal = document.getElementById('inventory-modal');
+        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        renderInventoryUI();
     }
 
-    function renderInvUI() {
-        const grid = document.getElementById('inv-grid');
-        grid.innerHTML = '';
-
+    function renderInventoryUI() {
+        const container = document.getElementById('inv-container');
+        container.innerHTML = '';
         p.inventory.forEach((item, idx) => {
-            const cell = document.createElement('div');
-            cell.className = 'inv-cell';
-            cell.innerHTML = `<div>${item.icon}</div><div class="item-stat">+${item.atk}</div>`;
-            cell.onclick = () => equip(idx);
-            grid.appendChild(cell);
+            const div = document.createElement('div');
+            div.className = 'slot';
+            div.innerHTML = `<div>${item.icon}</div><div style="font-size:9px; color:#22c55e;">+${item.atk}</div>`;
+            div.onclick = () => {
+                p.equipped = item;
+                logMsg("Inventario", `Equipaste: ${item.name}`);
+                toggleInventory();
+            };
+            container.appendChild(div);
         });
-
-        const eqW = document.getElementById('eq-weapon');
-        if (p.equipment.weapon) {
-            eqW.innerHTML = `${p.equipment.weapon.icon}<span style="font-size:9px; color:#22c55e;">+${p.equipment.weapon.atk}</span>`;
-            eqW.classList.add('active');
-        } else {
-            eqW.innerHTML = `🗡️<span style="font-size:9px; color:#aaa;">Arma</span>`;
-            eqW.classList.remove('active');
-        }
     }
 
-    function equip(idx) {
-        const item = p.inventory[idx];
-        if (p.equipment[item.type]) p.inventory.push(p.equipment[item.type]);
-        p.equipment[item.type] = item;
-        p.inventory.splice(idx, 1);
-        addMsg("Inventario", `Equipado: ${item.name}`);
-        save();
-        renderInvUI();
+    function updateHUD() {
+        document.getElementById('hp-bar').style.width = `${(p.hp / p.maxHp) * 100}%`;
+        document.getElementById('hp-text').textContent = `${p.hp}/${p.maxHp}`;
     }
 
-    function unequip(type) {
-        if (p.equipment[type]) {
-            p.inventory.push(p.equipment[type]);
-            p.equipment[type] = null;
-            save();
-            renderInvUI();
-        }
+    function logMsg(speaker, txt) {
+        const log = document.getElementById('chat-log');
+        const div = document.createElement('div');
+        div.className = 'msg';
+        div.innerHTML = `<span class="speaker">${speaker}:</span> ${txt}`;
+        log.appendChild(div);
+        log.scrollTop = log.scrollHeight;
     }
 
-    function addMsg(speaker, text) {
-        const c = document.getElementById('chat-content');
-        const m = document.createElement('div');
-        m.className = 'msg';
-        m.innerHTML = `<span class="speaker">${speaker}:</span> ${text}`;
-        c.appendChild(m);
-        document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
-    }
-
-    // Teclado y D-Pad
+    // Teclado
     window.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowUp' || e.key === 'w') move(0, -1);
         if (e.key === 'ArrowDown' || e.key === 's') move(0, 1);
         if (e.key === 'ArrowLeft' || e.key === 'a') move(-1, 0);
         if (e.key === 'ArrowRight' || e.key === 'd') move(1, 0);
     });
-
-    document.getElementById('btn-u').onclick = () => move(0, -1);
-    document.getElementById('btn-d').onclick = () => move(0, 1);
-    document.getElementById('btn-l').onclick = () => move(-1, 0);
-    document.getElementById('btn-r').onclick = () => move(1, 0);
 
     render();
 </script>
