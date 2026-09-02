@@ -114,7 +114,7 @@
 
     <div id="fullscreen-overlay">
         <h2>🎮 Cargar Mundo RPG Ampliado</h2>
-        <p style="margin-top: 8px; font-size: 14px; color: #94a3b8;">Nuevos ambientes, montañas, IA de enemigos y sistema de montura.</p>
+        <p style="margin-top: 8px; font-size: 14px; color: #94a3b8;">Cargando modelos 3D y entorno optimizado...</p>
         <button id="start-btn">JUGAR AHORA</button>
     </div>
 
@@ -180,11 +180,16 @@
         resize();
     });
 
+    // --- CATÁLOGO COMPLETO DE MODELOS 3D REALES ---
     const MODEL_URLS = {
         player: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb',
         horse: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Horse/glTF-Binary/Horse.glb',
         boss: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF-Binary/CesiumMan.glb',
-        tree: 'https://raw.githubusercontent.com/KenneyNL/Kenney-Assets/main/3D/Nature%20Kit/tree_simple.glb'
+        enemyPassive: 'https://raw.githubusercontent.com/KenneyNL/Kenney-Assets/main/3D/Nature%20Kit/flower_red.glb',
+        enemyAggressive: 'https://raw.githubusercontent.com/KenneyNL/Kenney-Assets/main/3D/Nature%20Kit/mushroom_red.glb',
+        npc: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF-Binary/CesiumMan.glb',
+        tree: 'https://raw.githubusercontent.com/KenneyNL/Kenney-Assets/main/3D/Nature%20Kit/tree_simple.glb',
+        mountain: 'https://raw.githubusercontent.com/KenneyNL/Kenney-Assets/main/3D/Nature%20Kit/rock_large.glb'
     };
 
     const container = document.getElementById('canvas-container');
@@ -223,27 +228,31 @@
     let p = { lvl: 1, xp: 0, hp: 100, maxHp: 100, mp: 80, maxMp: 80, wood: 0, speed: 0.18, activeSlot: 0, questState: 0, mounted: false };
     const keys = { up: false, down: false, left: false, right: false };
 
-    // --- ENTORNO: CÉSPED Y MONTAÑAS PERIMETRALES ---
+    // --- ENTORNO: CÉSPED Y MONTAÑAS MODELADAS ---
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e3a29, roughness: 0.9, metalness: 0.1 });
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(350, 350), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Montañas alrededor del mapa
+    // Generación de Rocas/Montañas perimetrales usando modelos 3D
     function createMountainRange() {
-        const mountMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.95 });
         const numPeaks = 45;
         for(let i = 0; i < numPeaks; i++) {
             const angle = (i / numPeaks) * Math.PI * 2;
             const dist = 140 + Math.random() * 20;
-            const h = 25 + Math.random() * 35;
-            const r = 18 + Math.random() * 15;
-            const cone = new THREE.Mesh(new THREE.ConeGeometry(r, h, 7), mountMat);
-            cone.position.set(Math.cos(angle) * dist, h / 2, Math.sin(angle) * dist);
-            cone.castShadow = true;
-            cone.receiveShadow = true;
-            scene.add(cone);
+            const x = Math.cos(angle) * dist;
+            const z = Math.sin(angle) * dist;
+
+            gltfLoader.load(MODEL_URLS.mountain, (gltf) => {
+                const rock = gltf.scene;
+                const scale = 8 + Math.random() * 10;
+                rock.scale.set(scale, scale * (1.5 + Math.random()), scale);
+                rock.position.set(x, 0, z);
+                rock.rotation.y = Math.random() * Math.PI * 2;
+                rock.traverse(c => { if(c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+                scene.add(rock);
+            });
         }
     }
     createMountainRange();
@@ -255,21 +264,16 @@
     let foxModel = null;
     let riderGroup = new THREE.Group();
 
-    // Modelo normal (Zorro)
+    // Modelo Zorro
     gltfLoader.load(MODEL_URLS.player, (gltf) => {
         foxModel = gltf.scene;
         foxModel.scale.set(0.022, 0.022, 0.022);
         foxModel.rotation.y = Math.PI;
         foxModel.traverse(c => { if(c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
         playerGroup.add(foxModel);
-    }, undefined, () => {
-        const pMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.4 });
-        foxModel = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 1.4), pMat);
-        foxModel.position.y = 0.4;
-        playerGroup.add(foxModel);
     });
 
-    // Construcción del Jinete + Caballo
+    // Modelo Caballo + Jinete
     gltfLoader.load(MODEL_URLS.horse, (gltf) => {
         const horse = gltf.scene;
         horse.scale.set(0.012, 0.012, 0.012);
@@ -277,26 +281,14 @@
         horse.traverse(c => { if(c.isMesh) c.castShadow = true; });
         riderGroup.add(horse);
 
-        // Jinete en la montura
-        const riderBody = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.3, 0.3, 0.9),
-            new THREE.MeshStandardMaterial({ color: 0x0284c7 })
-        );
-        riderBody.position.set(0, 1.6, -0.1);
-        riderBody.castShadow = true;
-        riderGroup.add(riderBody);
-
-        const riderHead = new THREE.Mesh(
-            new THREE.SphereGeometry(0.25),
-            new THREE.MeshStandardMaterial({ color: 0xfde047 })
-        );
-        riderHead.position.set(0, 2.2, -0.1);
-        riderGroup.add(riderHead);
-    }, undefined, () => {
-        const hMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
-        const horseFallback = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 2), hMat);
-        horseFallback.position.y = 0.6;
-        riderGroup.add(horseFallback);
+        // Jinete en la montura (Humanoyde)
+        gltfLoader.load(MODEL_URLS.npc, (gltfRider) => {
+            const rider = gltfRider.scene;
+            rider.scale.set(0.6, 0.6, 0.6);
+            rider.position.set(0, 1.1, -0.1);
+            rider.traverse(c => { if(c.isMesh) c.castShadow = true; });
+            riderGroup.add(rider);
+        });
     });
 
     const playerAura = new THREE.PointLight(0x38bdf8, 0.8, 5);
@@ -308,7 +300,7 @@
         if(p.mounted) {
             if(foxModel) playerGroup.remove(foxModel);
             playerGroup.add(riderGroup);
-            p.speed = 0.32; // Mayor velocidad montado
+            p.speed = 0.32;
             showDialogue("Sistema", "¡Has montado a tu caballo! (+Velocidad)");
         } else {
             playerGroup.remove(riderGroup);
@@ -340,19 +332,15 @@
         }
     }
 
-    // --- BOSQUE Y ÁRBOLES ---
+    // --- BOSQUE Y ÁRBOLES 3D ---
     const trees = [];
     function createTree(x, z) {
         const treeGroup = new THREE.Group();
         gltfLoader.load(MODEL_URLS.tree, (gltf) => {
-            const m = gltf.scene.clone();
+            const m = gltf.scene;
             m.scale.set(1.4, 1.4 + Math.random()*0.4, 1.4);
             m.traverse(c => { if(c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
             treeGroup.add(m);
-        }, undefined, () => {
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.35, 1.6, 10), new THREE.MeshStandardMaterial({ color: 0x451a03 }));
-            trunk.position.y = 0.8;
-            treeGroup.add(trunk);
         });
 
         treeGroup.position.set(x, 0, z);
@@ -368,51 +356,54 @@
         }
     }
 
-    // --- NPCs ---
+    // --- NPCs 3D ---
     const npcs = [
-        { id: 'sabio', name: 'Sabio Erudito', pos: new THREE.Vector3(8, 0, 8), color: 0x0284c7 },
-        { id: 'herrero', name: 'Herrero Vulcan', pos: new THREE.Vector3(-12, 0, 15), color: 0xd97706 },
-        { id: 'guardian', name: 'Guardia del Castillo', pos: new THREE.Vector3(25, 0, -20), color: 0xdc2626 }
+        { id: 'sabio', name: 'Sabio Erudito', pos: new THREE.Vector3(8, 0, 8) },
+        { id: 'herrero', name: 'Herrero Vulcan', pos: new THREE.Vector3(-12, 0, 15) },
+        { id: 'guardian', name: 'Guardia del Castillo', pos: new THREE.Vector3(25, 0, -20) }
     ];
 
     npcs.forEach(npc => {
         const g = new THREE.Group();
-        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 12), new THREE.MeshStandardMaterial({ color: npc.color, roughness: 0.3 }));
-        b.position.y = 0.7;
-        b.castShadow = true;
-        g.add(b);
+        gltfLoader.load(MODEL_URLS.npc, (gltf) => {
+            const m = gltf.scene;
+            m.scale.set(0.9, 0.9, 0.9);
+            m.traverse(c => { if(c.isMesh) c.castShadow = true; });
+            g.add(m);
+        });
         g.position.copy(npc.pos);
         scene.add(g);
         npc.mesh = g;
     });
 
-    // --- MONSTRUOS E INTELIGENCIA ARTIFICIAL (IA) ---
+    // --- MONSTRUOS CON MODELOS 3D E IA ---
     const enemies = [];
     function spawnEnemy(type, x, z) {
         const enemyGroup = new THREE.Group();
         let maxHp = 40;
         let isBoss = false;
-        let isAggressive = type === 'demon' || type === 'boss'; // Demonios y Boss persiguen/atacan
+        let isAggressive = type === 'demon' || type === 'boss';
+
+        let url = isAggressive ? MODEL_URLS.enemyAggressive : MODEL_URLS.enemyPassive;
 
         if (type === 'boss') {
             isBoss = true;
             maxHp = 300;
-            gltfLoader.load(MODEL_URLS.boss, (gltf) => {
-                const m = gltf.scene;
-                m.scale.set(1.2, 1.2, 1.2);
-                m.traverse(c => { if(c.isMesh) c.castShadow = true; });
-                enemyGroup.add(m);
-            });
+            url = MODEL_URLS.boss;
+        }
+
+        gltfLoader.load(url, (gltf) => {
+            const m = gltf.scene;
+            const scale = isBoss ? 1.4 : 1.8;
+            m.scale.set(scale, scale, scale);
+            m.traverse(c => { if(c.isMesh) c.castShadow = true; });
+            enemyGroup.add(m);
+        });
+
+        if (isBoss) {
             const bossLight = new THREE.PointLight(0xef4444, 1.5, 8);
             bossLight.position.set(0, 1.5, 0);
             enemyGroup.add(bossLight);
-        } else {
-            const color = isAggressive ? 0xdc2626 : 0x16a34a; // Rojo = Agresivo, Verde = Pasivo
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.5, 0.9), new THREE.MeshStandardMaterial({ color, roughness: 0.5 }));
-            body.position.y = 0.75;
-            body.castShadow = true;
-            enemyGroup.add(body);
-            maxHp = type === 'golem' ? 60 : 45;
         }
 
         enemyGroup.position.set(x, 0, z);
@@ -430,11 +421,11 @@
         });
     }
 
-    spawnEnemy('golem', -15, 15);   // Pasivo
-    spawnEnemy('demon', 15, -20);   // Agresivo
-    spawnEnemy('golem', -25, -15);  // Pasivo
-    spawnEnemy('demon', 30, 20);    // Agresivo
-    spawnEnemy('boss', 35, -35);    // Boss Agresivo
+    spawnEnemy('golem', -15, 15);
+    spawnEnemy('demon', 15, -20);
+    spawnEnemy('golem', -25, -15);
+    spawnEnemy('demon', 30, 20);
+    spawnEnemy('boss', 35, -35);
 
     const vfxList = [];
     const projectiles = [];
@@ -442,7 +433,7 @@
     const randomLore = [
         "El Caballero Carmesí custodia las reliquias arcanas en el estanque del este.",
         "Los monstruos rojos son agresivos y te atacarán si te acercas.",
-        "Los gólem verdes son pacíficos hasta que los desafías.",
+        "Los seres de naturaleza pacífica solo lucharán si los atacas primero.",
         "Usa la montura para desplazarte rápidamente por las montañas."
     ];
 
@@ -539,7 +530,7 @@
 
     function damageEnemy(enemy, index, amount) {
         enemy.hp -= amount;
-        enemy.isAggressive = true; // Si es atacado, se vuelve agresivo
+        enemy.isAggressive = true;
         spawnParticles(enemy.mesh.position.clone().add(new THREE.Vector3(0, 1, 0)), 0xef4444, 15);
 
         if(enemy.isBoss) {
@@ -696,26 +687,23 @@
             const dist = enemy.mesh.position.distanceTo(playerGroup.position);
 
             if (enemy.isAggressive && dist < 18) {
-                // Persecución si está en rango
                 enemy.mesh.lookAt(playerGroup.position.x, enemy.mesh.position.y, playerGroup.position.z);
                 enemy.mesh.translateZ(0.06);
 
-                // Ataque al jugador
                 if (dist < 1.8) {
                     if (enemy.attackCooldown <= 0) {
                         p.hp -= 10;
-                        enemy.attackCooldown = 50; // Delay entre golpes
+                        enemy.attackCooldown = 50;
                         spawnParticles(playerGroup.position.clone().add(new THREE.Vector3(0, 1, 0)), 0xef4444, 8);
                         updateHUD();
                         if (p.hp <= 0) {
                             p.hp = p.maxHp;
-                            playerGroup.position.set(0, 0, 0); // Respawn
+                            playerGroup.position.set(0, 0, 0);
                             showDialogue("Sistema", "¡Has sido derrotado! Reapareces en la aldea.");
                         }
                     }
                 }
             } else {
-                // Comportamiento pasivo / Vagar libremente
                 enemy.wanderTimer--;
                 if (enemy.wanderTimer <= 0) {
                     enemy.wanderTimer = 80 + Math.random() * 100;
