@@ -30,7 +30,7 @@
             border: 1px solid rgba(255,255,255,0.2); font-size: 10px; font-weight: bold;
         }
         .bar-wrap { width: 75px; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
-        .hp-bar { width: 100%; height: 100%; background: #22c55e; }
+        .hp-bar { width: 100%; height: 100%; background: #22c55e; transition: width 0.2s; }
         .mp-bar { width: 100%; height: 100%; background: #3b82f6; transition: width 0.2s; }
 
         #quest-hud {
@@ -80,7 +80,7 @@
         #btn-shoot { right: 20px; bottom: 20px; width: 58px; height: 58px; background: rgba(220, 38, 38, 0.5); border-color: #ef4444; }
         #btn-aim { right: 88px; bottom: 15px; width: 40px; height: 40px; }
         #btn-jump { right: 25px; bottom: 88px; width: 42px; height: 42px; }
-        #btn-mount { right: 78px; bottom: 65px; width: 38px; height: 38px; }
+        #btn-mount { right: 78px; bottom: 65px; width: 38px; height: 38px; background: rgba(234, 179, 8, 0.4); }
         #btn-interact { right: 125px; bottom: 60px; width: 38px; height: 38px; background: rgba(14, 165, 233, 0.5); }
 
         #dialogue-box {
@@ -113,8 +113,8 @@
 <body>
 
     <div id="fullscreen-overlay">
-        <h2>🎮 Cargar Mundo RPG Detallado</h2>
-        <p style="margin-top: 8px; font-size: 14px; color: #94a3b8;">Toca el botón para iniciar con modelos 3D y gráficos avanzados.</p>
+        <h2>🎮 Cargar Mundo RPG Ampliado</h2>
+        <p style="margin-top: 8px; font-size: 14px; color: #94a3b8;">Nuevos ambientes, montañas, IA de enemigos y sistema de montura.</p>
         <button id="start-btn">JUGAR AHORA</button>
     </div>
 
@@ -180,18 +180,17 @@
         resize();
     });
 
-    // Modelos GLTF/GLB públicos de la librería de Kenney (Assets libres para RPG en 3D)
     const MODEL_URLS = {
         player: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb',
-        golem: 'https://raw.githubusercontent.com/KenneyNL/Kenney-Assets/main/3D/Nature%20Kit/tree_detailed.glb',
+        horse: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Horse/glTF-Binary/Horse.glb',
         boss: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF-Binary/CesiumMan.glb',
         tree: 'https://raw.githubusercontent.com/KenneyNL/Kenney-Assets/main/3D/Nature%20Kit/tree_simple.glb'
     };
 
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a1128);
-    scene.fog = new THREE.FogExp2(0x0a1128, 0.008);
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.005);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     
@@ -200,59 +199,126 @@
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.25;
+    renderer.toneMappingExposure = 1.2;
     container.appendChild(renderer.domElement);
 
     const gltfLoader = new THREE.GLTFLoader();
     const minimapCtx = document.getElementById('minimap').getContext('2d');
 
-    const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.65);
+    const ambientLight = new THREE.AmbientLight(0xc7d2fe, 0.7);
     scene.add(ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xffedd5, 1.5);
-    sun.position.set(45, 65, 25);
+    const sun = new THREE.DirectionalLight(0xffedd5, 1.4);
+    sun.position.set(60, 80, 40);
     sun.castShadow = true;
     sun.shadow.mapSize.width = 2048;
     sun.shadow.mapSize.height = 2048;
-    sun.shadow.bias = -0.0001;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 300;
+    const d = 100;
+    sun.shadow.camera.left = -d; sun.shadow.camera.right = d;
+    sun.shadow.camera.top = d; sun.shadow.camera.bottom = -d;
     scene.add(sun);
 
-    let p = { lvl: 1, xp: 0, hp: 100, mp: 80, maxMp: 80, wood: 0, speed: 0.18, activeSlot: 0, questState: 0 };
+    let p = { lvl: 1, xp: 0, hp: 100, maxHp: 100, mp: 80, maxMp: 80, wood: 0, speed: 0.18, activeSlot: 0, questState: 0, mounted: false };
     const keys = { up: false, down: false, left: false, right: false };
 
-    // Terreno estilizado con textura
-    const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(300, 300),
-        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8, metalness: 0.2 })
-    );
+    // --- ENTORNO: CÉSPED Y MONTAÑAS PERIMETRALES ---
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e3a29, roughness: 0.9, metalness: 0.1 });
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(350, 350), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // --- CONSTRUCCIÓN Y CARGA DEL JUGADOR ---
+    // Montañas alrededor del mapa
+    function createMountainRange() {
+        const mountMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.95 });
+        const numPeaks = 45;
+        for(let i = 0; i < numPeaks; i++) {
+            const angle = (i / numPeaks) * Math.PI * 2;
+            const dist = 140 + Math.random() * 20;
+            const h = 25 + Math.random() * 35;
+            const r = 18 + Math.random() * 15;
+            const cone = new THREE.Mesh(new THREE.ConeGeometry(r, h, 7), mountMat);
+            cone.position.set(Math.cos(angle) * dist, h / 2, Math.sin(angle) * dist);
+            cone.castShadow = true;
+            cone.receiveShadow = true;
+            scene.add(cone);
+        }
+    }
+    createMountainRange();
+
+    // --- PERSONAJE Y JINETE/MONTURA ---
     const playerGroup = new THREE.Group();
     scene.add(playerGroup);
 
+    let foxModel = null;
+    let riderGroup = new THREE.Group();
+
+    // Modelo normal (Zorro)
     gltfLoader.load(MODEL_URLS.player, (gltf) => {
-        const m = gltf.scene;
-        m.scale.set(0.022, 0.022, 0.022);
-        m.rotation.y = Math.PI;
-        m.traverse(c => { if(c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
-        playerGroup.add(m);
+        foxModel = gltf.scene;
+        foxModel.scale.set(0.022, 0.022, 0.022);
+        foxModel.rotation.y = Math.PI;
+        foxModel.traverse(c => { if(c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+        playerGroup.add(foxModel);
     }, undefined, () => {
-        // Fallback detallado
-        const pMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.3, metalness: 0.4 });
-        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.28, 1.2, 16), pMat);
-        body.position.y = 0.9;
-        body.castShadow = true;
-        playerGroup.add(body);
+        const pMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.4 });
+        foxModel = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 1.4), pMat);
+        foxModel.position.y = 0.4;
+        playerGroup.add(foxModel);
     });
 
-    const playerAura = new THREE.PointLight(0x38bdf8, 1, 6);
+    // Construcción del Jinete + Caballo
+    gltfLoader.load(MODEL_URLS.horse, (gltf) => {
+        const horse = gltf.scene;
+        horse.scale.set(0.012, 0.012, 0.012);
+        horse.rotation.y = Math.PI;
+        horse.traverse(c => { if(c.isMesh) c.castShadow = true; });
+        riderGroup.add(horse);
+
+        // Jinete en la montura
+        const riderBody = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.3, 0.9),
+            new THREE.MeshStandardMaterial({ color: 0x0284c7 })
+        );
+        riderBody.position.set(0, 1.6, -0.1);
+        riderBody.castShadow = true;
+        riderGroup.add(riderBody);
+
+        const riderHead = new THREE.Mesh(
+            new THREE.SphereGeometry(0.25),
+            new THREE.MeshStandardMaterial({ color: 0xfde047 })
+        );
+        riderHead.position.set(0, 2.2, -0.1);
+        riderGroup.add(riderHead);
+    }, undefined, () => {
+        const hMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+        const horseFallback = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 2), hMat);
+        horseFallback.position.y = 0.6;
+        riderGroup.add(horseFallback);
+    });
+
+    const playerAura = new THREE.PointLight(0x38bdf8, 0.8, 5);
     playerAura.position.set(0, 1.2, 0);
     playerGroup.add(playerAura);
 
-    // --- EFECTOS DE PARTÍCULAS LUMINOSAS (VFX) ---
+    function toggleMount() {
+        p.mounted = !p.mounted;
+        if(p.mounted) {
+            if(foxModel) playerGroup.remove(foxModel);
+            playerGroup.add(riderGroup);
+            p.speed = 0.32; // Mayor velocidad montado
+            showDialogue("Sistema", "¡Has montado a tu caballo! (+Velocidad)");
+        } else {
+            playerGroup.remove(riderGroup);
+            if(foxModel) playerGroup.add(foxModel);
+            p.speed = 0.18;
+            showDialogue("Sistema", "Has desmontado.");
+        }
+    }
+
+    // --- EFECTOS DE PARTÍCULAS ---
     const particles = [];
     function spawnParticles(pos, colorHex, count = 12, speedMult = 1) {
         for(let i = 0; i < count; i++) {
@@ -274,11 +340,10 @@
         }
     }
 
-    // --- GENERACIÓN DE ÁRBOLES DETALLADOS CON GLTF ---
+    // --- BOSQUE Y ÁRBOLES ---
     const trees = [];
-    function createTree(type, x, z) {
+    function createTree(x, z) {
         const treeGroup = new THREE.Group();
-        
         gltfLoader.load(MODEL_URLS.tree, (gltf) => {
             const m = gltf.scene.clone();
             m.scale.set(1.4, 1.4 + Math.random()*0.4, 1.4);
@@ -295,15 +360,15 @@
         trees.push({ mesh: treeGroup, hp: 3, x, z });
     }
 
-    for(let i=0; i<40; i++) {
-        let rx = (Math.random() - 0.5) * 220;
-        let rz = (Math.random() - 0.5) * 220;
+    for(let i=0; i<50; i++) {
+        let rx = (Math.random() - 0.5) * 230;
+        let rz = (Math.random() - 0.5) * 230;
         if(Math.abs(rx) > 12 || Math.abs(rz) > 12) {
-            createTree('pine', rx, rz);
+            createTree(rx, rz);
         }
     }
 
-    // NPCs
+    // --- NPCs ---
     const npcs = [
         { id: 'sabio', name: 'Sabio Erudito', pos: new THREE.Vector3(8, 0, 8), color: 0x0284c7 },
         { id: 'herrero', name: 'Herrero Vulcan', pos: new THREE.Vector3(-12, 0, 15), color: 0xd97706 },
@@ -312,26 +377,22 @@
 
     npcs.forEach(npc => {
         const g = new THREE.Group();
-        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 12), new THREE.MeshStandardMaterial({ color: npc.color, roughness: 0.3, metalness: 0.5 }));
+        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 12), new THREE.MeshStandardMaterial({ color: npc.color, roughness: 0.3 }));
         b.position.y = 0.7;
         b.castShadow = true;
         g.add(b);
-        
-        const nLight = new THREE.PointLight(npc.color, 0.8, 4);
-        nLight.position.set(0, 1.8, 0);
-        g.add(nLight);
-
         g.position.copy(npc.pos);
         scene.add(g);
         npc.mesh = g;
     });
 
-    // --- ENEMIGOS DETALLADOS ---
+    // --- MONSTRUOS E INTELIGENCIA ARTIFICIAL (IA) ---
     const enemies = [];
-    function spawnEnemyModel(type, x, z) {
+    function spawnEnemy(type, x, z) {
         const enemyGroup = new THREE.Group();
         let maxHp = 40;
         let isBoss = false;
+        let isAggressive = type === 'demon' || type === 'boss'; // Demonios y Boss persiguen/atacan
 
         if (type === 'boss') {
             isBoss = true;
@@ -342,13 +403,13 @@
                 m.traverse(c => { if(c.isMesh) c.castShadow = true; });
                 enemyGroup.add(m);
             });
-
             const bossLight = new THREE.PointLight(0xef4444, 1.5, 8);
             bossLight.position.set(0, 1.5, 0);
             enemyGroup.add(bossLight);
         } else {
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.6, 0.9), new THREE.MeshStandardMaterial({ color: type === 'golem' ? 0x3f6212 : 0x312e81, roughness: 0.5 }));
-            body.position.y = 0.8;
+            const color = isAggressive ? 0xdc2626 : 0x16a34a; // Rojo = Agresivo, Verde = Pasivo
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.5, 0.9), new THREE.MeshStandardMaterial({ color, roughness: 0.5 }));
+            body.position.y = 0.75;
             body.castShadow = true;
             enemyGroup.add(body);
             maxHp = type === 'golem' ? 60 : 45;
@@ -356,23 +417,33 @@
 
         enemyGroup.position.set(x, 0, z);
         scene.add(enemyGroup);
-        enemies.push({ mesh: enemyGroup, hp: maxHp, maxHp, isBoss });
+        enemies.push({
+            mesh: enemyGroup,
+            hp: maxHp,
+            maxHp,
+            isBoss,
+            isAggressive,
+            type,
+            attackCooldown: 0,
+            wanderTimer: Math.random() * 100,
+            wanderDir: new THREE.Vector3((Math.random()-0.5), 0, (Math.random()-0.5)).normalize()
+        });
     }
 
-    spawnEnemyModel('golem', -15, 15);
-    spawnEnemyModel('demon', 15, -20);
-    spawnEnemyModel('golem', -25, -15);
-    spawnEnemyModel('demon', 30, 20);
-    spawnEnemyModel('boss', 35, -35);
+    spawnEnemy('golem', -15, 15);   // Pasivo
+    spawnEnemy('demon', 15, -20);   // Agresivo
+    spawnEnemy('golem', -25, -15);  // Pasivo
+    spawnEnemy('demon', 30, 20);    // Agresivo
+    spawnEnemy('boss', 35, -35);    // Boss Agresivo
 
     const vfxList = [];
     const projectiles = [];
 
     const randomLore = [
         "El Caballero Carmesí custodia las reliquias arcanas en el estanque del este.",
-        "Usa el Báculo Arcano si deseas mantener la distancia contra los gólem.",
-        "Las pistolas mecánicas consumen materiales, pero impactan con gran fuerza.",
-        "Los abedules amarillos contienen madera de alta calidad para comerciar."
+        "Los monstruos rojos son agresivos y te atacarán si te acercas.",
+        "Los gólem verdes son pacíficos hasta que los desafías.",
+        "Usa la montura para desplazarte rápidamente por las montañas."
     ];
 
     function selectSlot(i) {
@@ -388,7 +459,7 @@
         setTimeout(() => { box.style.display = 'none'; }, 4500);
     }
 
-    // --- SISTEMA DE ATAQUE Y EFECTOS ---
+    // --- COMBATE ---
     function executeAttack() {
         if(p.activeSlot === 2) {
             if(p.mp >= 20) {
@@ -400,8 +471,7 @@
                     new THREE.SphereGeometry(0.35, 12, 12),
                     new THREE.MeshStandardMaterial({ color: 0xc084fc, emissive: 0xa855f7, emissiveIntensity: 1.2 })
                 );
-                const light = new THREE.PointLight(0xc084fc, 1.2, 5);
-                orbGroup.add(orb); orbGroup.add(light);
+                orbGroup.add(orb);
                 
                 const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
                 orbGroup.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1.2, 0));
@@ -445,7 +515,7 @@
 
             if(p.activeSlot === 1) {
                 trees.forEach((t, i) => {
-                    if(t.mesh.position.distanceTo(playerGroup.position) < 2.8) {
+                    if(t.mesh.position.distanceTo(playerGroup.position) < 3.0) {
                         t.hp--;
                         spawnParticles(t.mesh.position.clone().add(new THREE.Vector3(0,1,0)), 0x78350f, 8);
                         if(t.hp <= 0) {
@@ -469,6 +539,7 @@
 
     function damageEnemy(enemy, index, amount) {
         enemy.hp -= amount;
+        enemy.isAggressive = true; // Si es atacado, se vuelve agresivo
         spawnParticles(enemy.mesh.position.clone().add(new THREE.Vector3(0, 1, 0)), 0xef4444, 15);
 
         if(enemy.isBoss) {
@@ -497,7 +568,7 @@
                     else showDialogue(npc.name, randomLore[Math.floor(Math.random()*randomLore.length)]);
                 }
                 else if(npc.id === 'herrero') {
-                    if(p.questState === 2) { showDialogue(npc.name, "Trae 5 maderas cortadas con el Hacha de Luz."); }
+                    if(p.questState === 2) { showDialogue(npc.name, "Trae 5 maderas cortadas con el Hacha."); }
                     else if(p.questState === 3) { p.questState = 4; p.xp += 100; showDialogue(npc.name, "¡Maderas listas! Enfréntate al Caballero Carmesí."); }
                     else showDialogue(npc.name, "Puedo forjar artefactos arcanos únicos.");
                 }
@@ -514,7 +585,7 @@
     function updateHUD() {
         document.getElementById('p-lvl').textContent = p.lvl;
         document.getElementById('p-xp').textContent = p.xp;
-        document.getElementById('hp-bar').style.width = `${p.hp}%`;
+        document.getElementById('hp-bar').style.width = `${Math.max(0, p.hp)}%`;
         document.getElementById('mp-bar').style.width = `${(p.mp / p.maxMp)*100}%`;
         document.getElementById('wood-count').textContent = p.wood;
 
@@ -535,6 +606,7 @@
     }
     bind('btn-shoot', executeAttack);
     bind('btn-interact', interactNPC);
+    bind('btn-mount', toggleMount);
 
     function bindDir(id, k) {
         const el = document.getElementById(id);
@@ -546,7 +618,7 @@
 
     function drawMinimap() {
         minimapCtx.clearRect(0,0,90,90);
-        const cx = 45, cy = 45, scale = 0.45;
+        const cx = 45, cy = 45, scale = 0.4;
 
         minimapCtx.fillStyle = '#0f172a';
         minimapCtx.fillRect(0,0,90,90);
@@ -556,7 +628,7 @@
             let ez = (enemy.mesh.position.z - playerGroup.position.z) * scale;
             
             if(Math.abs(ex) < 40 && Math.abs(ez) < 40) {
-                minimapCtx.fillStyle = enemy.isBoss ? '#f59e0b' : '#ef4444';
+                minimapCtx.fillStyle = enemy.isBoss ? '#f59e0b' : (enemy.isAggressive ? '#ef4444' : '#22c55e');
                 minimapCtx.beginPath();
                 minimapCtx.arc(cx + ex, cy + ez, enemy.isBoss ? 4 : 2.5, 0, Math.PI * 2);
                 minimapCtx.fill();
@@ -597,13 +669,7 @@
     function resize() {
         let w = window.innerWidth;
         let h = window.innerHeight;
-        
-        if (h > w) {
-            camera.aspect = h / w;
-        } else {
-            camera.aspect = w / h;
-        }
-
+        camera.aspect = w / h;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
     }
@@ -614,6 +680,7 @@
     function animate() {
         requestAnimationFrame(animate);
 
+        // Control del personaje
         if (keys.left) playerGroup.rotation.y += 0.04;
         if (keys.right) playerGroup.rotation.y -= 0.04;
         if (keys.up) playerGroup.translateZ(-p.speed);
@@ -624,6 +691,43 @@
             updateHUD();
         }
 
+        // LÓGICA E IA DE LOS ENEMIGOS
+        enemies.forEach((enemy) => {
+            const dist = enemy.mesh.position.distanceTo(playerGroup.position);
+
+            if (enemy.isAggressive && dist < 18) {
+                // Persecución si está en rango
+                enemy.mesh.lookAt(playerGroup.position.x, enemy.mesh.position.y, playerGroup.position.z);
+                enemy.mesh.translateZ(0.06);
+
+                // Ataque al jugador
+                if (dist < 1.8) {
+                    if (enemy.attackCooldown <= 0) {
+                        p.hp -= 10;
+                        enemy.attackCooldown = 50; // Delay entre golpes
+                        spawnParticles(playerGroup.position.clone().add(new THREE.Vector3(0, 1, 0)), 0xef4444, 8);
+                        updateHUD();
+                        if (p.hp <= 0) {
+                            p.hp = p.maxHp;
+                            playerGroup.position.set(0, 0, 0); // Respawn
+                            showDialogue("Sistema", "¡Has sido derrotado! Reapareces en la aldea.");
+                        }
+                    }
+                }
+            } else {
+                // Comportamiento pasivo / Vagar libremente
+                enemy.wanderTimer--;
+                if (enemy.wanderTimer <= 0) {
+                    enemy.wanderTimer = 80 + Math.random() * 100;
+                    enemy.wanderDir.set((Math.random() - 0.5), 0, (Math.random() - 0.5)).normalize();
+                }
+                enemy.mesh.position.addScaledVector(enemy.wanderDir, 0.02);
+            }
+
+            if (enemy.attackCooldown > 0) enemy.attackCooldown--;
+        });
+
+        // Partículas
         particles.forEach((pt, index) => {
             pt.mesh.position.add(pt.vel);
             pt.life--;
@@ -633,6 +737,7 @@
             }
         });
 
+        // Proyectiles
         projectiles.forEach((proj, prIndex) => {
             proj.mesh.position.addScaledVector(proj.dir, proj.speed);
             proj.life--;
@@ -650,6 +755,7 @@
             }
         });
 
+        // VFX
         vfxList.forEach((v, i) => {
             v.life--;
             if(v.life <= 0) {
@@ -658,7 +764,8 @@
             }
         });
 
-        const offset = new THREE.Vector3(0, 3.2, 5.5).applyMatrix4(playerGroup.matrixWorld);
+        // Cámara
+        const offset = new THREE.Vector3(0, 3.5, 6.0).applyMatrix4(playerGroup.matrixWorld);
         camera.position.lerp(offset, 0.1);
         camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
 
