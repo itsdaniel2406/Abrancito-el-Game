@@ -3,22 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Abrahancito 3D - Fixed Landscape Aspect Ratio</title>
+    <title>Abrahancito 3D - Expanded RPG Edition</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; color: white; }
 
-        #game-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            overflow: hidden;
-            background: #000;
-        }
-
+        #game-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; background: #000; }
         #canvas-container { width: 100%; height: 100%; }
 
-        /* Minimapa */
         #minimap-card {
             position: absolute; top: 12px; left: 12px;
             width: 90px; height: 90px; border-radius: 8px;
@@ -27,7 +19,6 @@
         }
         #minimap { width: 100%; height: 100%; }
 
-        /* HUD Superior */
         #top-hud {
             position: absolute; top: 12px; left: 115px; right: 12px;
             display: flex; justify-content: space-between; align-items: flex-start;
@@ -47,7 +38,6 @@
             border: 1px solid #f59e0b; font-size: 10px; text-align: right; max-width: 200px;
         }
 
-        /* Barra de Vida Boss */
         #boss-bar-card {
             position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.8); padding: 4px 12px; border-radius: 6px;
@@ -56,7 +46,6 @@
         #boss-hp { width: 140px; height: 8px; background: #7f1d1d; border-radius: 4px; overflow: hidden; margin-top: 2px; }
         #boss-hp-fill { width: 100%; height: 100%; background: #ef4444; }
 
-        /* Hotbar de Armas */
         #hotbar {
             position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 5px; background: rgba(15, 23, 42, 0.85);
@@ -71,7 +60,6 @@
         .slot.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.3); }
         .slot-ammo { position: absolute; bottom: 1px; right: 2px; font-size: 8px; font-weight: bold; color: #cbd5e1; }
 
-        /* D-Pad Joystick */
         #dpad {
             position: absolute; left: 15px; bottom: 15px; width: 105px; height: 105px;
             display: grid; grid-template-columns: repeat(3, 35px); grid-template-rows: repeat(3, 35px);
@@ -80,7 +68,6 @@
         .dp-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
         .dp-btn:active { background: rgba(255,255,255,0.5); }
 
-        /* Botones de Acción */
         #action-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 30; }
         .act-btn {
             position: absolute; pointer-events: auto; border-radius: 50%;
@@ -96,7 +83,6 @@
         #btn-mount { right: 78px; bottom: 65px; width: 38px; height: 38px; }
         #btn-interact { right: 125px; bottom: 60px; width: 38px; height: 38px; background: rgba(14, 165, 233, 0.5); }
 
-        /* Diálogo */
         #dialogue-box {
             position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);
             width: 80%; max-width: 450px; background: rgba(15, 23, 42, 0.95);
@@ -110,7 +96,6 @@
             border-radius: 50%; pointer-events: none; z-index: 10;
         }
 
-        /* Overlay de bloqueo/inicio fullscreen */
         #fullscreen-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(15, 23, 42, 0.95); z-index: 100;
@@ -128,7 +113,7 @@
 
     <div id="fullscreen-overlay">
         <h2>🎮 Modo Pantalla Completa</h2>
-        <p style="margin-top: 8px; font-size: 14px; color: #94a3b8;">Toca el botón para bloquear la pantalla en Horizontal.</p>
+        <p style="margin-top: 8px; font-size: 14px; color: #94a3b8;">Toca el botón para jugar en orientación horizontal.</p>
         <button id="start-btn">JUGAR AHORA</button>
     </div>
 
@@ -141,7 +126,7 @@
         </div>
 
         <div id="boss-bar-card">
-            <div style="font-size:10px; font-weight:bold; color:#ef4444;">👑 REY SOMBRA (BOSS)</div>
+            <div style="font-size:10px; font-weight:bold; color:#ef4444;">👑 CABALLERO CARMESÍ (BOSS)</div>
             <div id="boss-hp"><div id="boss-hp-fill"></div></div>
         </div>
 
@@ -163,10 +148,10 @@
         </div>
 
         <div id="hotbar">
-            <div class="slot active" id="slot-0" onclick="selectSlot(0)">⚔️<span class="slot-ammo">∞</span></div>
-            <div class="slot" id="slot-1" onclick="selectSlot(1)">🏹<span class="slot-ammo">15</span></div>
-            <div class="slot" id="slot-2" onclick="selectSlot(2)">🔥<span class="slot-ammo">MP</span></div>
-            <div class="slot" id="slot-3" onclick="selectSlot(3)">🪓<span class="slot-ammo">Tala</span></div>
+            <div class="slot active" id="slot-0" onclick="selectSlot(0)">🗡️<span class="slot-ammo">Espada</span></div>
+            <div class="slot" id="slot-1" onclick="selectSlot(1)">🪓<span class="slot-ammo">Hacha</span></div>
+            <div class="slot" id="slot-2" onclick="selectSlot(2)">🔮<span class="slot-ammo">Báculo</span></div>
+            <div class="slot" id="slot-3" onclick="selectSlot(3)">⚙️<span class="slot-ammo">Pistola</span></div>
         </div>
 
         <div id="dpad">
@@ -185,7 +170,6 @@
     </div>
 
 <script>
-    // Forzar pantalla completa y bloqueo de orientación landscape vía JS
     document.getElementById('start-btn').addEventListener('click', async () => {
         try {
             if (document.documentElement.requestFullscreen) {
@@ -203,8 +187,8 @@
 
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0284c7);
-    scene.fog = new THREE.FogExp2(0x0284c7, 0.007);
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.005);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -214,10 +198,10 @@
 
     const minimapCtx = document.getElementById('minimap').getContext('2d');
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xfffbeb, 0.9);
+    const sun = new THREE.DirectionalLight(0xfffbeb, 1.0);
     sun.position.set(40, 60, 20);
     sun.castShadow = true;
     scene.add(sun);
@@ -226,38 +210,96 @@
     const keys = { up: false, down: false, left: false, right: false };
 
     // Terreno
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshStandardMaterial({ color: 0x15803d }));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Jugador
+    // --- CONSTRUCCIÓN DEL JUGADOR CON DETALLES DE LA IMAGEN 1 ---
     const playerGroup = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.2, 0.5), new THREE.MeshStandardMaterial({ color: 0x2563eb }));
-    body.position.y = 0.6;
-    playerGroup.add(body);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshStandardMaterial({ color: 0xfde047 }));
-    head.position.y = 1.4;
-    playerGroup.add(head);
+    
+    // Torso y túnica verde/cuero
+    const pBody = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.35, 1.1, 8), new THREE.MeshStandardMaterial({ color: 0x15803d }));
+    pBody.position.y = 0.85;
+    playerGroup.add(pBody);
+
+    // Pechera de cuero
+    const pVest = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 0.5), new THREE.MeshStandardMaterial({ color: 0x78350f }));
+    pVest.position.y = 0.9;
+    playerGroup.add(pVest);
+
+    // Hombreras
+    const pShoulderL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.25, 0.35), new THREE.MeshStandardMaterial({ color: 0x64748b }));
+    pShoulderL.position.set(0.42, 1.15, 0);
+    const pShoulderR = pShoulderL.clone();
+    pShoulderR.position.x = -0.42;
+    playerGroup.add(pShoulderL); playerGroup.add(pShoulderR);
+
+    // Cabeza
+    const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8), new THREE.MeshStandardMaterial({ color: 0xfde047 }));
+    pHead.position.y = 1.6;
+    playerGroup.add(pHead);
+
+    // Espada Rúnica a la Espalda (Magical Sword de Imagen 1 & 4)
+    const backSwordGroup = new THREE.Group();
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.4, 0.04), new THREE.MeshStandardMaterial({ color: 0xc084fc, emissive: 0x3b82f6 }));
+    blade.position.y = 0.7;
+    const hilt = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.08), new THREE.MeshStandardMaterial({ color: 0xb45309 }));
+    hilt.position.y = 0.1;
+    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.1), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+    gem.position.y = 1.45;
+    backSwordGroup.add(blade); backSwordGroup.add(hilt); backSwordGroup.add(gem);
+    
+    backSwordGroup.rotation.z = -Math.PI / 4;
+    backSwordGroup.position.set(-0.2, 1.0, 0.28);
+    playerGroup.add(backSwordGroup);
+
     scene.add(playerGroup);
 
-    // Árboles
+    // --- GENERADOR DE ÁRBOLES SEGÚN IMAGEN 3 ---
     const trees = [];
-    function spawnTree(x, z) {
-        const tree = new THREE.Group();
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 2), new THREE.MeshStandardMaterial({ color: 0x78350f }));
-        trunk.position.y = 1;
-        const leaves = new THREE.Mesh(new THREE.ConeGeometry(1.2, 3, 6), new THREE.MeshStandardMaterial({ color: 0x166534 }));
-        leaves.position.y = 2.8;
-        tree.add(trunk); tree.add(leaves);
-        tree.position.set(x, 0, z);
-        scene.add(tree);
-        trees.push({ mesh: tree, hp: 3, x, z });
+    function createTree(type, x, z) {
+        const treeGroup = new THREE.Group();
+        
+        if (type === 'pine') { // Pino Verde
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 1.5), new THREE.MeshStandardMaterial({ color: 0x451a03 }));
+            trunk.position.y = 0.75;
+            treeGroup.add(trunk);
+            for(let i=0; i<3; i++) {
+                const c = new THREE.Mesh(new THREE.ConeGeometry(1.6 - i*0.3, 1.8, 6), new THREE.MeshStandardMaterial({ color: 0x14532d }));
+                c.position.y = 1.5 + i*0.9;
+                treeGroup.add(c);
+            }
+        } 
+        else if (type === 'amber') { // Amber Oak (Roble Naranja)
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.4, 2), new THREE.MeshStandardMaterial({ color: 0x78350f }));
+            trunk.position.y = 1;
+            treeGroup.add(trunk);
+            const foliage = new THREE.Mesh(new THREE.DodecahedronGeometry(1.4), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
+            foliage.position.y = 2.6;
+            treeGroup.add(foliage);
+        } 
+        else if (type === 'birch') { // Abedul Blanco (Birch)
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2.5), new THREE.MeshStandardMaterial({ color: 0xe2e8f0 }));
+            trunk.position.y = 1.25;
+            treeGroup.add(trunk);
+            const foliage = new THREE.Mesh(new THREE.SphereGeometry(1.1, 8, 8), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
+            foliage.position.y = 3;
+            treeGroup.add(foliage);
+        }
+
+        treeGroup.position.set(x, 0, z);
+        scene.add(treeGroup);
+        trees.push({ mesh: treeGroup, hp: 3, x, z });
     }
-    for(let i=0; i<35; i++) {
-        let rx = (Math.random() - 0.5) * 200;
-        let rz = (Math.random() - 0.5) * 200;
-        if(Math.abs(rx) > 10 || Math.abs(rz) > 10) spawnTree(rx, rz);
+
+    const treeTypes = ['pine', 'amber', 'birch'];
+    for(let i=0; i<40; i++) {
+        let rx = (Math.random() - 0.5) * 220;
+        let rz = (Math.random() - 0.5) * 220;
+        if(Math.abs(rx) > 12 || Math.abs(rz) > 12) {
+            createTree(treeTypes[i % 3], rx, rz);
+        }
     }
 
     // NPCs
@@ -277,31 +319,72 @@
         npc.mesh = g;
     });
 
-    // Enemigos
+    // --- ENEMIGOS INSPIRADOS EN LA IMAGEN 2 ---
     const enemies = [];
-    function spawnEnemy(x, z, isBoss = false) {
-        const scale = isBoss ? 2.5 : 1;
-        const mesh = new THREE.Mesh(
-            new THREE.ConeGeometry(0.6 * scale, 1.6 * scale, 8),
-            new THREE.MeshStandardMaterial({ color: isBoss ? 0x991b1b : 0x4c1d95 })
-        );
-        mesh.rotation.x = Math.PI;
-        mesh.position.set(x, 0.8 * scale, z);
-        scene.add(mesh);
-        enemies.push({ mesh, hp: isBoss ? 250 : 40, maxHp: isBoss ? 250 : 40, isBoss });
+    function spawnEnemyModel(type, x, z) {
+        const enemyGroup = new THREE.Group();
+        let maxHp = 40;
+        let isBoss = false;
+
+        if (type === 'golem') { // Gólem Verde con Maza (Izquierda Imagen 2)
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.6, 0.9), new THREE.MeshStandardMaterial({ color: 0x3f6212 }));
+            body.position.y = 0.8;
+            enemyGroup.add(body);
+            const mace = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 6), new THREE.MeshStandardMaterial({ color: 0x475569 }));
+            mace.position.set(0.8, 0.4, 0.3);
+            enemyGroup.add(mace);
+            maxHp = 60;
+        } 
+        else if (type === 'demon') { // Demonio Estigio con Báculo (Derecha Imagen 2)
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 1.5, 6), new THREE.MeshStandardMaterial({ color: 0x312e81 }));
+            body.position.y = 0.75;
+            enemyGroup.add(body);
+            const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2), new THREE.MeshStandardMaterial({ color: 0xa855f7 }));
+            staff.position.set(-0.5, 1.1, 0);
+            enemyGroup.add(staff);
+            maxHp = 45;
+        } 
+        else if (type === 'boss') { // Caballero Carmesí (Centro Imagen 2)
+            isBoss = true;
+            maxHp = 300;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.2, 1.2), new THREE.MeshStandardMaterial({ color: 0x18181b }));
+            body.position.y = 1.1;
+            enemyGroup.add(body);
+            
+            // Cuernos del casco
+            const hornL = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.8, 4), new THREE.MeshStandardMaterial({ color: 0x991b1b }));
+            hornL.position.set(0.6, 2.4, 0);
+            hornL.rotation.z = -0.4;
+            const hornR = hornL.clone();
+            hornR.position.x = -0.6;
+            hornR.rotation.z = 0.4;
+            enemyGroup.add(hornL); enemyGroup.add(hornR);
+
+            // Espada Carmesí
+            const sword = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.08), new THREE.MeshStandardMaterial({ color: 0xdc2626, emissive: 0x991b1b }));
+            sword.position.set(1.1, 1.1, 0.3);
+            enemyGroup.add(sword);
+        }
+
+        enemyGroup.position.set(x, 0, z);
+        scene.add(enemyGroup);
+        enemies.push({ mesh: enemyGroup, hp: maxHp, maxHp, isBoss });
     }
 
-    spawnEnemy(-15, 15); spawnEnemy(15, -20); spawnEnemy(-25, -15); spawnEnemy(30, 20);
-    spawnEnemy(35, -35, true);
+    spawnEnemyModel('golem', -15, 15);
+    spawnEnemyModel('demon', 15, -20);
+    spawnEnemyModel('golem', -25, -15);
+    spawnEnemyModel('demon', 30, 20);
+    spawnEnemyModel('boss', 35, -35); // Boss final
 
     const vfxList = [];
     const projectiles = [];
 
     const randomLore = [
-        "Dicen que el Rey Sombra solía ser un caballero de honor antes de tocar la reliquia.",
-        "Si necesitas madera para comerciar, usa el hacha cerca del bosque del este.",
-        "Los hechizos de fuego consumen maná rápidamente, úsalos con prudencia.",
-        "Se rumorea que completar misiones en el minimapa otorga recompensas legendarias."
+        "El Caballero Carmesí custodia las reliquias arcanas en el estanque del este.",
+        "Usa el Báculo Arcano si deseas mantener la distancia contra los gólem.",
+        "Las pistolas mecánicas consumen materiales, pero impactan con gran fuerza.",
+        "Los abedules amarillos contienen madera de alta calidad para comerciar."
     ];
 
     function selectSlot(i) {
@@ -317,32 +400,48 @@
         setTimeout(() => { box.style.display = 'none'; }, 4500);
     }
 
+    // --- SISTEMA DE ATAQUE (ARMAS INSPIRADAS EN IMAGEN 4) ---
     function executeAttack() {
-        if(p.activeSlot === 2) {
+        if(p.activeSlot === 2) { // Aura Staff / Báculo Arcana
             if(p.mp >= 20) {
                 p.mp -= 20;
                 updateHUD();
 
-                const fireball = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.4, 12, 12),
-                    new THREE.MeshBasicMaterial({ color: 0xff4500 })
+                const orb = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.45, 12, 12),
+                    new THREE.MeshBasicMaterial({ color: 0xc084fc })
                 );
                 
                 const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
-                fireball.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
+                orb.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1.2, 0));
                 
-                scene.add(fireball);
-                projectiles.push({ mesh: fireball, dir, speed: 0.6, life: 60 });
+                scene.add(orb);
+                projectiles.push({ mesh: orb, dir, speed: 0.65, life: 60 });
             } else {
-                showDialogue("Sistema", "¡No tienes suficiente Maná (MP)!");
+                showDialogue("Sistema", "¡Sin Maná suficiente!");
             }
             return;
         }
 
-        if(p.activeSlot === 0 || p.activeSlot === 3) {
+        if(p.activeSlot === 3) { // Steampunk / Clockwork Pistol
+            const bullet = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.08, 0.08, 0.4),
+                new THREE.MeshBasicMaterial({ color: 0xf59e0b })
+            );
+            bullet.rotation.x = Math.PI / 2;
+            const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
+            bullet.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1.0, 0));
+            scene.add(bullet);
+            projectiles.push({ mesh: bullet, dir, speed: 0.9, life: 45 });
+            return;
+        }
+
+        // Espada Rúnica o Hacha Resplandeciente (Glow Axe)
+        if(p.activeSlot === 0 || p.activeSlot === 1) {
+            const slashColor = p.activeSlot === 1 ? 0x38bdf8 : 0xc084fc;
             const slash = new THREE.Mesh(
-                new THREE.RingGeometry(0.5, 1.2, 8, 1, 0, Math.PI),
-                new THREE.MeshBasicMaterial({ color: p.activeSlot === 3 ? 0xf59e0b : 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+                new THREE.RingGeometry(0.6, 1.4, 8, 1, 0, Math.PI),
+                new THREE.MeshBasicMaterial({ color: slashColor, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
             );
             slash.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1, 0));
             slash.rotation.copy(playerGroup.rotation);
@@ -350,9 +449,9 @@
             scene.add(slash);
             vfxList.push({ mesh: slash, life: 10 });
 
-            if(p.activeSlot === 3) {
+            if(p.activeSlot === 1) { // Hacha de Tala
                 trees.forEach((t, i) => {
-                    if(t.mesh.position.distanceTo(playerGroup.position) < 2.5) {
+                    if(t.mesh.position.distanceTo(playerGroup.position) < 2.8) {
                         t.hp--;
                         if(t.hp <= 0) {
                             scene.remove(t.mesh);
@@ -366,8 +465,8 @@
             }
 
             enemies.forEach((enemy, i) => {
-                if(enemy.mesh.position.distanceTo(playerGroup.position) < 3.5) {
-                    damageEnemy(enemy, i, 20);
+                if(enemy.mesh.position.distanceTo(playerGroup.position) < 3.8) {
+                    damageEnemy(enemy, i, 25);
                 }
             });
         }
@@ -386,7 +485,7 @@
             }
             scene.remove(enemy.mesh);
             enemies.splice(index, 1);
-            p.xp += enemy.isBoss ? 200 : 40;
+            p.xp += enemy.isBoss ? 250 : 45;
             if(p.questState === 1) p.questState = 2;
             updateHUD();
         }
@@ -396,19 +495,19 @@
         npcs.forEach(npc => {
             if(playerGroup.position.distanceTo(npc.pos) < 4) {
                 if(npc.id === 'sabio') {
-                    if(p.questState === 0) { p.questState = 1; showDialogue(npc.name, "Derrota a las Sombras del Valle para probar tu valor."); }
-                    else if(p.questState === 2) { showDialogue(npc.name, "¡Gran trabajo! Ve con el Herrero en el oeste."); }
+                    if(p.questState === 0) { p.questState = 1; showDialogue(npc.name, "Derrota a las criaturas del valle para demostrar tu valía."); }
+                    else if(p.questState === 2) { showDialogue(npc.name, "¡Gran avance! Ve a buscar al Herrero al oeste."); }
                     else showDialogue(npc.name, randomLore[Math.floor(Math.random()*randomLore.length)]);
                 }
                 else if(npc.id === 'herrero') {
-                    if(p.questState === 2) { showDialogue(npc.name, "Necesito 5 maderas. Usa tu hacha en los árboles."); }
-                    else if(p.questState === 3) { p.questState = 4; p.xp += 100; showDialogue(npc.name, "¡Excelente madera! Habla con el Guardia para enfrentarte al Rey Sombra."); }
-                    else showDialogue(npc.name, "Tengo la mejor forja de la región.");
+                    if(p.questState === 2) { showDialogue(npc.name, "Trae 5 maderas cortadas con el Hacha de Luz."); }
+                    else if(p.questState === 3) { p.questState = 4; p.xp += 100; showDialogue(npc.name, "¡Maderas listas! Enfréntate al Caballero Carmesí."); }
+                    else showDialogue(npc.name, "Puedo forjar artefactos arcanos únicos.");
                 }
                 else if(npc.id === 'guardian') {
-                    if(p.questState === 4) showDialogue(npc.name, "¡El Rey Sombra acecha en el este! Elimínalo.");
-                    else if(p.questState === 5) { p.questState = 6; p.xp += 300; p.lvl += 2; showDialogue(npc.name, "¡Has salvado el reino! Eres una leyenda."); }
-                    else showDialogue(npc.name, "Mantengo el valle a salvo.");
+                    if(p.questState === 4) showDialogue(npc.name, "¡El Caballero Carmesí aguarda en el este!");
+                    else if(p.questState === 5) { p.questState = 6; p.xp += 300; p.lvl += 2; showDialogue(npc.name, "¡Has liberado el reino de la oscuridad!"); }
+                    else showDialogue(npc.name, "El acceso al castillo está despejado.");
                 }
                 updateHUD();
             }
@@ -424,11 +523,11 @@
 
         const qText = document.getElementById('quest-text');
         if(p.questState === 0) qText.textContent = "Misión: Habla con el Sabio (?)";
-        else if(p.questState === 1) qText.textContent = "Misión: Elimina a una Sombra";
-        else if(p.questState === 2) qText.textContent = "Misión: Lleva 5 maderas al Herrero (?)";
-        else if(p.questState === 3) qText.textContent = "¡Entrega la madera al Herrero (!)";
-        else if(p.questState === 4) qText.textContent = "Misión: Derrota al Rey Sombra (Boss)";
-        else if(p.questState === 5) qText.textContent = "¡Reporta la victoria al Guardia (!)";
+        else if(p.questState === 1) qText.textContent = "Misión: Elimina a un monstruo";
+        else if(p.questState === 2) qText.textContent = "Misión: Junta 5 maderas para el Herrero";
+        else if(p.questState === 3) qText.textContent = "¡Lleva la madera al Herrero (!)";
+        else if(p.questState === 4) qText.textContent = "Misión: Vence al Caballero Carmesí (Boss)";
+        else if(p.questState === 5) qText.textContent = "¡Informa tu victoria al Guardia (!)";
         else qText.textContent = "¡Todas las Misiones Completadas!";
     }
 
@@ -452,7 +551,7 @@
         minimapCtx.clearRect(0,0,90,90);
         const cx = 45, cy = 45, scale = 0.45;
 
-        minimapCtx.fillStyle = '#064e3b';
+        minimapCtx.fillStyle = '#0f172a';
         minimapCtx.fillRect(0,0,90,90);
 
         enemies.forEach(enemy => {
@@ -499,12 +598,10 @@
     }
 
     function resize() {
-        // Garantizar que la relación de aspecto siempre responda a Landscape (ancho > alto)
         let w = window.innerWidth;
         let h = window.innerHeight;
         
         if (h > w) {
-            // Si el teléfono se mantiene verticalmente, invertimos dimensiones de renderizado para forzar aspecto horizontal
             camera.aspect = h / w;
         } else {
             camera.aspect = w / h;
@@ -535,8 +632,8 @@
             proj.life--;
 
             enemies.forEach((enemy, eIndex) => {
-                if(proj.mesh.position.distanceTo(enemy.mesh.position) < 1.8) {
-                    damageEnemy(enemy, eIndex, 45);
+                if(proj.mesh.position.distanceTo(enemy.mesh.position) < 2.0) {
+                    damageEnemy(enemy, eIndex, 40);
                     proj.life = 0;
                 }
             });
