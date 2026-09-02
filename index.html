@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Abrahancito: La Leyenda - v1</title>
+    <title>Abrahancito: Mundo Abierto 3D - v1</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,184 +12,160 @@
         }
 
         body {
-            background-color: #090d16;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
             margin: 0;
-            padding: 10px;
+            padding: 0;
             overflow: hidden;
+            background-color: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
         }
 
-        /* HUD Estadísticas */
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        /* HUD Interfaz */
         .hud {
-            width: 100%;
-            max-width: 650px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #111827;
-            padding: 10px 16px;
-            border-radius: 10px 10px 0 0;
-            border: 2px solid #1f2937;
-            border-bottom: none;
-            font-size: 13px;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: 2px solid #334155;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            font-size: 14px;
             font-weight: bold;
+            pointer-events: none;
         }
 
         .bar-container {
-            width: 80px;
+            width: 120px;
             height: 12px;
-            background: #374151;
+            background: #334155;
             border-radius: 6px;
             overflow: hidden;
             display: inline-block;
             vertical-align: middle;
-            border: 1px solid #4b5563;
+            margin-left: 8px;
         }
 
         .hp-bar { width: 100%; height: 100%; background: #ef4444; transition: width 0.2s; }
-        .mp-bar { width: 100%; height: 100%; background: #3b82f6; transition: width 0.2s; }
-
-        /* Contenedor del Juego */
-        #game-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 650px;
-        }
-
-        canvas {
-            width: 100%;
-            height: auto;
-            background-color: #15803d;
-            display: block;
-            border: 2px solid #1f2937;
-            image-rendering: pixelated;
-        }
 
         /* Cuadro de Diálogo */
         #dialog-box {
             position: absolute;
-            bottom: 12px;
-            left: 12px;
-            right: 12px;
-            background: rgba(17, 24, 39, 0.95);
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            background: rgba(15, 23, 42, 0.95);
             border: 2px solid #f59e0b;
             border-radius: 8px;
-            padding: 12px;
-            font-size: 14px;
+            padding: 15px;
             display: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+            z-index: 10;
         }
 
-        /* Controles Táctiles Móbiles */
+        /* Controles Táctiles estilo GTA */
         #touch-controls {
+            position: absolute;
+            bottom: 20px;
             width: 100%;
-            max-width: 650px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-            padding: 0 5px;
+            padding: 0 20px;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .dpad, .action-btns {
+            pointer-events: auto;
         }
 
         .dpad {
             display: grid;
-            grid-template-columns: repeat(3, 44px);
-            grid-template-rows: repeat(3, 44px);
-            gap: 2px;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 4px;
         }
 
         .dbtn {
-            background: #1f2937;
-            border: 2px solid #374151;
-            border-radius: 8px;
+            background: rgba(31, 41, 55, 0.8);
+            border: 2px solid #4b5563;
+            border-radius: 10px;
             color: white;
-            font-size: 16px;
+            font-size: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
             touch-action: manipulation;
         }
 
-        .dbtn:active { background: #4b5563; }
+        .dbtn:active { background: #6b7280; }
 
         .action-btns {
             display: flex;
-            gap: 8px;
+            gap: 12px;
+            align-items: flex-end;
         }
 
         .abtn {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             border: 2px solid #fff;
             color: white;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
             touch-action: manipulation;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        .btn-a { background: #dc2626; } /* Atacar */
-        .btn-b { background: #2563eb; } /* Interactuar */
-        .btn-m { background: #9333ea; } /* Magia */
-        .abtn:active { transform: scale(0.92); }
-
-        /* Footer y Menú */
-        .btn-panel {
-            margin-top: 8px;
-            display: flex;
-            gap: 10px;
-        }
-
-        button.sys-btn {
-            background: #1f2937;
-            color: white;
-            border: 1px solid #374151;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 11px;
-        }
+        .btn-a { background: #dc2626; }
+        .btn-b { background: #2563eb; }
+        .abtn:active { transform: scale(0.9); }
 
         .credits {
-            margin-top: 12px;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
             font-size: 12px;
             color: #9ca3af;
             font-weight: bold;
-            letter-spacing: 1px;
+            pointer-events: none;
         }
     </style>
+    <!-- Carga de Three.js para motor de gráficos 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <!-- HUD Estadísticas -->
+    <div id="canvas-container"></div>
+
     <div class="hud">
-        <div>HP: <div class="bar-container"><div id="hp-bar" class="hp-bar"></div></div></div>
-        <div>MP: <div class="bar-container"><div id="mp-bar" class="mp-bar"></div></div></div>
-        <div style="color: #f59e0b;">MAPA: <span id="map-txt">1</span></div>
-        <div style="color: #60a5fa;">ARMA: <span id="weapon-txt">Espada</span></div>
+        <div>SALUD: <div class="bar-container"><div id="hp-bar" class="hp-bar"></div></div></div>
+        <div style="margin-top: 5px; color: #f59e0b;">MUNDO: <span id="zone-txt">Ciudad Central 3D</span></div>
     </div>
 
-    <!-- Canvas principal del juego -->
-    <div id="game-wrapper">
-        <canvas id="gameCanvas" width="600" height="400"></canvas>
-        <div id="dialog-box">
-            <strong id="npc-name" style="color: #f59e0b;"></strong>
-            <p id="npc-text" style="margin: 4px 0 0 0; line-height: 1.3;"></p>
-        </div>
+    <div class="credits">Creado por Dani v1</div>
+
+    <div id="dialog-box">
+        <strong id="npc-name" style="color: #f59e0b; font-size: 16px;"></strong>
+        <p id="npc-text" style="margin: 6px 0 0 0; font-size: 14px; line-height: 1.4;"></p>
     </div>
 
-    <!-- Controles Táctiles -->
     <div id="touch-controls">
         <div class="dpad">
             <div></div><div class="dbtn" id="btn-up">▲</div><div></div>
@@ -198,84 +174,134 @@
         </div>
         <div class="action-btns">
             <div class="abtn btn-b" id="btn-action">HABLAR</div>
-            <div class="abtn btn-m" id="btn-magic">PODER</div>
-            <div class="abtn btn-a" id="btn-attack">ATACAR</div>
+            <div class="abtn btn-a" id="btn-attack">GOLPE</div>
         </div>
     </div>
 
-    <!-- Menú y Firma -->
-    <div class="btn-panel">
-        <button class="sys-btn" onclick="saveGame()">Guardar 💾</button>
-        <button class="sys-btn" onclick="resetGame()">Reiniciar 🔄</button>
-    </div>
-
-    <div class="credits">Creado por Dani v1</div>
-
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    // --- MOTOR Y ESCENA 3D ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87ceeb); // Cielo azul estilo San Andreas
+    scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    // Luces
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(50, 80, 50);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
 
     // --- ESTADO DEL JUEGO ---
-    let currentLevel = 1;
-    let player = {
-        x: 80, y: 200, size: 26, speed: 3.2, direction: 'right',
-        hp: 100, maxHp: 100, mp: 50, maxMp: 50,
-        weapon: 'Espada Madera', weaponDamage: 25,
-        isAttacking: false, attackTimer: 0,
-        isCasting: false, magicTimer: 0,
-        invulnerableTimer: 0
+    let playerState = {
+        hp: 100, maxHp: 100,
+        speed: 0.15,
+        rotSpeed: 0.04
     };
 
-    let magicProjectiles = [];
-
-    // Base de datos de niveles
-    const levelData = {
-        1: {
-            bg: '#15803d',
-            name: "El Bosque Sagrado",
-            npcs: [
-                { name: "Anciano sabio", x: 150, y: 120, color: '#f59e0b', dialogs: ["¡Abrahancito! Los monstruos han invadido el reino.", "Usa [ATACAR] o barra espaciadora para vencer a los Slimes.", "El botón [PODER] lanza una onda mágica si tienes maná."] },
-                { name: "Sacerdotisa", x: 450, y: 300, color: '#ec4899', dialogs: ["Puedo curar tus heridas.", "¡Recuperaste tu vida y maná completos!"] }
-            ],
-            monsters: [
-                { x: 350, y: 100, type: 'slime', hp: 40, maxHp: 40, speed: 1.2, color: '#22c55e', damage: 10 },
-                { x: 400, y: 220, type: 'slime', hp: 40, maxHp: 40, speed: 1.2, color: '#22c55e', damage: 10 }
-            ],
-            chests: [{ x: 520, y: 80, opened: false, item: 'Espada de Hierro' }],
-            portal: { x: 550, y: 330, open: false }
-        },
-        2: {
-            bg: '#334155',
-            name: "Las Cavernas Oscuras",
-            npcs: [
-                { name: "Explorador Lost", x: 100, y: 100, color: '#3b82f6', dialogs: ["¡Cuidado! Los espectros de esta cueva son muy agresivos.", "Si encuentras el Báculo Mágico tu poder aumentará enormemente."] }
-            ],
-            monsters: [
-                { x: 250, y: 150, type: 'spectre', hp: 70, maxHp: 70, speed: 1.8, color: '#a855f7', damage: 15 },
-                { x: 400, y: 280, type: 'spectre', hp: 70, maxHp: 70, speed: 1.8, color: '#a855f7', damage: 15 },
-                { x: 300, y: 80, type: 'slime', hp: 50, maxHp: 50, speed: 1.4, color: '#22c55e', damage: 12 }
-            ],
-            chests: [{ x: 500, y: 60, opened: false, item: 'Báculo Mágico' }],
-            portal: { x: 550, y: 330, open: false }
-        },
-        3: {
-            bg: '#450a0a',
-            name: "Guarida del Rey Demonio",
-            npcs: [
-                { name: "Caballero Caído", x: 80, y: 320, color: '#94a3b8', dialogs: ["Este es el fin del camino...", "¡Derrota al Rey Demonio para liberar el reino!"] }
-            ],
-            monsters: [
-                { x: 420, y: 180, type: 'boss', hp: 250, maxHp: 250, speed: 1.0, color: '#ef4444', damage: 22, size: 45 }
-            ],
-            chests: [],
-            portal: null
-        }
-    };
-
-    let activeNPC = null;
     const keys = { up: false, down: false, left: false, right: false };
 
-    // Teclado
+    // --- CONSTRUCCIÓN DEL MUNDO ABIERTO (CIUDAD Y CALLES) ---
+    // Suelo / Calles
+    const floorGeo = new THREE.PlaneGeometry(200, 200);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Bloques de Pasto / Parques
+    const parkGeo = new THREE.BoxGeometry(40, 0.2, 40);
+    const parkMat = new THREE.MeshStandardMaterial({ color: 0x2e7d32 });
+    const park = new THREE.Mesh(parkGeo, parkMat);
+    park.position.set(-30, 0.1, -30);
+    scene.add(park);
+
+    // Edificios
+    function createBuilding(x, z, w, h, d, color) {
+        const geo = new THREE.BoxGeometry(w, h, d);
+        const mat = new THREE.MeshStandardMaterial({ color: color });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, h/2, z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+    }
+
+    createBuilding(30, 30, 20, 40, 20, 0x94a3b8);
+    createBuilding(-30, 30, 25, 30, 15, 0x64748b);
+    createBuilding(40, -30, 18, 50, 18, 0x475569);
+
+    // --- PERSONAJE PRINCIPAL (ABRAHANCITO 3D) ---
+    const playerGroup = new THREE.Group();
+
+    // Cuerpo
+    const bodyGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.4, 8);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2563eb });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 0.7;
+    playerGroup.add(body);
+
+    // Cabeza
+    const headGeo = new THREE.SphereGeometry(0.4, 8, 8);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 1.6;
+    playerGroup.add(head);
+
+    // Sombrero estilo Vaquero / Heroico
+    const hatGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.1, 8);
+    const hatMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b });
+    const hat = new THREE.Mesh(hatGeo, hatMat);
+    hat.position.y = 1.9;
+    playerGroup.add(hat);
+
+    playerGroup.position.set(0, 0, 0);
+    scene.add(playerGroup);
+
+    // --- ENEMIGOS Y NPCS 3D ---
+    // NPCs
+    const npcs = [];
+    function createNPC(x, z, name, dialog, color) {
+        const group = new THREE.Group();
+        const mGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.4, 8);
+        const mMat = new THREE.MeshStandardMaterial({ color: color });
+        const mesh = new THREE.Mesh(mGeo, mMat);
+        mesh.position.y = 0.7;
+        group.add(mesh);
+
+        group.position.set(x, 0, z);
+        scene.add(group);
+        npcs.push({ group, name, dialog });
+    }
+
+    createNPC(5, -5, "Ciudadano", "¡Bienvenido a la ciudad 3D Abrahancito! Puedes explorar libremente.", 0x10b981);
+    createNPC(-15, -20, "Mecánico", "Hay villanos cerca de los edificios, pero no hacen mucho daño.", 0xf59e0b);
+
+    // ENEMIGOS (Dificultad Baja)
+    const enemies = [];
+    function createEnemy(x, z) {
+        const geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+        const mat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, 0.6, z);
+        mesh.castShadow = true;
+        scene.add(mesh);
+        enemies.push({ mesh, hp: 30, speed: 0.03 }); // Velocidad lenta para bajar dificultad
+    }
+
+    createEnemy(20, 15);
+    createEnemy(-20, 20);
+
+    // --- CONTROLES Y EVENTOS ---
     window.addEventListener('keydown', e => {
         const k = e.key.toLowerCase();
         if (k === 'w' || k === 'arrowup') keys.up = true;
@@ -284,7 +310,6 @@
         if (k === 'd' || k === 'arrowright') keys.right = true;
         if (k === 'e') interact();
         if (k === ' ') attack();
-        if (k === 'm') castMagic();
     });
 
     window.addEventListener('keyup', e => {
@@ -295,7 +320,6 @@
         if (k === 'd' || k === 'arrowright') keys.right = false;
     });
 
-    // Controles Táctiles
     function bindTouch(id, keyName) {
         const el = document.getElementById(id);
         el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
@@ -309,316 +333,87 @@
 
     document.getElementById('btn-attack').addEventListener('click', attack);
     document.getElementById('btn-action').addEventListener('click', interact);
-    document.getElementById('btn-magic').addEventListener('click', castMagic);
 
-    // --- LÓGICA DE JUEGO ---
+    // --- BUCLE Y LÓGICA DE JUEGO ---
     function update() {
-        let level = levelData[currentLevel];
+        // Movimiento de Abrahancito
+        if (keys.left) playerGroup.rotation.y += playerState.rotSpeed;
+        if (keys.right) playerGroup.rotation.y -= playerState.rotSpeed;
 
-        // Mover Jugador
-        let dx = 0, dy = 0;
-        if (keys.up) { dy -= player.speed; player.direction = 'up'; }
-        if (keys.down) { dy += player.speed; player.direction = 'down'; }
-        if (keys.left) { dx -= player.speed; player.direction = 'left'; }
-        if (keys.right) { dx += player.speed; player.direction = 'right'; }
-
-        player.x = Math.max(10, Math.min(canvas.width - player.size - 10, player.x + dx));
-        player.y = Math.max(10, Math.min(canvas.height - player.size - 10, player.y + dy));
-
-        // Timers Jugador
-        if (player.isAttacking) {
-            player.attackTimer--;
-            if (player.attackTimer <= 0) player.isAttacking = false;
+        if (keys.up) {
+            playerGroup.translateZ(-playerState.speed);
         }
-        if (player.invulnerableTimer > 0) player.invulnerableTimer--;
+        if (keys.down) {
+            playerGroup.translateZ(playerState.speed);
+        }
 
-        // Recuperar Maná paulatinamente
-        if (player.mp < player.maxMp) player.mp += 0.05;
+        // Cámara en 3ra Persona estilo GTA
+        const cameraOffset = new THREE.Vector3(0, 4, 8).applyMatrix4(playerGroup.matrixWorld);
+        camera.position.lerp(cameraOffset, 0.1);
+        camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
 
-        // Proyectiles Mágicos
-        magicProjectiles.forEach((proj, index) => {
-            proj.x += proj.vx;
-            proj.y += proj.vy;
-            proj.life--;
-
-            // Impacto con monstruos
-            level.monsters.forEach(m => {
-                if (checkCollision({x: proj.x, y: proj.y, w: 12, h: 12}, {x: m.x, y: m.y, w: m.size || 28, h: m.size || 28})) {
-                    m.hp -= 40;
-                    proj.life = 0;
-                }
-            });
-
-            if (proj.life <= 0) magicProjectiles.splice(index, 1);
-        });
-
-        // IA y Ataque de Monstruos
-        level.monsters.forEach((m, i) => {
-            let mSize = m.size || 28;
-            // Perseguir al jugador
-            let angle = Math.atan2(player.y - m.y, player.x - m.x);
-            m.x += Math.cos(angle) * m.speed;
-            m.y += Math.sin(angle) * m.speed;
-
-            // Daño al Jugador
-            if (checkCollision({x: player.x, y: player.y, w: player.size, h: player.size}, {x: m.x, y: m.y, w: mSize, h: mSize})) {
-                if (player.invulnerableTimer === 0) {
-                    player.hp -= m.damage;
-                    player.invulnerableTimer = 30; // Tiempo de inmunidad temporal
-                    if (player.hp <= 0) {
-                        alert("¡Has sido derrotado! Reiniciando el nivel...");
-                        player.hp = player.maxHp;
-                        player.x = 80; player.y = 200;
-                    }
-                }
-            }
-
-            // Muerte de Monstruo
-            if (m.hp <= 0) {
-                level.monsters.splice(i, 1);
+        // Movimiento Lento de Enemigos (Baja Dificultad)
+        enemies.forEach((enemy, i) => {
+            const dist = enemy.mesh.position.distanceTo(playerGroup.position);
+            if (dist < 12 && dist > 1.2) {
+                enemy.mesh.lookAt(playerGroup.position);
+                enemy.mesh.translateZ(enemy.speed);
+            } else if (dist <= 1.2) {
+                // Daño bajo al jugador
+                playerState.hp = Math.max(0, playerState.hp - 0.1);
+                document.getElementById('hp-bar').style.width = `${playerState.hp}%`;
             }
         });
-
-        // Abrir portal si no quedan enemigos
-        if (level.monsters.length === 0 && level.portal) {
-            level.portal.open = true;
-        }
-
-        // Entrar en Portal
-        if (level.portal && level.portal.open) {
-            if (checkCollision({x: player.x, y: player.y, w: player.size, h: player.size}, {x: level.portal.x, y: level.portal.y, w: 30, h: 30})) {
-                currentLevel++;
-                player.x = 50; player.y = 200;
-                alert(`¡Entraste al Nivel ${currentLevel}: ${levelData[currentLevel].name}!`);
-            }
-        }
-
-        updateUI();
     }
 
     function attack() {
-        if (player.isAttacking) return;
-        player.isAttacking = true;
-        player.attackTimer = 10;
+        enemies.forEach((enemy, i) => {
+            const dist = enemy.mesh.position.distanceTo(playerGroup.position);
+            if (dist < 3) {
+                enemy.hp -= 15;
+                enemy.mesh.position.x += Math.sin(playerGroup.rotation.y) * -1;
+                enemy.mesh.position.z += Math.cos(playerGroup.rotation.y) * -1;
 
-        let level = levelData[currentLevel];
-        let range = player.weapon === 'Espada de Hierro' ? 36 : 26;
-        let hitBox = { x: player.x, y: player.y, w: range, h: range };
-
-        if (player.direction === 'up') hitBox.y -= range;
-        if (player.direction === 'down') hitBox.y += player.size;
-        if (player.direction === 'left') hitBox.x -= range;
-        if (player.direction === 'right') hitBox.x += player.size;
-
-        level.monsters.forEach(m => {
-            let mSize = m.size || 28;
-            if (checkCollision(hitBox, { x: m.x, y: m.y, w: mSize, h: mSize })) {
-                m.hp -= player.weaponDamage;
+                if (enemy.hp <= 0) {
+                    scene.remove(enemy.mesh);
+                    enemies.splice(i, 1);
+                }
             }
-        });
-    }
-
-    function castMagic() {
-        if (player.mp < 20) return;
-        player.mp -= 20;
-
-        let speed = 7;
-        let vx = 0, vy = 0;
-        if (player.direction === 'right') vx = speed;
-        if (player.direction === 'left') vx = -speed;
-        if (player.direction === 'up') vy = -speed;
-        if (player.direction === 'down') vy = speed;
-
-        magicProjectiles.push({
-            x: player.x + player.size/2,
-            y: player.y + player.size/2,
-            vx: vx, vy: vy, life: 40
         });
     }
 
     function interact() {
-        let level = levelData[currentLevel];
-
-        // Cerrar o avanzar diálogo
-        if (activeNPC) {
-            document.getElementById('dialog-box').style.display = 'none';
-            activeNPC = null;
+        const dialogBox = document.getElementById('dialog-box');
+        if (dialogBox.style.display === 'block') {
+            dialogBox.style.display = 'none';
             return;
         }
 
-        // Hablar con NPCs
-        level.npcs.forEach(npc => {
-            let dist = Math.hypot((player.x - npc.x), (player.y - npc.y));
-            if (dist < 45) {
-                activeNPC = npc;
-                showDialog(npc.name, npc.dialogs[0]);
-                if (npc.name === "Sacerdotisa") {
-                    player.hp = player.maxHp;
-                    player.mp = player.maxMp;
-                }
-            }
-        });
-
-        // Abrir Cofres
-        level.chests.forEach(chest => {
-            let dist = Math.hypot((player.x - chest.x), (player.y - chest.y));
-            if (dist < 45 && !chest.opened) {
-                chest.opened = true;
-                if (chest.item === 'Espada de Hierro') {
-                    player.weapon = 'Espada Hierro';
-                    player.weaponDamage = 45;
-                    showDialog("Cofre del Tesoro", "¡Obtuviste la Espada de Hierro! Aumenta tu daño a 45.");
-                } else if (chest.item === 'Báculo Mágico') {
-                    player.weapon = 'Báculo Mágico';
-                    player.weaponDamage = 65;
-                    showDialog("Cofre del Tesoro", "¡Obtuviste el Báculo Mágico! Un arma legendaria.");
-                }
+        npcs.forEach(npc => {
+            const dist = npc.group.position.distanceTo(playerGroup.position);
+            if (dist < 4) {
+                document.getElementById('npc-name').textContent = npc.name;
+                document.getElementById('npc-text').textContent = npc.dialog;
+                dialogBox.style.display = 'block';
             }
         });
     }
 
-    function showDialog(title, text) {
-        document.getElementById('npc-name').textContent = title;
-        document.getElementById('npc-text').textContent = text;
-        document.getElementById('dialog-box').style.display = 'block';
-    }
-
-    function checkCollision(r1, r2) {
-        return !(r1.x > r2.x + r2.w || r1.x + r1.w < r2.x || r1.y > r2.y + r2.h || r1.y + r1.h < r2.y);
-    }
-
-    function updateUI() {
-        document.getElementById('hp-bar').style.width = `${(player.hp / player.maxHp) * 100}%`;
-        document.getElementById('mp-bar').style.width = `${(player.mp / player.maxMp) * 100}%`;
-        document.getElementById('map-txt').textContent = currentLevel;
-        document.getElementById('weapon-txt').textContent = player.weapon;
-    }
-
-    // --- DIBUJADO DE GRÁFICOS ---
-    function draw() {
-        let level = levelData[currentLevel];
-
-        // Fondo
-        ctx.fillStyle = level.bg;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Portal de salida de nivel
-        if (level.portal) {
-            ctx.fillStyle = level.portal.open ? '#3b82f6' : '#4b5563';
-            ctx.beginPath();
-            ctx.arc(level.portal.x + 15, level.portal.y + 15, 16, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#fff';
-            ctx.font = '10px sans-serif';
-            ctx.fillText(level.portal.open ? "PORTAL" : "CERRADO", level.portal.x - 5, level.portal.y - 5);
-        }
-
-        // Cofres
-        level.chests.forEach(c => {
-            ctx.fillStyle = c.opened ? '#78350f' : '#f59e0b';
-            ctx.fillRect(c.x, c.y, 26, 20);
-            ctx.fillStyle = '#fef08a';
-            ctx.fillRect(c.x + 9, c.y + 6, 8, 6);
-        });
-
-        // NPCs
-        level.npcs.forEach(npc => {
-            ctx.fillStyle = npc.color;
-            ctx.fillRect(npc.x, npc.y, 26, 26);
-            // Detalles cara NPC
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(npc.x + 4, npc.y + 5, 5, 5);
-            ctx.fillRect(npc.x + 15, npc.y + 5, 5, 5);
-            ctx.fillStyle = '#000';
-            ctx.fillRect(npc.x + 6, npc.y + 7, 2, 2);
-            ctx.fillRect(npc.x + 17, npc.y + 7, 2, 2);
-
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 10px sans-serif';
-            ctx.fillText(npc.name, npc.x - 5, npc.y - 5);
-        });
-
-        // Monstruos
-        level.monsters.forEach(m => {
-            let mSize = m.size || 28;
-            ctx.fillStyle = m.color;
-            ctx.fillRect(m.x, m.y, mSize, mSize);
-
-            // Ojos de monstruo
-            ctx.fillStyle = '#000';
-            ctx.fillRect(m.x + 4, m.y + 6, 4, 4);
-            ctx.fillRect(m.x + mSize - 8, m.y + 6, 4, 4);
-
-            // Barra de vida de monstruo
-            ctx.fillStyle = '#ef4444';
-            ctx.fillRect(m.x, m.y - 8, (m.hp / m.maxHp) * mSize, 4);
-        });
-
-        // Proyectiles Mágicos
-        ctx.fillStyle = '#60a5fa';
-        magicProjectiles.forEach(p => {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // Jugador (Abrahancito)
-        if (player.invulnerableTimer % 4 < 2) { // Parpadeo al recibir daño
-            ctx.fillStyle = '#2563eb'; // Túnica Azul
-            ctx.fillRect(player.x, player.y, player.size, player.size);
-
-            // Gorrito
-            ctx.fillStyle = '#f59e0b';
-            ctx.fillRect(player.x + 3, player.y - 4, player.size - 6, 5);
-
-            // Ojos
-            ctx.fillStyle = '#fff';
-            let ox = player.direction === 'left' ? 2 : player.direction === 'right' ? 12 : 6;
-            ctx.fillRect(player.x + ox, player.y + 6, 4, 5);
-            ctx.fillRect(player.x + ox + 6, player.y + 6, 4, 5);
-        }
-
-        // Ataque Espada / Báculo
-        if (player.isAttacking) {
-            ctx.fillStyle = player.weapon === 'Báculo Mágico' ? '#a855f7' : player.weapon === 'Espada Hierro' ? '#e2e8f0' : '#d97706';
-            let sx = player.x, sy = player.y, sw = 6, sh = 26;
-            if (player.direction === 'right') { sx += 26; sy += 2; sw = 26; sh = 6; }
-            else if (player.direction === 'left') { sx -= 26; sy += 2; sw = 26; sh = 6; }
-            else if (player.direction === 'up') { sy -= 26; }
-            else if (player.direction === 'down') { sy += 26; }
-            ctx.fillRect(sx, sy, sw, sh);
-        }
-    }
-
-    function loop() {
+    // Renderizado Continuo
+    function animate() {
+        requestAnimationFrame(animate);
         update();
-        draw();
-        requestAnimationFrame(loop);
+        renderer.render(scene, camera);
     }
 
-    // --- GUARDADO ---
-    function saveGame() {
-        const sav = { level: currentLevel, player: player };
-        localStorage.setItem('abrahancito_v1_save', JSON.stringify(sav));
-        alert('¡Partida guardada correctamente!');
-    }
+    // Ajuste de Pantalla Celular / PC
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
-    function loadGame() {
-        const sav = localStorage.getItem('abrahancito_v1_save');
-        if (sav) {
-            const data = JSON.parse(sav);
-            currentLevel = data.level;
-            player = { ...player, ...data.player };
-        }
-    }
-
-    function resetGame() {
-        localStorage.removeItem('abrahancito_v1_save');
-        location.reload();
-    }
-
-    loadGame();
-    loop();
+    animate();
 </script>
 
 </body>
