@@ -2,142 +2,131 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Abrancito - El Game</title>
     <style>
-        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        html, body { width: 100vw; height: 100vh; overflow: hidden; background: #050811; color: white; }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        html, body { width: 100vw; height: 100vh; overflow: hidden; background: #000; color: white; }
 
-        #app-container {
-            display: flex; width: 100vw; height: 100vh; background: #080d1a;
+        /* FORZAR PANTALLA HORIZONTAL EN MÓVILES PORTRAIT */
+        #game-stage {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            background: #0b0f19;
         }
 
-        /* CANVAS A PANTALLA COMPLETA */
-        #viewport {
-            flex: 1; height: 100%; position: relative; background: #0f172a; overflow: hidden;
+        @media screen and (orientation: portrait) {
+            #game-stage {
+                width: 100vh;
+                height: 100vw;
+                transform: rotate(90deg);
+                transform-origin: top left;
+                top: 0;
+                left: 100vw;
+            }
         }
 
-        canvas { display: block; width: 100%; height: 100%; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* PANEL LATERAL INTEGRADO PARA INTERFAZ */
-        #side-panel {
-            width: 320px; height: 100%; background: rgba(15, 23, 42, 0.95);
-            border-left: 2px solid #1e293b; display: flex; flex-direction: column;
-            padding: 12px; gap: 10px; z-index: 10; box-shadow: -5px 0 25px rgba(0,0,0,0.8);
+        /* HUD SUPERIOR COMPACTO (NO TAPA EL MAPA) */
+        #hud-top {
+            position: absolute; top: 10px; left: 10px; right: 10px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            z-index: 10; pointer-events: none;
         }
 
-        .panel-block {
-            background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 10px;
+        .hud-card {
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px);
+            border: 1px solid #3b82f6; border-radius: 8px; padding: 6px 12px;
+            pointer-events: auto; font-size: 11px;
         }
 
-        .hero-card {
-            display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e1b4b, #0f172a);
-            border: 1px solid #6366f1; border-radius: 8px; padding: 10px;
+        .bar-bg { width: 100px; height: 8px; background: #020617; border-radius: 4px; overflow: hidden; margin-top: 2px; }
+        .bar-fill { height: 100%; background: #22c55e; width: 100%; }
+
+        /* BOTÓN DE MENÚ LATERAL DESPLEGABLE */
+        #menu-toggle {
+            position: absolute; top: 10px; right: 10px; z-index: 20;
+            background: #7c3aed; border: 1px solid #a855f7; border-radius: 6px;
+            color: white; padding: 6px 10px; font-size: 12px; font-weight: bold; cursor: pointer;
         }
 
-        .bar-container { width: 100%; background: #020617; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 4px; }
-        .bar-fill { height: 100%; background: #22c55e; width: 100%; transition: width 0.3s; }
+        /* DRAWER LATERAL OCULTO */
+        #side-drawer {
+            position: absolute; top: 0; right: -280px; width: 260px; height: 100%;
+            background: rgba(15, 23, 42, 0.95); border-left: 2px solid #3b82f6;
+            z-index: 15; padding: 15px; display: flex; flex-direction: column; gap: 10px;
+            transition: right 0.3s ease;
+        }
+
+        #side-drawer.open { right: 0; }
 
         #chat-log {
             flex: 1; background: #020617; border: 1px solid #1e293b; border-radius: 6px;
-            padding: 8px; font-size: 11px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
-        }
-        .msg { font-family: monospace; }
-        .speaker { color: #f59e0b; font-weight: bold; }
-
-        /* MODAL INVENTARIO ESTILIZADO */
-        #inventory-modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 400px; background: #0f172a; border: 2px solid #eab308; border-radius: 12px;
-            padding: 16px; display: none; z-index: 50; box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            padding: 8px; font-size: 10px; overflow-y: auto;
         }
 
-        .inv-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
-        .slot { width: 60px; height: 60px; background: #1e293b; border: 1px solid #334155; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-        .slot:hover { border-color: #f59e0b; background: #334155; }
-
-        /* BARRA DE ACCIÓN EN PANTALLA */
-        #action-bar {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 12px; background: rgba(15, 23, 42, 0.9); padding: 8px 16px;
-            border-radius: 30px; border: 1px solid #3b82f6; backdrop-filter: blur(4px);
+        /* CONTROLES MÓVILES (D-PAD Y BOTONES DE ACCIÓN) */
+        #controls {
+            position: absolute; bottom: 15px; left: 15px; right: 15px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            z-index: 10; pointer-events: none;
         }
 
-        .btn-act {
-            width: 50px; height: 50px; border-radius: 50%; background: #1e293b; border: 2px solid #3b82f6;
-            display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        .btn-act:active { transform: scale(0.9); }
+        #dpad { width: 110px; height: 110px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 2px; pointer-events: auto; }
+        .dp { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: white; cursor: pointer; }
 
-        /* CONTROLES MÓVILES */
-        #dpad { position: absolute; left: 20px; bottom: 20px; width: 120px; height: 120px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 4px; }
-        .dp { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; cursor: pointer; }
+        #action-btns { display: flex; gap: 10px; pointer-events: auto; }
+        .btn-act { width: 52px; height: 52px; border-radius: 50%; background: #1e293b; border: 2px solid #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
-    <div id="app-container">
-        <!-- ÁREA DEL JUEGO -->
-        <div id="viewport">
-            <canvas id="gameCanvas"></canvas>
+    <div id="game-stage">
+        <canvas id="gameCanvas"></canvas>
 
-            <!-- Barra de Acciones -->
-            <div id="action-bar">
-                <div class="btn-act" style="background:#dc2626;" onclick="attack()" title="Atacar">⚔️</div>
-                <div class="btn-act" style="background:#0284c7;" onclick="interact()" title="Interactuar">💬</div>
-                <div class="btn-act" style="background:#7c3aed;" onclick="toggleInventory()" title="Inventario">🎒</div>
+        <button id="menu-toggle" onclick="toggleDrawer()">📜 Menú / Chat</button>
+
+        <!-- HUD SUPERIOR SLIM -->
+        <div id="hud-top">
+            <div class="hud-card">
+                <div style="font-weight:bold; color:#38bdf8;">Abrancito (Nvl. 1)</div>
+                <div class="bar-bg"><div id="hp-bar" class="bar-fill"></div></div>
+                <div id="hp-text" style="font-size:9px; text-align:right;">100/100</div>
             </div>
+            <div class="hud-card" style="margin-right: 110px;">
+                <div style="color:#f59e0b; font-weight:bold;" id="map-name">Pradera Principal</div>
+                <div id="quest-text" style="color:#cbd5e1; font-size:10px;">Habla con el Sabio Orestes</div>
+            </div>
+        </div>
 
-            <!-- D-Pad -->
+        <!-- MENÚ LATERAL COMPLETO (DESPLEGABLE) -->
+        <div id="side-drawer">
+            <h3 style="color:#38bdf8; font-size:14px;">ABRANCITO - EL GAME</h3>
+            <div style="font-size:11px; color:#94a3b8;">Clase: Guerrero</div>
+            <hr style="border-color:#334155;">
+            <div style="font-size:11px; color:#f59e0b; font-weight:bold;">Registro de Chat:</div>
+            <div id="chat-log">
+                <div><span style="color:#f59e0b;">Sistema:</span> Juego iniciado en pantalla completa.</div>
+            </div>
+            <button onclick="toggleDrawer()" style="padding:8px; background:#ef4444; border:none; color:white; border-radius:4px; cursor:pointer;">Cerrar Panel</button>
+        </div>
+
+        <!-- CONTROLES -->
+        <div id="controls">
             <div id="dpad">
                 <div></div><div class="dp" onclick="move(0,-1)">▲</div><div></div>
                 <div class="dp" onclick="move(-1,0)">◀</div><div></div><div class="dp" onclick="move(1,0)">▶</div>
                 <div></div><div class="dp" onclick="move(0,1)">▼</div><div></div>
             </div>
 
-            <!-- Inventario Modal -->
-            <div id="inventory-modal">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3 style="color:#f59e0b;">🎒 Inventario de Equipamiento</h3>
-                    <span style="cursor:pointer;" onclick="toggleInventory()">✖</span>
-                </div>
-                <div class="inv-grid" id="inv-container"></div>
-            </div>
-        </div>
-
-        <!-- PANEL LATERAL INFORMATIVO -->
-        <div id="side-panel">
-            <h2 style="font-size:16px; color:#38bdf8; text-align:center; letter-spacing:1px;">ABRANCITO - EL GAME</h2>
-            
-            <div class="hero-card">
-                <div>
-                    <div id="hero-name" style="font-weight:bold; color:#f8fafc;">Abrancito</div>
-                    <div id="hero-class" style="font-size:12px; color:#94a3b8;">Clase: Guerrero</div>
-                </div>
-                <div style="text-align:right;">
-                    <div id="hero-lvl" style="font-size:14px; color:#f59e0b; font-weight:bold;">Nvl. 1</div>
-                </div>
-            </div>
-
-            <div class="panel-block">
-                <div style="font-size:12px; color:#94a3b8;">Vida del Héroe</div>
-                <div class="bar-container"><div id="hp-bar" class="bar-fill"></div></div>
-                <div style="font-size:11px; text-align:right; margin-top:2px;" id="hp-text">100/100</div>
-            </div>
-
-            <div class="panel-block">
-                <div style="font-size:12px; color:#f59e0b; font-weight:bold;">📜 Misión Activa</div>
-                <div id="quest-info" style="font-size:12px; color:#cbd5e1; margin-top:4px;">Habla con el Sabio Orestes para iniciar la aventura.</div>
-            </div>
-
-            <div class="panel-block">
-                <div style="font-size:12px; color:#38bdf8; font-weight:bold;">🗺️ Ubicación Actual</div>
-                <div id="map-info" style="font-size:12px; color:#cbd5e1; margin-top:4px;">Pradera Principal</div>
-            </div>
-
-            <div id="chat-log">
-                <div class="msg"><span class="speaker">Sistema:</span> Bienvenido a Abrancito - El Game.</div>
+            <div id="action-btns">
+                <div class="btn-act" style="background:#dc2626;" onclick="attack()" title="Atacar">⚔️</div>
+                <div class="btn-act" style="background:#0284c7;" onclick="interact()" title="Hablar">💬</div>
             </div>
         </div>
     </div>
@@ -146,298 +135,106 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    function resizeCanvas() {
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = canvas.parentElement.clientHeight;
+    function resize() {
+        const stage = document.getElementById('game-stage');
+        canvas.width = stage.clientWidth;
+        canvas.height = stage.clientHeight;
     }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    window.addEventListener('resize', resize);
+    setTimeout(resize, 100);
 
-    // CONFIGURACIÓN DE MAPA E ISOMETRÍA VOLUMÉTRICA
     const TILE_W = 64;
     const TILE_H = 32;
     const MAP_SIZE = 12;
 
-    // JUGADOR CON ESTRUCTURA PARA EXPANDIR A RPG/MMO
-    let p = {
-        x: 5, y: 5,
-        name: "Abrancito",
-        heroClass: "Guerrero",
-        lvl: 1, hp: 100, maxHp: 100,
-        atk: 20, map: "Pradera Principal",
-        inventory: [
-            { name: "Magical Sword", atk: 15, icon: "🗡️" },
-            { name: "Glow Axe", atk: 12, icon: "🪓" }
-        ],
-        equipped: null
-    };
+    let p = { x: 5, y: 5, hp: 100, maxHp: 100, atk: 25, map: "Pradera Principal" };
 
-    // MUNDOS Y MAPAS
-    const maps = {
+    const mapData = {
         "Pradera Principal": {
-            bg: "#1e3a1e",
             tile1: "#2d5a27", tile2: "#24491f",
-            npcs: [
-                { x: 2, y: 2, name: "Sabio Orestes", icon: "🧙‍♂️", quest: "Derrota al Orco en la pradera." },
-                { x: 9, y: 2, name: "Mercader Kael", icon: "👨‍🌾", quest: "Vendo pociones y armas." }
-            ],
-            enemies: [
-                { id: 1, x: 8, y: 4, name: "Orco Voraz", hp: 50, maxHp: 50, atk: 8, alive: true, type: "orc" },
-                { id: 2, x: 4, y: 8, name: "Caballero Oscuro", hp: 80, maxHp: 80, atk: 14, alive: true, type: "knight" }
-            ],
-            portal: { x: 10, y: 10, target: "Bosque Sombrío" }
-        },
-        "Bosque Sombrío": {
-            bg: "#111827",
-            tile1: "#1f2937", tile2: "#111827",
-            npcs: [
-                { x: 3, y: 3, name: "Guardiana Vanya", icon: "🧝‍♀️", quest: "Limpia el bosque de demonios." }
-            ],
-            enemies: [
-                { id: 3, x: 7, y: 7, name: "Demonio de Sombras", hp: 110, maxHp: 110, atk: 22, alive: true, type: "demon" },
-                { id: 4, x: 3, y: 8, name: "Golem de Piedra", hp: 150, maxHp: 150, atk: 18, alive: true, type: "golem" }
-            ],
-            portal: { x: 1, y: 1, target: "Pradera Principal" }
+            npc: { x: 2, y: 2, name: "Sabio Orestes" },
+            enemy: { x: 8, y: 4, name: "Orco", hp: 60, maxHp: 60, alive: true }
         }
     };
 
     function toIso(x, y) {
-        const originX = canvas.width / 2;
-        const originY = 120;
         return {
-            isoX: originX + (x - y) * (TILE_W / 2),
-            isoY: originY + (x + y) * (TILE_H / 2)
+            isoX: (canvas.width / 2) + (x - y) * (TILE_W / 2),
+            isoY: 100 + (x + y) * (TILE_H / 2)
         };
     }
 
-    // --- RENDERIZADO CON PROFUNDIDAD Y SOMBRAS (NO PLANO) ---
-
-    function drawTile3D(x, y, color1, color2) {
-        const pt = toIso(x, y);
-        const h = 8; // Altura 3D del bloque
-
-        // Cara Lateral Izquierda (Sombra)
-        ctx.beginPath();
-        ctx.moveTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2);
-        ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
-        ctx.lineTo(pt.isoX, pt.isoY + TILE_H + h);
-        ctx.lineTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2 + h);
-        ctx.fillStyle = "#111827"; ctx.fill();
-
-        // Cara Lateral Derecha (Sombra)
-        ctx.beginPath();
-        ctx.moveTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2);
-        ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
-        ctx.lineTo(pt.isoX, pt.isoY + TILE_H + h);
-        ctx.lineTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2 + h);
-        ctx.fillStyle = "#1f2937"; ctx.fill();
-
-        // Cara Superior
-        ctx.beginPath();
-        ctx.moveTo(pt.isoX, pt.isoY);
-        ctx.lineTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2);
-        ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
-        ctx.lineTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2);
-        ctx.closePath();
-        ctx.fillStyle = (x + y) % 2 === 0 ? color1 : color2;
-        ctx.fill();
-        ctx.strokeStyle = "rgba(0,0,0,0.3)";
-        ctx.stroke();
-    }
-
-    function drawShadow(pt, rx, ry) {
-        ctx.beginPath();
-        ctx.ellipse(pt.isoX, pt.isoY + TILE_H / 2, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-        ctx.fill();
-    }
-
-    function drawHero3D(x, y) {
-        const pt = toIso(x, y);
-        drawShadow(pt, 16, 8);
-
-        // Luz propia de héroe
-        const grad = ctx.createRadialGradient(pt.isoX, pt.isoY, 5, pt.isoX, pt.isoY, 35);
-        grad.addColorStop(0, 'rgba(56, 189, 248, 0.3)');
-        grad.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.arc(pt.isoX, pt.isoY, 35, 0, Math.PI * 2); ctx.fill();
-
-        // Espada Rúnica a la Espalda
-        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(pt.isoX - 10, pt.isoY - 40); ctx.lineTo(pt.isoX + 8, pt.isoY - 10); ctx.stroke();
-
-        // Cuerpo / Armadura
-        ctx.fillStyle = '#15803d'; ctx.fillRect(pt.isoX - 8, pt.isoY - 24, 16, 16);
-        ctx.fillStyle = '#475569'; ctx.fillRect(pt.isoX - 10, pt.isoY - 26, 4, 8); ctx.fillRect(pt.isoX + 6, pt.isoY - 26, 4, 8);
-        ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(pt.isoX, pt.isoY - 30, 7, 0, Math.PI * 2); ctx.fill();
-
-        // Nombre
-        ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = '#38bdf8'; ctx.textAlign = 'center';
-        ctx.fillText(p.name, pt.isoX, pt.isoY - 45);
-    }
-
-    function drawEnemies3D(enemies) {
-        enemies.forEach(e => {
-            if (!e.alive) return;
-            const pt = toIso(e.x, e.y);
-            drawShadow(pt, 16, 8);
-
-            if (e.type === 'orc') {
-                ctx.fillStyle = '#166534'; ctx.fillRect(pt.isoX - 8, pt.isoY - 24, 16, 16);
-                ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(pt.isoX - 12, pt.isoY - 12, 6, 0, Math.PI * 2); ctx.fill();
-            } else if (e.type === 'knight') {
-                ctx.fillStyle = '#020617'; ctx.fillRect(pt.isoX - 8, pt.isoY - 26, 16, 18);
-                ctx.fillStyle = '#ef4444'; ctx.fillRect(pt.isoX - 2, pt.isoY - 26, 4, 18);
-            } else if (e.type === 'demon') {
-                ctx.fillStyle = '#31104b'; ctx.fillRect(pt.isoX - 8, pt.isoY - 26, 16, 18);
-                ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(pt.isoX - 6, pt.isoY - 30); ctx.lineTo(pt.isoX - 12, pt.isoY - 40); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(pt.isoX + 6, pt.isoY - 30); ctx.lineTo(pt.isoX + 12, pt.isoY - 40); ctx.stroke();
-            } else if (e.type === 'golem') {
-                ctx.fillStyle = '#475569'; ctx.fillRect(pt.isoX - 12, pt.isoY - 32, 24, 24);
-            }
-
-            // Vida
-            const hpPct = e.hp / e.maxHp;
-            ctx.fillStyle = '#000'; ctx.fillRect(pt.isoX - 15, pt.isoY - 42, 30, 4);
-            ctx.fillStyle = '#ef4444'; ctx.fillRect(pt.isoX - 15, pt.isoY - 42, 30 * hpPct, 4);
-            ctx.font = '10px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-            ctx.fillText(e.name, pt.isoX, pt.isoY - 46);
-        });
-    }
-
-    function drawPortal(portal) {
-        const pt = toIso(portal.x, portal.y);
-        ctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
-        ctx.beginPath(); ctx.ellipse(pt.isoX, pt.isoY + TILE_H/2, 20, 10, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.stroke();
-        ctx.font = '10px sans-serif'; ctx.fillStyle = '#e9d5ff'; ctx.textAlign = 'center';
-        ctx.fillText(`Portal a ${portal.target}`, pt.isoX, pt.isoY - 15);
-    }
-
-    function drawNPCs(npcs) {
-        npcs.forEach(n => {
-            const pt = toIso(n.x, n.y);
-            drawShadow(pt, 12, 6);
-            ctx.font = '18px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText(n.icon, pt.isoX, pt.isoY - 10);
-            ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = '#f59e0b';
-            ctx.fillText(n.name, pt.isoX, pt.isoY - 32);
-        });
-    }
-
-    // --- LOOP PRINCIPAL DE RENDERIZADO ---
     function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const currentMap = maps[p.map];
+        const m = mapData[p.map];
 
-        // Dibujar Terreno 3D
         for (let x = 0; x < MAP_SIZE; x++) {
             for (let y = 0; y < MAP_SIZE; y++) {
-                drawTile3D(x, y, currentMap.tile1, currentMap.tile2);
+                const pt = toIso(x, y);
+                ctx.beginPath();
+                ctx.moveTo(pt.isoX, pt.isoY);
+                ctx.lineTo(pt.isoX + TILE_W / 2, pt.isoY + TILE_H / 2);
+                ctx.lineTo(pt.isoX, pt.isoY + TILE_H);
+                ctx.lineTo(pt.isoX - TILE_W / 2, pt.isoY + TILE_H / 2);
+                ctx.closePath();
+                ctx.fillStyle = (x + y) % 2 === 0 ? m.tile1 : m.tile2;
+                ctx.fill();
+                ctx.strokeStyle = "rgba(0,0,0,0.2)";
+                ctx.stroke();
             }
         }
 
-        drawPortal(currentMap.portal);
-        drawNPCs(currentMap.npcs);
-        drawEnemies3D(currentMap.enemies);
-        drawHero3D(p.x, p.y);
+        // DIBUJAR JUGADOR
+        const ptP = toIso(p.x, p.y);
+        ctx.fillStyle = '#15803d'; ctx.fillRect(ptP.isoX - 8, ptP.isoY - 20, 16, 16);
+        ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(ptP.isoX, ptP.isoY - 24, 6, 0, Math.PI*2); ctx.fill();
+
+        // DIBUJAR NPC
+        const ptN = toIso(m.npc.x, m.npc.y);
+        ctx.fillStyle = '#0284c7'; ctx.fillRect(ptN.isoX - 8, ptN.isoY - 20, 16, 16);
+
+        // DIBUJAR ENEMIGO
+        if (m.enemy.alive) {
+            const ptE = toIso(m.enemy.x, m.enemy.y);
+            ctx.fillStyle = '#dc2626'; ctx.fillRect(ptE.isoX - 8, ptE.isoY - 20, 16, 16);
+        }
 
         requestAnimationFrame(render);
     }
 
-    // --- MECÁNICAS DE JUEGO Y ACCIONES ---
     function move(dx, dy) {
-        const nx = p.x + dx;
-        const ny = p.y + dy;
-        if (nx >= 0 && nx < MAP_SIZE && ny >= 0 && ny < MAP_SIZE) {
-            p.x = nx; p.y = ny;
-
-            // Verificar Portal
-            const portal = maps[p.map].portal;
-            if (p.x === portal.x && p.y === portal.y) {
-                p.map = portal.target;
-                p.x = 2; p.y = 2;
-                logMsg("Portal", `Viajaste a: ${p.map}`);
-                document.getElementById('map-info').textContent = p.map;
-            }
+        if (p.x + dx >= 0 && p.x + dx < MAP_SIZE && p.y + dy >= 0 && p.y + dy < MAP_SIZE) {
+            p.x += dx; p.y += dy;
         }
     }
 
     function attack() {
-        let dmg = p.atk + (p.equipped ? p.equipped.atk : 0);
-        const enemies = maps[p.map].enemies;
-
-        enemies.forEach(e => {
-            if (e.alive && Math.abs(e.x - p.x) <= 1 && Math.abs(e.y - p.y) <= 1) {
-                e.hp -= dmg;
-                logMsg("Combate", `Atacaste a ${e.name} haciéndole ${dmg} de daño.`);
-
-                if (e.hp <= 0) {
-                    e.alive = false;
-                    logMsg("Victoria", `¡Derrotaste a ${e.name}!`);
-                    p.hp = Math.min(p.maxHp, p.hp + 20);
-                    updateHUD();
-                }
-            }
-        });
+        const e = mapData[p.map].enemy;
+        if (e.alive && Math.abs(e.x - p.x) <= 1 && Math.abs(e.y - p.y) <= 1) {
+            e.hp -= p.atk;
+            logChat(`Atacaste a ${e.name} (-${p.atk} HP)`);
+            if (e.hp <= 0) e.alive = false;
+        }
     }
 
     function interact() {
-        const npcs = maps[p.map].npcs;
-        npcs.forEach(n => {
-            if (Math.abs(n.x - p.x) <= 1 && Math.abs(n.y - p.y) <= 1) {
-                logMsg(n.name, n.quest);
-                document.getElementById('quest-info').textContent = n.quest;
-            }
-        });
+        const n = mapData[p.map].npc;
+        if (Math.abs(n.x - p.x) <= 1 && Math.abs(n.y - p.y) <= 1) {
+            logChat(`${n.name}: ¡Bienvenido Abrancito! Derrota al Orco.`);
+        }
     }
 
-    function toggleInventory() {
-        const modal = document.getElementById('inventory-modal');
-        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
-        renderInventoryUI();
+    function toggleDrawer() {
+        document.getElementById('side-drawer').classList.toggle('open');
     }
 
-    function renderInventoryUI() {
-        const container = document.getElementById('inv-container');
-        container.innerHTML = '';
-        p.inventory.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 'slot';
-            div.innerHTML = `<div>${item.icon}</div><div style="font-size:9px; color:#22c55e;">+${item.atk}</div>`;
-            div.onclick = () => {
-                p.equipped = item;
-                logMsg("Inventario", `Equipaste: ${item.name}`);
-                toggleInventory();
-            };
-            container.appendChild(div);
-        });
-    }
-
-    function updateHUD() {
-        document.getElementById('hp-bar').style.width = `${(p.hp / p.maxHp) * 100}%`;
-        document.getElementById('hp-text').textContent = `${p.hp}/${p.maxHp}`;
-    }
-
-    function logMsg(speaker, txt) {
+    function logChat(msg) {
         const log = document.getElementById('chat-log');
-        const div = document.createElement('div');
-        div.className = 'msg';
-        div.innerHTML = `<span class="speaker">${speaker}:</span> ${txt}`;
-        log.appendChild(div);
+        log.innerHTML += `<div>${msg}</div>`;
         log.scrollTop = log.scrollHeight;
     }
 
-    // Teclado
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp' || e.key === 'w') move(0, -1);
-        if (e.key === 'ArrowDown' || e.key === 's') move(0, 1);
-        if (e.key === 'ArrowLeft' || e.key === 'a') move(-1, 0);
-        if (e.key === 'ArrowRight' || e.key === 'd') move(1, 0);
-    });
-
+    resize();
     render();
 </script>
 </body>
